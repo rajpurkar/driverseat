@@ -20,9 +20,11 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {maxAge: '1d'}));
 
-app.use('/', routes);
+app.use('/', function(req, res, next){
+   res.sendFile('/first.html', {root: __dirname + '/public/'});
+});
 app.use('/users', users);
 
 // catch 404 and forward to error handler

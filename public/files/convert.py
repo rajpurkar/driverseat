@@ -4,7 +4,7 @@ import sys
 
 def run(filepath):
 	data = np.load(filepath)['data']
-	data_subset = data[:5000, :4]
+	data_subset = data[:1000000, :4]
 	json.dump(data_subset.tolist(), open('datafile.json', 'w'))
 
 if __name__ == '__main__':

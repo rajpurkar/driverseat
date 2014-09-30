@@ -8,11 +8,14 @@ var projector, raycaster;
 var dataFile = "files/datafile.json";
 
 // Detect when shift key is being pressed for painting
-var shiftKey = false;
-var shiftKeyDown = function(event) {
-	shiftKey = event.keyCode == 16;
-};
-document.addEventListener('keydown', shiftKeyDown, false);
+document.addEventListener('keydown', function(event) {
+	if (event.keyCode == 16)
+		shiftKey = true;
+}, false);
+document.addEventListener('keyup', function(event) {
+	if (event.keyCode == 16)
+		shiftKey = false;
+}, false);
 
 /**
  * Algorithm to calculate a single RGB channel (0-255) from HSL hue (0-1.0)

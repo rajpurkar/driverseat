@@ -6,6 +6,7 @@ var pickLocation;
 var mouse = { x: 1, y: 1 };
 var projector, raycaster;
 var dataFile = "files/datafile.json";
+var shiftKey = false;
 
 // Detect when shift key is being pressed for painting
 document.addEventListener('keydown', function(event) {
@@ -39,14 +40,12 @@ function HUEtoRGB(hue) {
 
 function generatePointCloud() {
 	geometry = new THREE.BufferGeometry();
-
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", dataFile, false);
 	xhr.send(null);
 	if (xhr.status !== 200 && xhr.status !== 0) {
 		throw new Error(dataFile + " not found");
 	}
-
 	var data = JSON.parse(xhr.responseText);
 	var positions = new Float32Array(3*data.length);
 	var colors    = new Float32Array(3*data.length);

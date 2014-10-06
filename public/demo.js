@@ -1,4 +1,5 @@
 //todo: not make these globals since multiple things are starting to use geometry
+//please don't remove commented code
 var renderer;
 var camera;
 var scene;
@@ -8,6 +9,7 @@ var mouse = { x: 1, y: 1 };
 var projector, raycaster;
 var dataFile = "files/datafile.json";
 var gpsFile = "files/gpsfile.json";
+var lanesFile = "files/lanesfile.json";
 var shiftKey = false;
 var gpsData;
 
@@ -52,7 +54,7 @@ document.addEventListener('keyup', function(event) {
  	return data;
  }
 
- function generatePointCloud(data) {
+ function generatePointCloud(data, size, color) {
  	var geometry = new THREE.BufferGeometry();
  	var positions = new Float32Array(3*data.length);
  	var colors    = new Float32Array(3*data.length);
@@ -68,16 +70,16 @@ document.addEventListener('keyup', function(event) {
 			colors[3*i+2] = HUEtoRGB(hue);		//g
 			colors[3*i+0] = HUEtoRGB(hue-1/3);	//b
 		}else{
-			colors[3*i+1] = 240;	//r
-			colors[3*i+2] = 240;		//g
-			colors[3*i+0] = 240;
+			colors[3*i+1] = color;	//r
+			colors[3*i+2] = color;		//g
+			colors[3*i+0] = color;
 		}
 	}
 
 	geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
 	geometry.addAttribute('color', new THREE.BufferAttribute(colors, 3));
 	
-	var material = new THREE.PointCloudMaterial({ size: 0.01, vertexColors: true });
+	var material = new THREE.PointCloudMaterial({ size: size, vertexColors: true });
 	var pointcloud = new THREE.PointCloud(geometry, material);
 	
 	return pointcloud;
@@ -139,11 +141,16 @@ function init() {
 	document.body.appendChild(renderer.domElement);
 	
 	var pointData = loadPoints(dataFile)
-	pointcloud = generatePointCloud(pointData);
+	pointcloud = generatePointCloud(pointData, 0.01);
 	scene.add(pointcloud);
 	gpsData = loadPoints(gpsFile)
-	gpsCloud = generatePointCloud(gpsData);
-	scene.add(gpsCloud);
+	gpsCloud = generatePointCloud(gpsData, 0.05, 250);
+	lanesData = loadPoints(lanesFile);
+	for (var lane in lanesData){
+		laneCloud = generatePointCloud(lanesData[lane], 0.15, 255);
+		scene.add(laneCloud);	
+	}
+	
 
 	var sphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
 	var sphereMaterial = new THREE.MeshBasicMaterial({color: 0xff0000, shading: THREE.FlatShading});
@@ -204,15 +211,12 @@ function render() {
 		}
 	}
 	//var timer = Date.now() * 0.0005;
-
 	//camera.position.y +=  Math.abs(Math.cos( timer )) *.3 ;
 	//camera.position.z += Math.cos( timer ) * 0.03;
 	positionArr = gpsData[count];
 	camera.position.y =  gpsData[count+1][0];
 	camera.position.z =  gpsData[count+1][1];
 	camera.position.x =  gpsData[count+1][2];
-	console.log(camera.position.y)
-	lookAtArr = gpsData[count + 30];
 	target.y = gpsData[count + 5][0];
 	target.z = gpsData[count + 1][1];
 	target.x = gpsData[count + 1][2];

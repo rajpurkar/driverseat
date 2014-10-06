@@ -23,7 +23,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'), {maxAge: '1d'}));
 
 app.get('/', function(req, res, next){
-   res.redirect('/potree/examples/example.html');
+   res.redirect('/demo.html');
 });
 
 // catch 404 and forward to error handler

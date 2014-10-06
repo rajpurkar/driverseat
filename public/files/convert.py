@@ -12,5 +12,15 @@ def runGps(filepath):
 	data_subset = data[:data.shape[0]/5, :3]
 	json.dump(data_subset.tolist(), open('gpsfile.json', 'w'))
 
+def runLanes(filepath):
+	allData = np.load(filepath);
+	num_lanes = allData['num_lanes'].tolist()
+	d = {}
+	for i in xrange(num_lanes):
+		data = allData['lane' + str(i)]
+		data_subset = data[:data.shape[0]/5, :3]
+		d[i] = data_subset.tolist();
+	json.dump(d, open('lanesfile.json', 'w'));
+
 if __name__ == '__main__':
-	runGps(sys.argv[1])
+	runLanes(sys.argv[1])

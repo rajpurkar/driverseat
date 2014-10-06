@@ -227,7 +227,9 @@ function render() {
 
 	renderer.render(scene, camera);
 	count++;
-	console.log(count)
+	if(count+5 >= gpsData.length){
+		count = 0;
+	}
 }
 
 init();

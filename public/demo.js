@@ -12,17 +12,32 @@ var gpsFile = "files/gpsfile.json";
 var lanesFile = "files/lanesfile.json";
 var shiftKey = false;
 var gpsData;
+var paused = false;
 
 // Detect when shift key is being pressed for painting
 document.addEventListener('keydown', function(event) {
-	if (event.keyCode == 16)
+	console.log(event.keyCode);
+	if (event.keyCode == 16){
 		shiftKey = true;
+	}
+	if (event.keyCode == 80){
+		togglePause();
+	}
 }, false);
 document.addEventListener('keyup', function(event) {
 	if (event.keyCode == 16)
 		shiftKey = false;
 }, false);
 
+
+function togglePause(){
+	if(paused === false){
+		paused = true;	
+	}else{
+		paused = false;
+	}
+	
+}
 /**
  * Algorithm to calculate a single RGB channel (0-255) from HSL hue (0-1.0)
  */
@@ -226,7 +241,9 @@ function render() {
 	renderer.render( scene, camera );
 
 	renderer.render(scene, camera);
-	count++;
+	if(paused == false){
+		count++;	
+	}
 	if(count+5 >= gpsData.length){
 		count = 0;
 	}

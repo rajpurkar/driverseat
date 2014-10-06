@@ -1,12 +1,15 @@
+//todo: not make these globals since multiple things are starting to use geometry
 var renderer;
 var camera;
 var scene;
-var geometry;
+var geometry; 
 var pickLocation;
 var mouse = { x: 1, y: 1 };
 var projector, raycaster;
 var dataFile = "files/datafile.json";
+var gpsFile = "files/gpsfile.json";
 var shiftKey = false;
+var gpsData;
 
 // Detect when shift key is being pressed for painting
 document.addEventListener('keydown', function(event) {
@@ -38,15 +41,19 @@ document.addEventListener('keyup', function(event) {
  	return Math.round(rgb * 255);
  }
 
- function generatePointCloud() {
- 	geometry = new THREE.BufferGeometry();
- 	var xhr = new XMLHttpRequest();
- 	xhr.open("GET", dataFile, false);
+ function loadPoints(df){
+	var xhr = new XMLHttpRequest();
+ 	xhr.open("GET", df, false);
  	xhr.send(null);
  	if (xhr.status !== 200 && xhr.status !== 0) {
- 		throw new Error(dataFile + " not found");
+ 		throw new Error(df + " not found");
  	}
  	var data = JSON.parse(xhr.responseText);
+ 	return data;
+ }
+
+ function generatePointCloud(data) {
+ 	var geometry = new THREE.BufferGeometry();
  	var positions = new Float32Array(3*data.length);
  	var colors    = new Float32Array(3*data.length);
  	for (var i = 0; i < data.length; i++) {
@@ -55,10 +62,16 @@ document.addEventListener('keyup', function(event) {
 		positions[3*i+1] = data[i][0];	//y
 		positions[3*i+2] = data[i][1];	//z
 		// map intensity (0-120) to RGB
-		var hue = 1 - data[i][3]/120;	//TODO: fix intensity scaling
-		colors[3*i+1]   = HUEtoRGB(hue+1/3);	//r
-		colors[3*i+2] = HUEtoRGB(hue);		//g
-		colors[3*i+0] = HUEtoRGB(hue-1/3);	//b
+		if(data[i].length >= 4){
+			var hue = 1 - data[i][3]/120;	//TODO: fix intensity scaling
+			colors[3*i+1]   = HUEtoRGB(hue+1/3);	//r
+			colors[3*i+2] = HUEtoRGB(hue);		//g
+			colors[3*i+0] = HUEtoRGB(hue-1/3);	//b
+		}else{
+			colors[3*i+1] = 240;	//r
+			colors[3*i+2] = 240;		//g
+			colors[3*i+0] = 240;
+		}
 	}
 
 	geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -70,10 +83,21 @@ document.addEventListener('keyup', function(event) {
 	return pointcloud;
 }
 
+function addCar2(){
+	THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
+	var loader = new THREE.OBJMTLLoader();
+	loader.load('/files/R8_14blend.obj', '/files/R8_14blend.mtl', function(object) {
+		object.position.set( 0, 0, 0 );
+		object.rotation.set( 0, Math.PI / 2, Math.PI );
+		object.scale.set( 10, 10, 10 );
+		scene.add(object);
+	});
+}
+
 function addCar(){
 	
 	var loader = new THREE.PLYLoader();
-	loader.addEventListener( 'load', function ( event ) {
+	loader.addEventListener('load', function ( event ) {
 
 		var geometry = event.content;
 		var material = new THREE.MeshBasicMaterial( {} );
@@ -100,33 +124,40 @@ function onWindowResize() {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 
 }
+var target = new THREE.Vector3(0, 200, 0 );
 
 
 function init() {
 	scene = new THREE.Scene();
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-	cameraTarget = new THREE.Vector3(0, 200, 0 );
+	cameraTarget = target;
 	projector = new THREE.Projector();
 	raycaster = new THREE.Raycaster();
-
-	renderer = new THREE.WebGLRenderer();
+	renderer = new THREE.WebGLRenderer({alpha:true});
+	renderer.setClearColor(0, 1)
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
 	
-	pointcloud = generatePointCloud();
+	var pointData = loadPoints(dataFile)
+	pointcloud = generatePointCloud(pointData);
 	scene.add(pointcloud);
-	
+	gpsData = loadPoints(gpsFile)
+	gpsCloud = generatePointCloud(gpsData);
+	scene.add(gpsCloud);
+
 	var sphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
 	var sphereMaterial = new THREE.MeshBasicMaterial({color: 0xff0000, shading: THREE.FlatShading});
 	pickLocation = new THREE.Mesh(sphereGeometry, sphereMaterial);
 	scene.add(pickLocation);
-	
+
+	//addCar2();
+
 	// controls
-	camera.position.set(0,10,0);
-	controls = new THREE.OrbitControls(camera);
+	camera.position.set(0,0,0);
+	//controls = new THREE.OrbitControls(camera);
 	//controls.target.set( 0, 100, 0 );
 	//camera.lookAt(new THREE.Vector3(0,100,0));
-	addCar();
+	
 
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 	window.addEventListener( 'resize', onWindowResize, false );
@@ -146,6 +177,7 @@ function animate() {
 
 	render();
 }
+var count = 0;
 
 function render() {			
 	
@@ -171,17 +203,27 @@ function render() {
 			geometry.attributes.color.needsUpdate = true;
 		}
 	}
-	var timer = Date.now() * 0.0005;
+	//var timer = Date.now() * 0.0005;
 
 	//camera.position.y +=  Math.abs(Math.cos( timer )) *.3 ;
-	camera.position.y +=  0.3;
 	//camera.position.z += Math.cos( timer ) * 0.03;
-
-	camera.lookAt( cameraTarget );
-
+	positionArr = gpsData[count];
+	camera.position.y =  gpsData[count+1][0];
+	camera.position.z =  gpsData[count+1][1];
+	camera.position.x =  gpsData[count+1][2];
+	console.log(camera.position.y)
+	lookAtArr = gpsData[count + 30];
+	target.y = gpsData[count + 5][0];
+	target.z = gpsData[count + 1][1];
+	target.x = gpsData[count + 1][2];
+	//camera.position.set(new THREE.Vector3(positionArr[2],positionArr[0],positionArr[1]));
+	//camera.lookAt(new THREE.Vector3(0,100,0));
+	camera.lookAt(target);
 	renderer.render( scene, camera );
 
 	renderer.render(scene, camera);
+	count++;
+	console.log(count)
 }
 
 init();

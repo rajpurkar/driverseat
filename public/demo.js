@@ -21,6 +21,7 @@ var DRAG_RANGE = 3;
 
 //TODO: make keycode handler
 document.addEventListener('keydown', function(event) {
+	console.log(event.keyCode);
 	if (event.keyCode == 16){
 		shiftKey = true;
 	} else if (event.keyCode == 80){
@@ -101,39 +102,39 @@ function distanceFunction(a, b) {
 /**
  * Algorithm to calculate a single RGB channel (0-255) from HSL hue (0-1.0)
  */
- function HUEtoRGB(hue) {
- 	if (hue < 0) {
- 		hue += 1;
- 	} else if (hue > 1) {
- 		hue -= 1;
- 	}
- 	var rgb = 0;
- 	if (hue < 1/6) {
- 		rgb = hue*6;
- 	} else if (hue < 1/2) {
- 		rgb = 1;
- 	} else if (hue < 2/3) {
- 		rgb = (2/3 - hue)*6;
- 	}
- 	return Math.round(rgb * 255);
+function HUEtoRGB(hue) {
+	if (hue < 0) {
+		hue += 1;
+	} else if (hue > 1) {
+		hue -= 1;
+	}
+	var rgb = 0;
+	if (hue < 1/6) {
+		rgb = hue*6;
+	} else if (hue < 1/2) {
+		rgb = 1;
+	} else if (hue < 2/3) {
+		rgb = (2/3 - hue)*6;
+	}
+	return Math.round(rgb * 255);
  }
 
- function loadPoints(df){
- 	var xhr = new XMLHttpRequest();
- 	xhr.open("GET", df, false);
- 	xhr.send(null);
- 	if (xhr.status !== 200 && xhr.status !== 0) {
- 		throw new Error(df + " not found");
- 	}
- 	var data = JSON.parse(xhr.responseText);
- 	return data;
- }
+function loadPoints(df){
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", df, false);
+	xhr.send(null);
+	if (xhr.status !== 200 && xhr.status !== 0) {
+		throw new Error(df + " not found");
+	}
+	var data = JSON.parse(xhr.responseText);
+	return data;
+}
 
- function generatePointCloud(name, data, size, color) {
- 	geometries[name] = new THREE.BufferGeometry();
- 	var positions = new Float32Array(3*data.length);
- 	var colors    = new Float32Array(3*data.length);
- 	for (var i = 0; i < data.length; i++) {
+function generatePointCloud(name, data, size, color) {
+	geometries[name] = new THREE.BufferGeometry();
+	var positions = new Float32Array(3*data.length);
+	var colors    = new Float32Array(3*data.length);
+	for (var i = 0; i < data.length; i++) {
 		//Note: order is changed
 		positions[3*i]   = data[i][2];	//x
 		positions[3*i+1] = data[i][0];	//y
@@ -170,177 +171,49 @@ function addCar2(){
 	});
 }
 
-
-function addCar() {
-
-	directionalLight = new THREE.DirectionalLight( 0xffffff );
-	directionalLight.position.set( 1, 1, 0.5 ).normalize();
-	scene.add( directionalLight );
-
-	//var light = new THREE.AmbientLight( 0x404040 ); // soft white light
-	//scene.add( light )
-
+function addCar(){
 	
-	//var light = new THREE.AmbientLight( 0x00ee00 ); // soft white light
-	//scene.add( light );
-	/*
-	var sphere = new THREE.SphereGeometry( 100, 16, 8 );
-	var mesh = new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xffaa00 } ) );
-	mesh.scale.set( 0.05, 0.05, 0.05 );
-	pointLight.add( mesh );
-	*/
-	var camaroMaterials = {
+	var loader = new THREE.PLYLoader();
+	loader.addEventListener('load', function ( event ) {
 
-		body: {
+		var geometry = event.content;
+		var material = new THREE.MeshBasicMaterial( {} );
+		var mesh = new THREE.Mesh( geometry, material );
 
-			Orange: new THREE.MeshLambertMaterial( {
-				color: 0xff6600,
-				combine: THREE.MixOperation,
-				reflectivity: 0.3
-			} ),
+		mesh.position.set( -2, 30, -2 );
+		mesh.rotation.set( 0, Math.PI / 2, Math.PI );
+		mesh.scale.set( 1, 1, 1 );
 
-			Blue: new THREE.MeshLambertMaterial( {
-				color: 0x226699,
-				combine: THREE.MixOperation,
-				reflectivity: 0.3
-			} ),
+		//mesh.castShadow = true;
+		//mesh.receiveShadow = true;
 
-			Red: new THREE.MeshLambertMaterial( {
-				color: 0x660000,
-				combine: THREE.MixOperation,
-				reflectivity: 0.5
-			} ),
+		scene.add( mesh );
 
-			Black: new THREE.MeshLambertMaterial( {
-				color: 0x000000,
-				combine: THREE.MixOperation,
-				reflectivity: 0.5
-			} ),
-
-			White: new THREE.MeshLambertMaterial( {
-				color: 0xffffff,
-				combine: THREE.MixOperation,
-				reflectivity: 0.5
-			} ),
-
-			Carmine: new THREE.MeshPhongMaterial( {
-				color: 0x770000,
-				specular: 0xffaaaa,
-				combine: THREE.MultiplyOperation
-			} ),
-
-			Gold: new THREE.MeshPhongMaterial( {
-				color: 0xaa9944,
-				specular: 0xbbaa99,
-				shininess: 50,
-				combine: THREE.MultiplyOperation
-			} ),
-
-			Bronze: new THREE.MeshPhongMaterial( {
-				color: 0x150505,
-				specular: 0xee6600,
-				shininess: 10,
-				combine: THREE.MixOperation,
-				reflectivity: 0.5
-			} ),
-
-			Chrome: new THREE.MeshPhongMaterial( {
-				color: 0xffffff,
-				specular:0xffffff,
-				combine: THREE.MultiplyOperation
-			} )
-
-		},
-
-		chrome: new THREE.MeshLambertMaterial( {
-			color: 0xffffff,
-		} ),
-
-		darkchrome: new THREE.MeshLambertMaterial( {
-			color: 0x444444,
-		} ),
-
-		glass: new THREE.MeshBasicMaterial( {
-			color: 0x223344,
-			opacity: 0.25,
-			combine: THREE.MixOperation,
-			reflectivity: 0.25,
-			transparent: true
-		} ),
-
-		tire: new THREE.MeshLambertMaterial( {
-			color: 0x050505
-		} ),
-
-		interior: new THREE.MeshPhongMaterial( {
-			color: 0x050505,
-			shininess: 20
-		} ),
-
-		black: new THREE.MeshLambertMaterial( {
-			color: 0x000000
-		} )
-
-	};
-
-	var loader = new THREE.BinaryLoader();
-	loader.load( "/files/CamaroNoUv_bin.js", function( geometry ) { createScene( geometry, camaroMaterials ) } );
-
-				//
+	} );
+	loader.load('/files/gtr.ply' );
 }
 
-var car; 
-function createScene( geometry, materials ) {
-
-	var s = 0.35, m = new THREE.MeshFaceMaterial();
-
-	m.materials[ 0 ] = materials.body[ "Orange" ]; // car body
-	m.materials[ 1 ] = materials.chrome; // wheels chrome
-	m.materials[ 2 ] = materials.chrome; // grille chrome
-	m.materials[ 3 ] = materials.darkchrome; // door lines
-	m.materials[ 4 ] = materials.glass; // windshield
-	m.materials[ 5 ] = materials.interior; // interior
-	m.materials[ 6 ] = materials.tire; // tire
-	m.materials[ 7 ] = materials.black; // tireling
-	m.materials[ 8 ] = materials.black; // behind grille
-
-	car = new THREE.Mesh( geometry, m );
-	car.rotation.set( - Math.PI / 2, 0, Math.PI /2);
-	car.scale.set( s, s, s );
-	car.position.set( -3, 0, 0 );
-	target = car.position;
-	//camera.position.set(car.position.x - 12, car.position.y -14, car.position.z- 0.11);
-	scene.add( car );
-	camera.position.set(car.position.x -5 , car.position.y -14, car.position.z - 0);
-	//controls.target = car.position;
-	camera.lookAt(car.position);
-	pointLight = new THREE.PointLight( 0xffaa00 );
-	scene.add( pointLight );
-	pointLight.position= car.position;
-	pointLight.position.x= car.position.x -10;
-}
-
-			function addPlanes() {
-				planesData = loadPoints(planesFile);
-				planes = [];
-				var groundGeometry = new THREE.Geometry();
-				for (var i = 0; i < planesData.length; i++) {
-					var normal = planesData[i];
-					var dy = normal[0],
-					dz = normal[1],
-					dx = normal[2],
-					y = normal[3],
-					z = normal[4],
-					x = normal[5];
-					var origin = new THREE.Vector3(x,y,z),
-					direction = new THREE.Vector3(dx,dy,dz),
-					end = new THREE.Vector3(x+dx,y+dy,z+dz);
-					direction.normalize();
-					var plane = new THREE.Plane();
-					plane.setFromNormalAndCoplanarPoint(direction, origin);
-					var planeGeometry = new THREE.PlaneGeometry(50, 50),
-					planeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true });
-					plane = new THREE.Mesh(planeGeometry, planeMaterial);
+function addPlanes() {
+	planesData = loadPoints(planesFile);
+	planes = [];
+	var groundGeometry = new THREE.Geometry();
+	for (var i = 0; i < planesData.length; i++) {
+		var normal = planesData[i];
+		var dy = normal[0],
+			dz = normal[1],
+			dx = normal[2],
+			y = normal[3],
+			z = normal[4],
+			x = normal[5];
+		var origin = new THREE.Vector3(x,y,z),
+			direction = new THREE.Vector3(dx,dy,dz),
+			end = new THREE.Vector3(x+dx,y+dy,z+dz);
+		direction.normalize();
+		var plane = new THREE.Plane();
+		plane.setFromNormalAndCoplanarPoint(direction, origin);
+		var planeGeometry = new THREE.PlaneGeometry(50, 50),
+			planeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true });
+		plane = new THREE.Mesh(planeGeometry, planeMaterial);
 		// groundGeometry.vertices.push()
 		plane.position.set(x, y, z);
 		plane.lookAt(end);
@@ -351,11 +224,11 @@ function createScene( geometry, materials ) {
 		// var ray = new THREE.Ray(origin, direction);
 		// groundNormals.push(ray);
 		var material = new THREE.LineBasicMaterial({ color: 0x00ff00 }),
-		geometry = new THREE.Geometry();
+			geometry = new THREE.Geometry();
 		geometry.vertices.push(origin);
 		geometry.vertices.push(end);
 		var line = new THREE.Line(geometry, material);
-		//scene.add(line);
+		scene.add(line);
 	}
 }
 
@@ -381,15 +254,12 @@ function init() {
 	// renderer.setClearColor(0, 1);
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
-	/*
+	
 	var pointData = loadPoints(dataFile);
 	pointcloud = generatePointCloud("points", pointData, 0.01);
 	scene.add(pointcloud);
-	*/
-	/*
 	gpsData = loadPoints(gpsFile);
-	gpsCloud = generatePointCloud("gps", gpsData, 0.1, 240);
-	*/
+	gpsCloud = generatePointCloud("gps", gpsData, 0.05, 250);
 	lanesData = loadPoints(lanesFile);
 	for (var lane in lanesData){
 		var laneCloud = generatePointCloud("lane"+lane, lanesData[lane], 0.15, 255);
@@ -399,22 +269,21 @@ function init() {
 		kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, distanceFunction, 3);
 	}
 	addPlanes();
-	/*
+
 	var sphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
 	var sphereMaterial = new THREE.MeshBasicMaterial({color: 0xff0000, shading: THREE.FlatShading});
 	pickLocation = new THREE.Mesh(sphereGeometry, sphereMaterial);
 	scene.add(pickLocation);
-	*/
-	addCar();
+
+	//addCar2();
 
 	// controls
-	//camera.position.set(-2,-14,0);
+	camera.position.set(0,0,0);
 	//controls = new THREE.OrbitControls(camera);
-	//controls.addEventListener( 'change', render );
-	//controls.target = new THREE.Vector3(0,1,0);
+	//controls.target.set( 0, 100, 0 );
 	//camera.lookAt(new THREE.Vector3(0,100,0));
 
-	//document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 	window.addEventListener( 'resize', onWindowResize, false );
 }
 
@@ -433,17 +302,13 @@ var count = 0;
 
 function render() {
 	camera.updateMatrixWorld(true);
+	
 	vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 );
 	projector.unprojectVector( vector, camera );
 	raycaster.params = {"PointCloud" : {threshold: 0.1}};
 	raycaster.ray.set( camera.position, vector.sub( camera.position ).normalize() );
-	if(car){
-		camera.position.set(car.position.x -5 , car.position.y -14, car.position.z - 0);
-		car.position.y += 0.1;
-	}
-	//
-	//var intersects = raycaster.intersectObject(pointcloud);
-	/*
+	
+	var intersects = raycaster.intersectObject(pointcloud);
 	if(intersects.length > 0){
 		// pickLocation.position.copy(intersects[0].point); // brush cursor
 		// Paint the points with the cursor while pressing <shift>
@@ -458,8 +323,6 @@ function render() {
 			geometries.points.attributes.color.needsUpdate = true;
 		}
 	}
-	*/
-	/*
 	//var timer = Date.now() * 0.0005;
 	//camera.position.y +=  Math.abs(Math.cos( timer )) *.3 ;
 	//camera.position.z += Math.cos( timer ) * 0.03;
@@ -472,19 +335,16 @@ function render() {
 	target.x = gpsData[count + 1][2];
 	//camera.position.set(new THREE.Vector3(positionArr[2],positionArr[0],positionArr[1]));
 	//camera.lookAt(new THREE.Vector3(0,100,0));
-	*/
-	//camera.position.set(target);
-	//camera.position.x = target - 10;
-	//camera.lookAt(target);
+	camera.lookAt(target);
+	// renderer.render( scene, camera );
+
 	renderer.render(scene, camera);
 	if(!paused){
 		count++;	
 	}
-	/*
 	if(count+5 >= gpsData.length){
 		count = 0;
 	}
-	*/
 }
 
 init();

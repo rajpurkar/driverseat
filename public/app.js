@@ -6,30 +6,26 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 	return {
 		link: function postLink($scope, element, attrs) {
 			var camera, scene, renderer,
-				projector, raycaster,
-				geometries = {},
-				pointClouds = {},
-				kdtrees = {},
-				// laneClouds = [],
-				// laneCloudsHistoryFlag,
-				groundNormals = [],
-				// cursor,
-				mouse = { x: 1, y: 1 },
-				windowWidth = $window.innerWidth,
-				windowHeight = $window.innerHeight,
-				datafiles = {
-					points: "files/datafile.json",
-					gps: "files/gpsfile.json",
-					lanes: "files/lanesfile.json",
-					planes: "files/planesfile.json"
-				},
-				// numFilesLoaded = 0,
-				selectedPoint,
+			projector, raycaster,
+			geometries = {},
+			pointClouds = {},
+			kdtrees = {},
+			groundNormals = [],
+			mouse = { x: 1, y: 1 },
+			windowWidth = $window.innerWidth,
+			windowHeight = $window.innerHeight,
+			datafiles = {
+				points: "files/datafile.json",
+				gps: "files/gpsfile.json",
+				lanes: "files/lanesfile.json",
+				planes: "files/planesfile.json"
+			},
+			selectedPoint,
 				frameCount = 0, //TODO
 				DRAG_RANGE = 3,
 				car;
-
-			$scope.numFilesLoaded = 0;
+				// laneClouds = [],
+				// laneCloudsHistoryFlag,
 
 			$scope.init = function() {
 				scene = new THREE.Scene();
@@ -37,56 +33,71 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				projector = new THREE.Projector();
 				raycaster = new THREE.Raycaster();
 				renderer = new THREE.WebGLRenderer();
-				// renderer = new THREE.WebGLRenderer({alpha:true});
-				// renderer.setClearColor(0, 1);
 				renderer.setSize(windowWidth, windowHeight);
 				element[0].appendChild(renderer.domElement);
 
-				util.loadJSON(datafiles.points, function(data) {
-					pointClouds.points = $scope.generatePointCloud("points", data, 0.01);
-					scene.add(pointClouds.points);
-					$scope.numFilesLoaded++;
-				});
-				util.loadJSON(datafiles.gps, function(data) {
-					pointClouds.gps = $scope.generatePointCloud("gps", data, 0.01);
-					$scope.numFilesLoaded++;
-					$scope.updateCamera(frameCount);
-				});
-				util.loadJSON(datafiles.lanes, function(data) {
-					pointClouds.lanes = [];
-					for (var lane in data){
-						var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], 0.15, 255);
-						scene.add(laneCloud);	
-						pointClouds.lanes.push(laneCloud);
-						var positions = laneCloud.geometry.attributes.position.array;
-						kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distanceFunction, 3);
+				//load the datafiles
+				//-----------------------------------------------------------------------
+				async.parallel({
+					pointCloud: function(callback){
+						util.loadJSON(datafiles.points, function(data) {
+							pointClouds.points = $scope.generatePointCloud("points", data, 0.01);
+							scene.add(pointClouds.points);
+							callback(null, 1);
+						});
+					},
+					gps: function(callback){
+						util.loadJSON(datafiles.gps, function(data) {
+							pointClouds.gps = $scope.generatePointCloud("gps", data, 0.01);
+							$scope.updateCamera(frameCount);
+							callback(null, 2);
+						});
+					},
+					lanes: function(callback){
+						util.loadJSON(datafiles.lanes, function(data) {
+							pointClouds.lanes = [];
+							for (var lane in data){
+								var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], 0.15, 255);
+								scene.add(laneCloud);	
+								pointClouds.lanes.push(laneCloud);
+								var positions = laneCloud.geometry.attributes.position.array;
+								kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distanceFunction, 3);
+							}
+							callback(null, 3);
+						});
+					},
+					planes: function(callback){
+						util.loadJSON(datafiles.planes, function(data) {
+							$scope.addPlanes(data);
+							callback(null, 4);
+						});
+					},
+					car: function(callback){
+						$scope.addCar(function(geometry, materials){
+							//to clean
+							camera.position.set(car.position.x +5 , car.position.y -14, car.position.z - 0);
+							camera.lookAt(car.position);
+							pointLight = new THREE.PointLight( 0xffaa00 );
+							scene.add( pointLight );
+							pointLight.position= car.position;
+							pointLight.position.x= car.position.x -5;
+							directionalLight = new THREE.DirectionalLight( 0xffffff );
+							directionalLight.position.set( 1, 1, 0.5 ).normalize();
+							scene.add( directionalLight );
+							callback(null, 5);
+						});
 					}
-					$scope.numFilesLoaded++;
+				},
+				function(err, results) {
+					console.log("Loaded!");
+					key.watchToggle("space");
+					document.addEventListener('mousedown', $scope.onDocumentMouseDown, false);
+					document.addEventListener('mouseup', $scope.onDocumentMouseUp, false);
+					document.addEventListener('mousemove', $scope.onDocumentMouseMove, false);
+					window.addEventListener('resize', $scope.onWindowResize, false);
+					$scope.animate();
 				});
-				util.loadJSON(datafiles.planes, function(data) {
-					$scope.addPlanes(data);
-					$scope.numFilesLoaded++;
-				});
-
-				// Cursor
-				// var sphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
-				// var sphereMaterial = new THREE.MeshBasicMaterial({color: 0xff0000, shading: THREE.FlatShading});
-				// cursor = new THREE.Mesh(sphereGeometry, sphereMaterial);
-				// scene.add(cursor);
-
-				// $scope.addCar();
-
-				// controls
-				// camera.position.set(0,0,0);
-				// controls = new THREE.OrbitControls(camera);
-				// controls.target.set( 0, 100, 0 );
-				// camera.lookAt(new THREE.Vector3(0,100,0));
-
-				key.watchToggle("space");
-				document.addEventListener('mousedown', $scope.onDocumentMouseDown, false);
-				document.addEventListener('mouseup', $scope.onDocumentMouseUp, false);
-				document.addEventListener('mousemove', $scope.onDocumentMouseMove, false);
-				window.addEventListener('resize', $scope.onWindowResize, false);
+				//-----------------------------------------------------------------------
 			};
 
 			//--------------------
@@ -94,14 +105,7 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 			//--------------------
 
 			//TODO: not working yet
-			var numFilesLoadedWatcher = $scope.$watch($scope.numFilesLoaded, function() {
-				console.log("Loading" + $scope.numFilesLoaded);
-				if ($scope.numFilesLoaded != datafiles.length) return;
-				console.log("Loaded!");
-				$scope.animate();
-				numFilesLoadedWatcher();
-			});
-
+			//also take care of car loading
 			$scope.onDocumentMouseDown = function(event) {
 				// if (!key.isDown("ctrl")) return;
 				// event.stopPropagation();
@@ -140,7 +144,6 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 			$scope.onDocumentMouseUp = function() {
 				document.removeEventListener('mousemove', $scope.dragPoint);
 				// $scope.laneCloudsHistory.endFlag(laneCloudsHistoryFlag);
-				console.log(pointColor);
 				var pointColor = selectedPoint.object.geometry.attributes.color;
 				var index = selectedIndex;
 				pointColor.array[3*index] = 255;
@@ -151,7 +154,6 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 
 			$scope.onDocumentMouseMove = function(event) {
 				event.preventDefault();
-
 				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 			};
@@ -166,10 +168,22 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				renderer.setSize(windowWidth, windowHeight);
 			};
 
-			//--------------------
-			// Render and Animate
-			//--------------------
-
+			$scope.updateCamera = function(frameCount) {
+				var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
+				//var timer = Date.now() * 0.0005;
+				//camera.position.y +=  Math.abs(Math.cos( timer )) *.3 ;
+				//camera.position.z += Math.cos( timer ) * 0.03;
+				camera.position.x = gpsPositions[3*frameCount+0];
+				camera.position.y = gpsPositions[3*frameCount+1];
+				camera.position.z = gpsPositions[3*frameCount+2];
+				//camera.position.set(new THREE.Vector3(positionArr[2],positionArr[0],positionArr[1]));
+				camera.lookAt(new THREE.Vector3(
+					gpsPositions[3*frameCount+0],
+					gpsPositions[3*(frameCount+5)+1],
+					gpsPositions[3*frameCount+2]
+					));
+			};
+			
 			$scope.animate = function() {
 				requestAnimationFrame($scope.animate);
 				$scope.render();
@@ -182,6 +196,7 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				projector.unprojectVector(mousePosition, camera);
 				raycaster.params = {"PointCloud" : {threshold: 0.1}};
 				raycaster.ray.set(camera.position, mousePosition.sub(camera.position).normalize());
+				
 				if (car) {
 					camera.position.set(car.position.x -5 , car.position.y -14, car.position.z - 0);
 					car.position.y += 0.1;
@@ -203,6 +218,14 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 					}
 				}
 
+				if(car){
+					var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
+					camera.position.set(car.position.x +5 , car.position.y -14, car.position.z - 0);
+					camera.position.x = gpsPositions[3*frameCount+0];
+					camera.position.y = gpsPositions[3*frameCount+1];
+					camera.position.z = gpsPositions[3*frameCount+2];
+				}
+
 				if (key.isToggledOn("space")) {
 					$scope.updateCamera(frameCount);
 					frameCount++;
@@ -213,22 +236,6 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				}
 
 				renderer.render(scene, camera);
-			};
-
-			$scope.updateCamera = function(frameCount) {
-				var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
-				//var timer = Date.now() * 0.0005;
-				//camera.position.y +=  Math.abs(Math.cos( timer )) *.3 ;
-				//camera.position.z += Math.cos( timer ) * 0.03;
-				camera.position.x = gpsPositions[3*frameCount+0];
-				camera.position.y = gpsPositions[3*frameCount+1];
-				camera.position.z = gpsPositions[3*frameCount+2];
-				//camera.position.set(new THREE.Vector3(positionArr[2],positionArr[0],positionArr[1]));
-				camera.lookAt(new THREE.Vector3(
-					gpsPositions[3*frameCount+0],
-					gpsPositions[3*(frameCount+5)+1],
-					gpsPositions[3*frameCount+2]
-				));
 			};
 
 			$scope.dragPoint = function() {
@@ -281,33 +288,11 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				return pointCloud;
 			};
 
-			$scope.addCar2 = function() {
-				THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
-				var loader = new THREE.OBJMTLLoader();
-				loader.load('/files/R8_14blend.obj', '/files/R8_14blend.mtl', function(object) {
-					object.position.set( 0, 0, 0 );
-					object.rotation.set( 0, Math.PI / 2, Math.PI );
-					object.scale.set( 10, 10, 10 );
-					scene.add(object);
-				});
+			$scope.addCarLight = function() {
+				
 			};
 
-			$scope.addCar = function() {
-				directionalLight = new THREE.DirectionalLight( 0xffffff );
-				directionalLight.position.set( 1, 1, 0.5 ).normalize();
-				scene.add( directionalLight );
-
-				//var light = new THREE.AmbientLight( 0x404040 ); // soft white light
-				//scene.add( light )
-				
-				//var light = new THREE.AmbientLight( 0x00ee00 ); // soft white light
-				//scene.add( light );
-				/*
-				var sphere = new THREE.SphereGeometry( 100, 16, 8 );
-				var mesh = new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xffaa00 } ) );
-				mesh.scale.set( 0.05, 0.05, 0.05 );
-				pointLight.add( mesh );
-				*/
+			$scope.addCar = function(callback) {
 				var camaroMaterials = {
 					body: {
 						Orange: new THREE.MeshLambertMaterial( {
@@ -315,49 +300,6 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 							combine: THREE.MixOperation,
 							reflectivity: 0.3
 						} ),
-						Blue: new THREE.MeshLambertMaterial( {
-							color: 0x226699,
-							combine: THREE.MixOperation,
-							reflectivity: 0.3
-						} ),
-						Red: new THREE.MeshLambertMaterial( {
-							color: 0x660000,
-							combine: THREE.MixOperation,
-							reflectivity: 0.5
-						} ),
-						Black: new THREE.MeshLambertMaterial( {
-							color: 0x000000,
-							combine: THREE.MixOperation,
-							reflectivity: 0.5
-						} ),
-						White: new THREE.MeshLambertMaterial( {
-							color: 0xffffff,
-							combine: THREE.MixOperation,
-							reflectivity: 0.5
-						} ),
-						Carmine: new THREE.MeshPhongMaterial( {
-							color: 0x770000,
-							specular: 0xffaaaa,
-							combine: THREE.MultiplyOperation
-						} ),
-						Gold: new THREE.MeshPhongMaterial( {
-							color: 0xaa9944,
-							specular: 0xbbaa99,
-							shininess: 50,
-							combine: THREE.MultiplyOperation
-						} ),
-						Bronze: new THREE.MeshPhongMaterial( {
-							color: 0x150505,
-							specular: 0xee6600,
-							shininess: 10,
-							combine: THREE.MixOperation,
-							reflectivity: 0.5
-						} ),
-						Chrome: new THREE.MeshPhongMaterial( {
-							color: 0xffffff,
-							specular:0xffffff,
-							combine: THREE.MultiplyOperation
-						} )
 					},
 					chrome: new THREE.MeshLambertMaterial( {
 						color: 0xffffff
@@ -385,36 +327,26 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				};
 
 				var loader = new THREE.BinaryLoader();
-				loader.load("/files/CamaroNoUv_bin.js", function(geometry) { $scope.createScene(geometry, camaroMaterials); });
-			};
+				loader.load("/files/CamaroNoUv_bin.js", function(geometry) { 
+					var materials = camaroMaterials;
+					var s = 0.27, m = new THREE.MeshFaceMaterial();
+					m.materials[ 0 ] = materials.body[ "Orange" ]; // car body
+					m.materials[ 1 ] = materials.chrome; // wheels chrome
+					m.materials[ 2 ] = materials.chrome; // grille chrome
+					m.materials[ 3 ] = materials.darkchrome; // door lines
+					m.materials[ 4 ] = materials.glass; // windshield
+					m.materials[ 5 ] = materials.interior; // interior
+					m.materials[ 6 ] = materials.tire; // tire
+					m.materials[ 7 ] = materials.black; // tireling
+					m.materials[ 8 ] = materials.black; // behind grille
 
-			$scope.createScene = function(geometry, materials) {
-				var s = 0.35, m = new THREE.MeshFaceMaterial();
-
-				m.materials[ 0 ] = materials.body.Orange; // car body
-				m.materials[ 1 ] = materials.chrome; // wheels chrome
-				m.materials[ 2 ] = materials.chrome; // grille chrome
-				m.materials[ 3 ] = materials.darkchrome; // door lines
-				m.materials[ 4 ] = materials.glass; // windshield
-				m.materials[ 5 ] = materials.interior; // interior
-				m.materials[ 6 ] = materials.tire; // tire
-				m.materials[ 7 ] = materials.black; // tireling
-				m.materials[ 8 ] = materials.black; // behind grille
-
-				car = new THREE.Mesh( geometry, m );
-				car.rotation.set( - Math.PI / 2, 0, Math.PI /2);
-				car.scale.set( s, s, s );
-				car.position.set( -3, 0, 0 );
-				target = car.position;
-				//camera.position.set(car.position.x - 12, car.position.y -14, car.position.z- 0.11);
-				scene.add( car );
-				camera.position.set(car.position.x -5 , car.position.y -14, car.position.z - 0);
-				//controls.target = car.position;
-				camera.lookAt(car.position);
-				pointLight = new THREE.PointLight( 0xffaa00 );
-				scene.add( pointLight );
-				pointLight.position= car.position;
-				pointLight.position.x= car.position.x -10;
+					car = new THREE.Mesh( geometry, m );
+					car.rotation.set( - Math.PI / 2, 0, -Math.PI /2);
+					car.scale.set( s, s, s );
+					car.position.set( -3, 0, 0 );
+					scene.add( car );
+					callback(); 
+				});
 			};
 
 			$scope.addPlanes = function(data) {
@@ -423,19 +355,19 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				for (var i = 0; i < data.length; i++) {
 					var normal = data[i];
 					var dy = normal[0],
-						dz = normal[1],
-						dx = normal[2],
-						y = normal[3],
-						z = normal[4],
-						x = normal[5];
+					dz = normal[1],
+					dx = normal[2],
+					y = normal[3],
+					z = normal[4],
+					x = normal[5];
 					var origin = new THREE.Vector3(x,y,z),
-						direction = new THREE.Vector3(dx,dy,dz),
-						end = new THREE.Vector3(x+dx,y+dy,z+dz);
+					direction = new THREE.Vector3(dx,dy,dz),
+					end = new THREE.Vector3(x+dx,y+dy,z+dz);
 					direction.normalize();
 					var plane = new THREE.Plane();
 					plane.setFromNormalAndCoplanarPoint(direction, origin);
 					var planeGeometry = new THREE.PlaneGeometry(50, 50),
-						planeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true });
+					planeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true });
 					plane = new THREE.Mesh(planeGeometry, planeMaterial);
 					// groundGeometry.vertices.push()
 					plane.position.set(x, y, z);
@@ -443,24 +375,17 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 					plane.visible = false;
 					scene.add(plane);
 					planes.push(plane);
-
 					// var ray = new THREE.Ray(origin, direction);
 					// groundNormals.push(ray);
 					var material = new THREE.LineBasicMaterial({ color: 0x00ff00 }),
-						geometry = new THREE.Geometry();
+					geometry = new THREE.Geometry();
 					geometry.vertices.push(origin);
 					geometry.vertices.push(end);
 					var line = new THREE.Line(geometry, material);
 					scene.add(line);
 				}
 			};
-
-			//--------------------
-			// Begin
-			//--------------------
-
 			$scope.init();
-			$scope.animate();
 		}
 	};
 }]);

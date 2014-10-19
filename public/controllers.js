@@ -1,7 +1,7 @@
-angular.module('roadglApp', ['decipher.history']);
+angular.module('roadglApp', []);
 
 angular.module('roadglApp').
-controller('AppCtrl', ['$scope', 'History', function ($scope, History) {
+controller('AppCtrl', ['$scope', function ($scope) {
 	$scope.laneClouds = [];
 	// $scope.laneCloudsHistory;
 	// History.watch('laneClouds', $scope);

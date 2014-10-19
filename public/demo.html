@@ -1,5 +1,6 @@
 <html>
 <head>
+	<script src="javascripts/angular.min.js"></script>
 	<script src="javascripts/three.min.js"></script>
 	<script src="javascripts/PLYLoader.js"></script>
 	<script src="javascripts/OrbitControls.js"></script>
@@ -8,8 +9,16 @@
 	<script src="javascripts/OBJMTLLoader.js"></script>
 	<script src="javascripts/TypedArrayUtils.js"></script>
 	<script src="javascripts/jquery-2.1.1.min.js"></script>
+	<!-- <script src="javascripts/ngLazyBind.js"></script> -->
+	<!-- <script src="javascripts/history.js"></script> -->
+	<!-- <script src="javascripts/LazyJsonUndoRedo.min.js"></script> -->
 </head>
-<body style="margin: 0px; padding: 0px;">
-	<script src="demo.js"></script>
+<body style="margin: 0px; padding: 0px;" ng-app="roadglApp">
+	<div ng-controller="AppCtrl">
+		<div ng-roadgl></div>
+	</div>
+	<script src="controllers.js"></script>
+	<script src="app.js"></script>
+	<script src="util.js"></script>
 </body>
 </html>

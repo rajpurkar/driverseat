@@ -6,23 +6,25 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 	return {
 		link: function postLink($scope, element, attrs) {
 			var camera, scene, renderer,
-			projector, raycaster,
-			geometries = {},
-			pointClouds = {},
-			kdtrees = {},
-			groundNormals = [],
-			mouse = { x: 1, y: 1 },
-			windowWidth = $window.innerWidth,
-			windowHeight = $window.innerHeight,
-			datafiles = {
-				points: "files/datafile.json",
-				gps: "files/gpsfile.json",
-				lanes: "files/lanesfile.json",
-				planes: "files/planesfile.json"
-			},
-			selectedPoint,
+				projector, raycaster,
+				controls,
+				geometries = {},
+				pointClouds = {},
+				kdtrees = {},
+				groundNormals = [],
+				mouse = { x: 1, y: 1 },
+				windowWidth = $window.innerWidth,
+				windowHeight = $window.innerHeight,
+				datafiles = {
+					points: "files/datafile.json",
+					gps: "files/gpsfile.json",
+					lanes: "files/lanesfile.json",
+					planes: "files/planesfile.json"
+				},
+				selectedPoint,
+				selectedPositions,	// index => position array
 				frameCount = 0, //TODO
-				DRAG_RANGE = 3,
+				DRAG_RANGE = 1.5,
 				car;
 				// laneClouds = [],
 				// laneCloudsHistoryFlag,
@@ -35,6 +37,8 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize(windowWidth, windowHeight);
 				element[0].appendChild(renderer.domElement);
+
+				controls = new THREE.OrbitControls(camera);
 
 				//load the datafiles
 				//-----------------------------------------------------------------------
@@ -61,7 +65,7 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 								scene.add(laneCloud);	
 								pointClouds.lanes.push(laneCloud);
 								var positions = laneCloud.geometry.attributes.position.array;
-								kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distanceFunction, 3);
+								kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3);
 							}
 							callback(null, 3);
 						});
@@ -75,8 +79,8 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 					car: function(callback){
 						$scope.addCar(function(geometry, materials){
 							//to clean
-							camera.position.set(car.position.x +5 , car.position.y -14, car.position.z - 0);
-							camera.lookAt(car.position);
+							// camera.position.set(car.position.x +5 , car.position.y -14, car.position.z - 0);
+							// camera.lookAt(car.position);
 							pointLight = new THREE.PointLight( 0xffaa00 );
 							scene.add( pointLight );
 							pointLight.position= car.position;
@@ -92,8 +96,10 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 					console.log("Loaded!");
 					key.watchToggle("space");
 					document.addEventListener('mousedown', $scope.onDocumentMouseDown, false);
+					document.addEventListener('mousedown', $scope.rotateCamera, false);
 					document.addEventListener('mouseup', $scope.onDocumentMouseUp, false);
 					document.addEventListener('mousemove', $scope.onDocumentMouseMove, false);
+					document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
 					window.addEventListener('resize', $scope.onWindowResize, false);
 					$scope.animate();
 				});
@@ -104,58 +110,86 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 			// Event Listeners
 			//--------------------
 
-			//TODO: not working yet
-			//also take care of car loading
-			$scope.onDocumentMouseDown = function(event) {
-				// if (!key.isDown("ctrl")) return;
-				// event.stopPropagation();
-				for (var i = 0; i < pointClouds.lanes.length; i++) {
-					var intersects = raycaster.intersectObject(pointClouds.lanes[i]);
-					if (intersects.length > 0) {
-						selectedPoint = intersects[0];
-						var pointColors = geometries["lane"+i].attributes.color.array;
-						var index = intersects[0].index;
-						pointColors[3*index] = 255;
-						pointColors[3*index+1] = 0;
-						pointColors[3*index+2] = 0;
-						geometries["lane"+i].attributes.color.needsUpdate = true;
-						var pointPos = selectedPoint.object.geometry.attributes.position.array;
+			$scope.rotateCamera = function(event) {
+				if (!key.isDown("ctrl")) return;
+				controls.onMouseDown(event);
+			};
 
-						var nearestPoints = kdtrees["lane"+i].nearest(pointPos.subarray(3*index, 3*index+3), 100, DRAG_RANGE);
-						selectedPositions = {};
-						selectedIndex = index;
-						for (var j = 0; j < nearestPoints.length; j++) {
-							index = nearestPoints[j][0].pos;
-							selectedPositions[index] = new Float32Array(pointPos.subarray(3*index, 3*index+3));
-						}
-						for (j = 0; j < planes.length; j++) {
-							intersects = raycaster.intersectObject(planes[j]);
-							if (intersects.length > 0) {
-								selectedPlane = intersects[0];
-								document.addEventListener('mousemove', $scope.dragPoint);
-								// laneCloudsHistoryFlag = $scope.laneCloudsHistory.startFlag();
-								return;
-							}
-						}
+			$scope.onDocumentMouseDown = function(event) {
+				if (key.isDown("ctrl")) return;
+				// event.stopPropagation();
+				var intersects, lane;
+				for (lane = 0; lane < pointClouds.lanes.length; lane++) {
+					intersects = raycaster.intersectObject(pointClouds.lanes[lane]);
+					if (intersects.length > 0) break;
+				}
+				if (lane >= pointClouds.lanes.length) return;
+
+				var i, nearestPoints, index;
+				var pointPos = intersects[0].object.geometry.attributes.position.array;
+				if (key.isDown("shift")) {
+					// select range
+					var startPoint = selectedPoint,
+						startPos = util.getPos(pointPos, startPoint.index);
+					selectedPoint = intersects[0];
+					var endPoint = selectedPoint,
+						endPos = util.getPos(pointPos, endPoint.index);
+					var midPoint = util.midpoint(startPos, endPos);
+					var range = util.distance(startPos, endPos) / 2 + 0.01;
+					nearestPoints = kdtrees["lane"+lane].nearest(midPoint, 100, range);
+					selectedPositions = {};
+					for (i = 0; i < nearestPoints.length; i++) {
+						index = nearestPoints[i][0].pos;
+						selectedPositions[index] = util.getPos(pointPos, index);
+						util.paintPoint(geometries["lane"+lane].attributes.color, index, 255, 0, 0);
+					}
+					return;
+				}
+				// select point for dragging
+				selectedPoint = intersects[0];
+				for (index in selectedPositions) {
+					util.paintPoint(geometries["lane"+lane].attributes.color, index, 255, 255, 255);
+				}
+				util.paintPoint(geometries["lane"+lane].attributes.color, selectedPoint.index, 255, 0, 0);
+				nearestPoints = kdtrees["lane"+lane].nearest(util.getPos(pointPos, selectedPoint.index), 100, DRAG_RANGE);
+				selectedPositions = {};
+				for (i = 0; i < nearestPoints.length; i++) {
+					index = nearestPoints[i][0].pos;
+					selectedPositions[index] = new Float32Array(util.getPos(pointPos, index));
+				}
+				//TODO: find nearest plane instead of raycasting
+				for (i = 0; i < planes.length; i++) {
+					intersects = raycaster.intersectObject(planes[i]);
+					if (intersects.length > 0) {
+						selectedPlane = intersects[0];
+						document.addEventListener('mousemove', $scope.dragPoint);
+						// laneCloudsHistoryFlag = $scope.laneCloudsHistory.startFlag();
+						return;
 					}
 				}
 			};
 
 			$scope.onDocumentMouseUp = function() {
 				document.removeEventListener('mousemove', $scope.dragPoint);
+				document.removeEventListener('mouseup', $scope.clearPoint);
 				// $scope.laneCloudsHistory.endFlag(laneCloudsHistoryFlag);
-				var pointColor = selectedPoint.object.geometry.attributes.color;
-				var index = selectedIndex;
-				pointColor.array[3*index] = 255;
-				pointColor.array[3*index+1] = 255;
-				pointColor.array[3*index+2] = 255;
-				pointColor.needsUpdate = true;
 			};
 
 			$scope.onDocumentMouseMove = function(event) {
 				event.preventDefault();
 				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+			};
+
+			$scope.onDocumentKeyDown = function(event) {
+				switch (event.keyCode) {
+					case key.keyMap.backspace:
+					case key.keyMap.D:
+					case key.keyMap.d:
+						event.preventDefault();
+						$scope.deletePoints();
+						break;
+				}
 			};
 			
 			$scope.onWindowResize = function() {
@@ -170,18 +204,17 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 
 			$scope.updateCamera = function(frameCount) {
 				var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
-				//var timer = Date.now() * 0.0005;
-				//camera.position.y +=  Math.abs(Math.cos( timer )) *.3 ;
-				//camera.position.z += Math.cos( timer ) * 0.03;
 				camera.position.x = gpsPositions[3*frameCount+0];
 				camera.position.y = gpsPositions[3*frameCount+1];
 				camera.position.z = gpsPositions[3*frameCount+2];
-				//camera.position.set(new THREE.Vector3(positionArr[2],positionArr[0],positionArr[1]));
-				camera.lookAt(new THREE.Vector3(
+				var target = new THREE.Vector3(
 					gpsPositions[3*frameCount+0],
-					gpsPositions[3*(frameCount+5)+1],
-					gpsPositions[3*frameCount+2]
-					));
+					gpsPositions[3*frameCount+1],
+					gpsPositions[3*(frameCount+5)+2]
+				);
+				camera.lookAt(target);
+				controls.target.copy(target);
+				controls.update();
 			};
 			
 			$scope.animate = function() {
@@ -197,10 +230,10 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				raycaster.params = {"PointCloud" : {threshold: 0.1}};
 				raycaster.ray.set(camera.position, mousePosition.sub(camera.position).normalize());
 				
-				if (car) {
-					camera.position.set(car.position.x -5 , car.position.y -14, car.position.z - 0);
-					car.position.y += 0.1;
-				}
+				// if (car) {
+				//     camera.position.set(car.position.x -5 , car.position.y -14, car.position.z - 0);
+				//     car.position.y += 0.1;
+				// }
 				
 				var intersects = raycaster.intersectObject(pointClouds.points);
 				if(intersects.length > 0){
@@ -218,19 +251,18 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 					}
 				}
 
-				if(car){
-					var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
-					camera.position.set(car.position.x +5 , car.position.y -14, car.position.z - 0);
-					camera.position.x = gpsPositions[3*frameCount+0];
-					camera.position.y = gpsPositions[3*frameCount+1];
-					camera.position.z = gpsPositions[3*frameCount+2];
-				}
+				var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
+				// if (car) {
+				//     camera.position.set(car.position.x +5 , car.position.y -14, car.position.z - 0);
+				//     camera.position.x = gpsPositions[3*frameCount+0];
+				//     camera.position.y = gpsPositions[3*frameCount+1];
+				//     camera.position.z = gpsPositions[3*frameCount+2];
+				// }
 
 				if (key.isToggledOn("space")) {
 					$scope.updateCamera(frameCount);
 					frameCount++;
 				}
-				var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
 				if (frameCount+5 >= gpsPositions.length/3) {
 					frameCount = 0;
 				}
@@ -239,17 +271,16 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 			};
 
 			$scope.dragPoint = function() {
+				document.addEventListener('mouseup', $scope.clearPoint);
 				var intersects = raycaster.intersectObject(selectedPlane.object);
 				if (intersects.length > 0) {
-					console.log(pointClouds.lanes);
-					console.log(selectedPoint);
 					// var index = selectedPoint.index;
 					var pointPosition = selectedPoint.object.geometry.attributes.position;
 					var newPos = new THREE.Vector3();
 					newPos.subVectors(intersects[0].point, selectedPlane.point);
 					for (var index in selectedPositions) {
-						var dist = util.distanceFunction(selectedPositions[selectedIndex], selectedPositions[index]);
-						var weight = (Math.cos(Math.PI/DRAG_RANGE * Math.sqrt(dist)) + 1)/2;
+						var dist = util.distance(selectedPositions[selectedPoint.index], selectedPositions[index]);
+						var weight = (Math.cos(Math.PI/DRAG_RANGE * dist) + 1)/2;
 						pointPosition.array[3*index] = weight * newPos.x + selectedPositions[index][0];
 						pointPosition.array[3*index+1] = weight * newPos.y + selectedPositions[index][1];
 						pointPosition.array[3*index+2] = weight * newPos.z + selectedPositions[index][2];
@@ -258,15 +289,34 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				}
 			};
 
+			$scope.clearPoint = function() {
+				util.paintPoint(selectedPoint.object.geometry.attributes.color, selectedPoint.index, 255, 255, 255);
+			};
+
+			$scope.deletePoints = function() {
+				var positions = selectedPoint.object.geometry.attributes.position;
+				var colors = selectedPoint.object.geometry.attributes.color;
+				for (var index in selectedPositions) {
+					positions.array[3*index] = 0;
+					positions.array[3*index+1] = 0;
+					positions.array[3*index+2] = 0;
+					colors.array[3*index] = 0;
+					colors.array[3*index+1] = 0;
+					colors.array[3*index+2] = 0;
+				}
+				positions.needsUpdate = true;
+				colors.needsUpdate = true;
+			};
+
 			$scope.generatePointCloud = function(name, data, size, color) {
 				geometries[name] = new THREE.BufferGeometry();
 				var positions = new Float32Array(3*data.length);
 				var colors    = new Float32Array(3*data.length);
 				for (var i = 0; i < data.length; i++) {
 					//Note: order is changed
-					positions[3*i]   = data[i][2];	//x
-					positions[3*i+1] = data[i][0];	//y
-					positions[3*i+2] = data[i][1];	//z
+					positions[3*i]   = data[i][1];	//x
+					positions[3*i+1] = data[i][2];	//y
+					positions[3*i+2] = data[i][0];	//z
 					// map intensity (0-120) to RGB
 					if (data[i].length >= 4) {
 						var hue = 1 - data[i][3]/120;	//TODO: fix intensity scaling
@@ -299,7 +349,7 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 							color: 0xff6600,
 							combine: THREE.MixOperation,
 							reflectivity: 0.3
-						} ),
+						} )
 					},
 					chrome: new THREE.MeshLambertMaterial( {
 						color: 0xffffff
@@ -330,7 +380,7 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				loader.load("/files/CamaroNoUv_bin.js", function(geometry) { 
 					var materials = camaroMaterials;
 					var s = 0.27, m = new THREE.MeshFaceMaterial();
-					m.materials[ 0 ] = materials.body[ "Orange" ]; // car body
+					m.materials[ 0 ] = materials.body.Orange; // car body
 					m.materials[ 1 ] = materials.chrome; // wheels chrome
 					m.materials[ 2 ] = materials.chrome; // grille chrome
 					m.materials[ 3 ] = materials.darkchrome; // door lines
@@ -341,9 +391,9 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 					m.materials[ 8 ] = materials.black; // behind grille
 
 					car = new THREE.Mesh( geometry, m );
-					car.rotation.set( - Math.PI / 2, 0, -Math.PI /2);
+					// car.rotation.set( - Math.PI / 2, 0, -Math.PI /2);
 					car.scale.set( s, s, s );
-					car.position.set( -3, 0, 0 );
+					car.position.set( 0, -1.2, 7 );
 					scene.add( car );
 					callback(); 
 				});
@@ -354,12 +404,12 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				var groundGeometry = new THREE.Geometry();
 				for (var i = 0; i < data.length; i++) {
 					var normal = data[i];
-					var dy = normal[0],
-					dz = normal[1],
-					dx = normal[2],
-					y = normal[3],
-					z = normal[4],
-					x = normal[5];
+					var dz = normal[0],
+					dx = normal[1],
+					dy = normal[2],
+					z = normal[3],
+					x = normal[4],
+					y = normal[5];
 					var origin = new THREE.Vector3(x,y,z),
 					direction = new THREE.Vector3(dx,dy,dz),
 					end = new THREE.Vector3(x+dx,y+dy,z+dz);

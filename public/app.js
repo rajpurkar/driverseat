@@ -23,6 +23,7 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				frameCount = 0, //TODO
 				DRAG_RANGE = 1.5,
 				car;
+			var offset = [0, 5, -14];
 				// laneClouds = [],
 				// laneCloudsHistoryFlag,
 
@@ -175,6 +176,12 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				event.preventDefault();
 				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+				
+				if (!key.isDown("ctrl")) return;
+				offset[0] = - car.position.x + camera.position.x;
+				offset[1] = - car.position.y + camera.position.y;
+				offset[2] = - car.position.z + camera.position.z;
+				document.getElementById('debugText').innerHTML = JSON.stringify(offset);
 			};
 
 			$scope.onDocumentKeyDown = function(event) {
@@ -203,12 +210,14 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				car.position.x = gpsPositions[3*frameCount+0];
 				car.position.y = gpsPositions[3*frameCount+1] -1.1;
 				car.position.z = gpsPositions[3*frameCount+2];
-				camera.position.set(car.position.x, car.position.y +5, car.position.z - 14);
+				
+				camera.position.set(car.position.x + offset[0], car.position.y + offset[1], car.position.z + offset[2]);
 				
 				var target = car.position;
 				camera.lookAt(target);
 				controls.target.copy(target);
 				controls.update();
+
 			};
 			
 			$scope.animate = function() {

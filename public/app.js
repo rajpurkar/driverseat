@@ -31,9 +31,10 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 1, 100);
 				projector = new THREE.Projector();
 				raycaster = new THREE.Raycaster();
-				renderer = new THREE.WebGLRenderer();
+				var canvas = document.getElementById("road");
+				renderer = new THREE.WebGLRenderer({canvas: canvas});
 				renderer.setSize(windowWidth, windowHeight);
-				element[0].appendChild(renderer.domElement);
+				//element[0].appendChild(renderer.domElement);
 
 				controls = new THREE.OrbitControls(camera);
 
@@ -72,8 +73,6 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 					},
 					car: function(callback){
 						$scope.addCar(function(geometry, materials){
-							//to clean
-							// camera.position.set(car.position.x +5 , car.position.y -14, car.position.z - 0);
 							callback(null, 5);
 						});
 					}

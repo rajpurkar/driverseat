@@ -1,6 +1,3 @@
-//todo: not make these globals since multiple things are starting to use geometry
-//please don't remove commented code
-//
 angular.module('roadglApp').
 directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 	return {
@@ -31,7 +28,7 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 
 			$scope.init = function() {
 				scene = new THREE.Scene();
-				camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 0.1, 1000);
+				camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 1, 100);
 				projector = new THREE.Projector();
 				raycaster = new THREE.Raycaster();
 				renderer = new THREE.WebGLRenderer();
@@ -109,10 +106,6 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				$scope.updateCamera(0);
 				$scope.animate();
 			};
-
-			//--------------------
-			// Event Listeners
-			//--------------------
 
 			$scope.rotateCamera = function(event) {
 				if (!key.isDown("ctrl")) return;
@@ -208,26 +201,12 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 
 			$scope.updateCamera = function(frameCount) {
 				var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
-				//camera.position.x = gpsPositions[3*frameCount+0];
-				//camera.position.y = gpsPositions[3*frameCount+1];
-				//camera.position.z = gpsPositions[3*frameCount+2];
-
-				var fAhead = frameCount+10
-				car.position.x = gpsPositions[3*fAhead+0];
-				car.position.y = gpsPositions[3*fAhead+1] -1.1;
-				car.position.z = gpsPositions[3*fAhead+2];
+				car.position.x = gpsPositions[3*frameCount+0];
+				car.position.y = gpsPositions[3*frameCount+1] -1.1;
+				car.position.z = gpsPositions[3*frameCount+2];
 				camera.position.set(car.position.x, car.position.y +5, car.position.z - 14);
-				//     camera.position.set(car.position.x +5 , car.position.y -14, car.position.z - 0);
-				//     camera.position.x = gpsPositions[3*frameCount+0];
-				//     camera.position.y = gpsPositions[3*frameCount+1];
-				//     camera.position.z = gpsPositions[3*frameCount+2];
-				// }
-
-				var target = new THREE.Vector3(
-					gpsPositions[3*frameCount+0],
-					gpsPositions[3*frameCount+1],
-					gpsPositions[3*(frameCount+5)+2]
-				);
+				
+				var target = car.position;
 				camera.lookAt(target);
 				controls.target.copy(target);
 				controls.update();

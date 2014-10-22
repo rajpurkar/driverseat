@@ -15,13 +15,35 @@
 	<script src="/javascripts/BinaryLoader.js"></script>
 	<script src="/javascripts/async.js"></script>
 	<style>
-	#overlay {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
+		body,html{
+			margin: 0px;
+		}
+
+		h1, h2, h3, h4, li, p, a{
+			 font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+			font-weight: 100;
+			color: #fff;
+		}
+
+		#title{
+			margin: 10px;
+		}
+
+		#instructions{
+			margin-left: 10px;
+		}
+
+		#debug{
+			margin-left: 10px;
+		}
+
+		#overlay {
+		    width: 100%;
+		    height: 100%;
+		    position: absolute;
+		    top: 0;
+		    left: 0;
+		}
 	</style>
 </head>
 <body style="margin: 0px; padding: 0px;" ng-app="roadglApp">
@@ -30,7 +52,16 @@
 		<canvas id="road">
 		</div>
 		<div id="overlay">
-		<h1 style="font-size: 50px; color: #fff">Welcome to RoadGL</h1>
+			<div id="title">
+				<h3>Welcome to RoadGL</h3>
+			</div>
+			<div id="instructions">
+				<h4>Ctrl + Mouse to look around</h4>
+				<h4>Space to Play/Pause</h4>
+			</div>
+			<div id="debug">
+				<p id="debugText"></p>
+			</div>
 		</div>
 	</div>
 	<script src="controllers.js"></script>

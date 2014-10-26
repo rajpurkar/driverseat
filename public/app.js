@@ -184,10 +184,20 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 			$scope.onDocumentKeyDown = function(event) {
 				switch (event.keyCode) {
 					case key.keyMap.backspace:
+					case key.keyMap.del:
 					case key.keyMap.D:
 					case key.keyMap.d:
 						event.preventDefault();
 						$scope.deletePoints();
+						break;
+					case key.keyMap.z:
+						if (!event.ctrlKey) break;
+						//TODO: undo
+						break;
+					case key.keyMap.y:
+					case key.keyMap.Z:
+						if (!event.ctrlKey) break;
+						//TODO: redo
 						break;
 				}
 			};

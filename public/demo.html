@@ -14,11 +14,55 @@
 	<!-- <script src="javascripts/LazyJsonUndoRedo.min.js"></script> -->
 	<script src="/javascripts/BinaryLoader.js"></script>
 	<script src="/javascripts/async.js"></script>
+	<style>
+		body,html{
+			margin: 0px;
+		}
 
+		h1, h2, h3, h4, li, p, a{
+			 font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+			font-weight: 100;
+			color: #fff;
+		}
+
+		#title{
+			margin: 10px;
+		}
+
+		#instructions{
+			margin-left: 10px;
+		}
+
+		#debug{
+			margin-left: 10px;
+		}
+
+		#overlay {
+		    width: 100%;
+		    height: 100%;
+		    position: absolute;
+		    top: 0;
+		    left: 0;
+		}
+	</style>
 </head>
 <body style="margin: 0px; padding: 0px;" ng-app="roadglApp">
 	<div ng-controller="AppCtrl">
-		<div ng-roadgl></div>
+		<div ng-roadgl>
+		<canvas id="road">
+		</div>
+		<div id="overlay">
+			<div id="title">
+				<h3>Welcome to RoadGL</h3>
+			</div>
+			<div id="instructions">
+				<h4>Ctrl + Mouse to look around</h4>
+				<h4>Space to Play/Pause</h4>
+			</div>
+			<div id="debug">
+				<p id="debugText"></p>
+			</div>
+		</div>
 	</div>
 	<script src="controllers.js"></script>
 	<script src="app.js"></script>

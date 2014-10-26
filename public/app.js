@@ -1,6 +1,3 @@
-//todo: not make these globals since multiple things are starting to use geometry
-//please don't remove commented code
-//
 angular.module('roadglApp').
 directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 	return {
@@ -26,22 +23,22 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				frameCount = 0, //TODO
 				DRAG_RANGE = 1.5,
 				car;
+			var offset = [0, 5, -14];
 				// laneClouds = [],
 				// laneCloudsHistoryFlag,
 
 			$scope.init = function() {
 				scene = new THREE.Scene();
-				camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 0.1, 1000);
+				camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 1, 100);
 				projector = new THREE.Projector();
 				raycaster = new THREE.Raycaster();
-				renderer = new THREE.WebGLRenderer();
+				var canvas = document.getElementById("road");
+				renderer = new THREE.WebGLRenderer({canvas: canvas});
 				renderer.setSize(windowWidth, windowHeight);
-				element[0].appendChild(renderer.domElement);
+				//element[0].appendChild(renderer.domElement);
 
 				controls = new THREE.OrbitControls(camera);
 
-				//load the datafiles
-				//-----------------------------------------------------------------------
 				async.parallel({
 					pointCloud: function(callback){
 						util.loadJSON(datafiles.points, function(data) {
@@ -53,7 +50,6 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 					gps: function(callback){
 						util.loadJSON(datafiles.gps, function(data) {
 							pointClouds.gps = $scope.generatePointCloud("gps", data, 0.01);
-							$scope.updateCamera(frameCount);
 							callback(null, 2);
 						});
 					},
@@ -78,37 +74,38 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 					},
 					car: function(callback){
 						$scope.addCar(function(geometry, materials){
-							//to clean
-							// camera.position.set(car.position.x +5 , car.position.y -14, car.position.z - 0);
-							// camera.lookAt(car.position);
-							pointLight = new THREE.PointLight( 0xffaa00 );
-							scene.add( pointLight );
-							pointLight.position= car.position;
-							pointLight.position.x= car.position.x -5;
-							directionalLight = new THREE.DirectionalLight( 0xffffff );
-							directionalLight.position.set( 1, 1, 0.5 ).normalize();
-							scene.add( directionalLight );
 							callback(null, 5);
 						});
 					}
 				},
 				function(err, results) {
 					console.log("Loaded!");
-					key.watchToggle("space");
-					document.addEventListener('mousedown', $scope.onDocumentMouseDown, false);
-					document.addEventListener('mousedown', $scope.rotateCamera, false);
-					document.addEventListener('mouseup', $scope.onDocumentMouseUp, false);
-					document.addEventListener('mousemove', $scope.onDocumentMouseMove, false);
-					document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
-					window.addEventListener('resize', $scope.onWindowResize, false);
-					$scope.animate();
+					$scope.execOnLoaded();
 				});
-				//-----------------------------------------------------------------------
 			};
 
-			//--------------------
-			// Event Listeners
-			//--------------------
+			$scope.addLighting = function(){
+				pointLight = new THREE.PointLight( 0xffaa00 );
+				scene.add( pointLight );
+				pointLight.position= car.position;
+				pointLight.position.x= car.position.x -5;
+				directionalLight = new THREE.DirectionalLight( 0xffffff );
+				directionalLight.position.set( 1, 1, 0.5 ).normalize();
+				scene.add( directionalLight );		
+			};
+
+			$scope.execOnLoaded = function(){
+				key.watchToggle("space");
+				document.addEventListener('mousedown', $scope.onDocumentMouseDown, false);
+				document.addEventListener('mousedown', $scope.rotateCamera, false);
+				document.addEventListener('mouseup', $scope.onDocumentMouseUp, false);
+				document.addEventListener('mousemove', $scope.onDocumentMouseMove, false);
+				document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
+				window.addEventListener('resize', $scope.onWindowResize, false);
+				$scope.addLighting();
+				$scope.updateCamera(0);
+				$scope.animate();
+			};
 
 			$scope.rotateCamera = function(event) {
 				if (!key.isDown("ctrl")) return;
@@ -179,6 +176,12 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				event.preventDefault();
 				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+				
+				if (!key.isDown("ctrl")) return;
+				offset[0] = - car.position.x + camera.position.x;
+				offset[1] = - car.position.y + camera.position.y;
+				offset[2] = - car.position.z + camera.position.z;
+				document.getElementById('debugText').innerHTML = JSON.stringify(offset);
 			};
 
 			$scope.onDocumentKeyDown = function(event) {
@@ -214,17 +217,17 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 
 			$scope.updateCamera = function(frameCount) {
 				var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
-				camera.position.x = gpsPositions[3*frameCount+0];
-				camera.position.y = gpsPositions[3*frameCount+1];
-				camera.position.z = gpsPositions[3*frameCount+2];
-				var target = new THREE.Vector3(
-					gpsPositions[3*frameCount+0],
-					gpsPositions[3*frameCount+1],
-					gpsPositions[3*(frameCount+5)+2]
-				);
+				car.position.x = gpsPositions[3*frameCount+0];
+				car.position.y = gpsPositions[3*frameCount+1] -1.1;
+				car.position.z = gpsPositions[3*frameCount+2];
+				
+				camera.position.set(car.position.x + offset[0], car.position.y + offset[1], car.position.z + offset[2]);
+				
+				var target = car.position;
 				camera.lookAt(target);
 				controls.target.copy(target);
 				controls.update();
+
 			};
 			
 			$scope.animate = function() {
@@ -239,11 +242,7 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				projector.unprojectVector(mousePosition, camera);
 				raycaster.params = {"PointCloud" : {threshold: 0.1}};
 				raycaster.ray.set(camera.position, mousePosition.sub(camera.position).normalize());
-				
-				// if (car) {
-				//     camera.position.set(car.position.x -5 , car.position.y -14, car.position.z - 0);
-				//     car.position.y += 0.1;
-				// }
+
 				
 				var intersects = raycaster.intersectObject(pointClouds.points);
 				if(intersects.length > 0){
@@ -262,12 +261,6 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				}
 
 				var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
-				// if (car) {
-				//     camera.position.set(car.position.x +5 , car.position.y -14, car.position.z - 0);
-				//     camera.position.x = gpsPositions[3*frameCount+0];
-				//     camera.position.y = gpsPositions[3*frameCount+1];
-				//     camera.position.z = gpsPositions[3*frameCount+2];
-				// }
 
 				if (key.isToggledOn("space")) {
 					$scope.updateCamera(frameCount);
@@ -346,10 +339,6 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				pointCloud = new THREE.PointCloud(geometries[name], material);
 
 				return pointCloud;
-			};
-
-			$scope.addCarLight = function() {
-				
 			};
 
 			$scope.addCar = function(callback) {

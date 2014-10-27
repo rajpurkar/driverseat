@@ -1,5 +1,5 @@
 angular.module('roadglApp').
-directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
+directive('ngRoadgl', ['$window', 'util', 'key', 'history', function($window, util, key, history) {
 	return {
 		link: function postLink($scope, element, attrs) {
 			var camera, scene, renderer,
@@ -21,9 +21,10 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				selectedPoint,
 				selectedPositions,	// index => position array
 				frameCount = 0, //TODO
-				DRAG_RANGE = 1.5,
-				car;
-			var offset = [0, 5, -14];
+				DRAG_RANGE = 2,
+				car,
+				action = { laneNum: 0, type: "" };
+			var offset = [0,1,-5];//[0, 5, -14];
 				// laneClouds = [],
 				// laneCloudsHistoryFlag,
 
@@ -55,13 +56,14 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 					},
 					lanes: function(callback){
 						util.loadJSON(datafiles.lanes, function(data) {
-							pointClouds.lanes = [];
+							pointClouds.lanes = {};
 							for (var lane in data){
 								var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], 0.15, 255);
 								scene.add(laneCloud);	
-								pointClouds.lanes.push(laneCloud);
+								pointClouds.lanes[lane] = laneCloud;
 								var positions = laneCloud.geometry.attributes.position.array;
 								kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3);
+								history.push("original", positions, lane);
 							}
 							callback(null, 3);
 						});
@@ -116,11 +118,12 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 				if (key.isDown("ctrl")) return;
 				// event.stopPropagation();
 				var intersects, lane;
-				for (lane = 0; lane < pointClouds.lanes.length; lane++) {
+				for (lane in pointClouds.lanes) {
 					intersects = raycaster.intersectObject(pointClouds.lanes[lane]);
 					if (intersects.length > 0) break;
 				}
-				if (lane >= pointClouds.lanes.length) return;
+				//TODO find way to check if no points are selected
+				// if (lane >= pointClouds.lanes.length) return;
 
 				var i, nearestPoints, index;
 				var pointPos = intersects[0].object.geometry.attributes.position.array;
@@ -143,6 +146,7 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 					return;
 				}
 				// select point for dragging
+				action = { laneNum: lane, type: "drag" };
 				selectedPoint = intersects[0];
 				for (index in selectedPositions) {
 					util.paintPoint(geometries["lane"+lane].attributes.color, index, 255, 255, 255);
@@ -167,6 +171,9 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 			};
 
 			$scope.onDocumentMouseUp = function() {
+				if (action.type !== "")
+					history.push(action.type, selectedPoint.object.geometry.attributes.position.array, action.laneNum);
+				action.type = "";
 				document.removeEventListener('mousemove', $scope.dragPoint);
 				document.removeEventListener('mouseup', $scope.clearPoint);
 				// $scope.laneCloudsHistory.endFlag(laneCloudsHistoryFlag);
@@ -193,14 +200,15 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 						event.preventDefault();
 						$scope.deletePoints();
 						break;
+					case key.keyMap.Z:
 					case key.keyMap.z:
 						if (!event.ctrlKey) break;
-						//TODO: undo
+						$scope.undo();
 						break;
+					case key.keyMap.Y:
 					case key.keyMap.y:
-					case key.keyMap.Z:
 						if (!event.ctrlKey) break;
-						//TODO: redo
+						$scope.redo();
 						break;
 				}
 			};
@@ -299,37 +307,76 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 			$scope.deletePoints = function() {
 				var positions = selectedPoint.object.geometry.attributes.position;
 				var colors = selectedPoint.object.geometry.attributes.color;
-				for (var index in selectedPositions) {
-					positions.array[3*index] = 0;
-					positions.array[3*index+1] = 0;
-					positions.array[3*index+2] = 0;
-					colors.array[3*index] = 0;
-					colors.array[3*index+1] = 0;
-					colors.array[3*index+2] = 0;
+				var boundaryIndex = Object.keys(selectedPositions)[0];
+				oldPositions = new Float32Array(positions.array.length);
+				lenOldPositions = 0;
+				newPositions = new Float32Array(positions.array.length);
+				lenNewPositions = 0;
+				for (var index = 0; index < positions.length/3; index++) {
+					if (index in selectedPositions) continue;
+					if (positions.array[3*index+2] < positions.array[3*boundaryIndex+2]) {
+						oldPositions[lenOldPositions++] = positions.array[3*index];
+						oldPositions[lenOldPositions++] = positions.array[3*index+1];
+						oldPositions[lenOldPositions++] = positions.array[3*index+2];
+					} else {
+						newPositions[lenNewPositions++] = positions.array[3*index];
+						newPositions[lenNewPositions++] = positions.array[3*index+1];
+						newPositions[lenNewPositions++] = positions.array[3*index+2];
+					}
 				}
+				// Create new lane
+				lanes = Object.keys(kdtrees).filter(function(key) {
+					return key.slice(0,4) == "lane";
+				}).map(function(key) {
+					return parseInt(key.slice(4), 10);
+				}).sort();
+				var newLane;
+				for (newLane = 0; newLane <= lanes.length; newLane++) {
+					if (lanes[newLane] != newLane) break;
+				}
+				var laneCloud = $scope.generatePointCloud("lane"+newLane, newPositions.subarray(0,lenNewPositions), 0.15, 255);
+				scene.add(laneCloud);	
+				pointClouds.lanes[newLane] = laneCloud;
+				newPositions = laneCloud.geometry.attributes.position;
+				kdtrees["lane"+newLane] = new THREE.TypedArrayUtils.Kdtree(newPositions.array, util.distance, 3);
+				// truncate old lane
+				positions.array = new Float32Array(oldPositions.subarray(0,lenOldPositions));
+				colors.array = new Float32Array(colors.array.subarray(0,lenOldPositions));
 				positions.needsUpdate = true;
 				colors.needsUpdate = true;
+				//TODO edge case where newLane is empty
+				history.push("new", newPositions.array, newLane);
+				history.push("delete", positions.array, action.laneNum);
 			};
 
 			$scope.generatePointCloud = function(name, data, size, color) {
 				geometries[name] = new THREE.BufferGeometry();
-				var positions = new Float32Array(3*data.length);
-				var colors    = new Float32Array(3*data.length);
-				for (var i = 0; i < data.length; i++) {
-					//Note: order is changed
-					positions[3*i]   = data[i][1];	//x
-					positions[3*i+1] = data[i][2];	//y
-					positions[3*i+2] = data[i][0];	//z
-					// map intensity (0-120) to RGB
-					if (data[i].length >= 4) {
-						var hue = 1 - data[i][3]/120;	//TODO: fix intensity scaling
-						colors[3*i+1]   = util.HUEtoRGB(hue+1/3);	//r
-						colors[3*i+2] = util.HUEtoRGB(hue);		//g
-						colors[3*i+0] = util.HUEtoRGB(hue-1/3);	//b
-					} else {
-						colors[3*i+1] = color;
-						colors[3*i+2] = color;
-						colors[3*i+0] = color;
+				var positions, colors;
+				var i;
+				var dataType = Object.prototype.toString.call(data);
+				if (dataType === "[object Float32Array]" || dataType === "[object ArrayBuffer]") {
+					positions = new Float32Array(data);
+					colors = new Float32Array(positions.length);
+					for (i = 0; i < colors.length; i++) colors[i] = color;
+				} else {
+					positions = new Float32Array(3*data.length);
+					colors    = new Float32Array(3*data.length);
+					for (i = 0; i < data.length; i++) {
+						//Note: order is changed
+						positions[3*i]   = data[i][1];	//x
+						positions[3*i+1] = data[i][2];	//y
+						positions[3*i+2] = data[i][0];	//z
+						// map intensity (0-120) to RGB
+						if (data[i].length >= 4) {
+							var hue = 1 - data[i][3]/120;	//TODO: fix intensity scaling
+							colors[3*i+1]   = util.HUEtoRGB(hue+1/3);	//r
+							colors[3*i+2] = util.HUEtoRGB(hue);		//g
+							colors[3*i+0] = util.HUEtoRGB(hue-1/3);	//b
+						} else {
+							colors[3*i+1] = color;
+							colors[3*i+2] = color;
+							colors[3*i+0] = color;
+						}
 					}
 				}
 
@@ -393,7 +440,7 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 					// car.rotation.set( - Math.PI / 2, 0, -Math.PI /2);
 					car.scale.set( s, s, s );
 					car.position.set( 0, -1.2, 7 );
-					scene.add( car );
+					// scene.add( car );
 					callback(); 
 				});
 			};
@@ -434,6 +481,55 @@ directive('ngRoadgl', ['$window', 'util', 'key', function($window, util, key) {
 					scene.add(line);
 				}
 			};
+
+			$scope.undo = function() {
+				history.undo(function(action, arrayBuffer, laneNum) {
+					if (action == "new") {
+						//TODO: likely memory leak here
+						geometries["lane"+laneNum].dispose();
+						scene.remove(pointClouds.lanes[laneNum]);
+						delete geometries["lane"+laneNum];
+						delete kdtrees["lane"+laneNum];
+						delete pointClouds.lanes[laneNum];
+						return;
+					}
+					var lanePositions = geometries["lane"+laneNum].attributes.position;
+					var laneColors = geometries["lane"+laneNum].attributes.color;
+					lanePositions.array = new Float32Array(arrayBuffer);
+					laneColors.array = new Float32Array(lanePositions.array.length);
+					for (var i = 0; i < laneColors.array.length; i++)
+						laneColors.array[i] = 255;
+					lanePositions.needsUpdate = true;
+					laneColors.needsUpdate = true;
+					if (action == "delete") {
+						$scope.undo();
+					}
+				});
+			};
+
+			$scope.redo = function() {
+				history.redo(function(laneNum, action, arrayBuffer) {
+					if (action == "new") {
+						var laneCloud = $scope.generatePointCloud("lane"+laneNum, arrayBuffer, 0.15, 255);
+						scene.add(laneCloud);
+						pointClouds.lanes[laneNum] = laneCloud;
+						newPositions = laneCloud.geometry.attributes.position;
+						kdtrees["lane"+laneNum] = new THREE.TypedArrayUtils.Kdtree(newPositions.array, util.distance, 3);
+						$scope.redo();
+						//TODO if next is delete:
+						return;
+					}
+					var lanePositions = geometries["lane"+laneNum].attributes.position;
+					var laneColors = geometries["lane"+laneNum].attributes.color;
+					lanePositions.array = new Float32Array(arrayBuffer);
+					laneColors.array = new Float32Array(lanePositions.array.length);
+					for (var i = 0; i < laneColors.array.length; i++)
+						laneColors.array[i] = 255;
+					lanePositions.needsUpdate = true;
+					laneColors.needsUpdate = true;
+				});
+			};
+
 			$scope.init();
 		}
 	};

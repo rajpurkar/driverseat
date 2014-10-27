@@ -99,3 +99,128 @@ factory('key', function() {
 		}
 	};
 });
+
+angular.module('roadglApp').
+factory('cache', function() {
+	window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
+	var storageSize = 5*1024*1024;
+	var fs;
+	window.requestFileSystem(window.TEMPORARY, storageSize, function(fileSystem) {
+		fs = fileSystem;
+		readEntries(fs.root.createReader(), [], function(entries) {
+			for (var i = 0; i < entries.length; i++) {
+				remove(entries[i].name);
+			}
+		});
+	}, function(fe) {
+		console.log("Error loading filesystem", fe);
+	});
+
+	function readEntries(dirReader, entries, callback) {
+		dirReader.readEntries(function(results) {
+			if (results.length === 0) {
+				callback(entries);
+				return;
+			}
+			entries = entries.concat(results.slice(0));
+			readEntries(dirReader, entries, callback);
+		});
+	}
+
+	function remove(filename, callback) {
+		fs.root.getFile(filename, {create: false}, function(fileEntry) {
+			fileEntry.remove(function() {
+				if (callback) callback();
+			});
+		});
+	}
+
+	return {
+		write: function(filename, data, callback) {
+			fs.root.getFile(filename, {create: true}, function(fileEntry) {
+				fileEntry.createWriter(function(fileWriter) {
+					fileWriter.onwriteend = callback;
+					fileWriter.onerror = function(e) {
+						console.log("Write failed:", e);
+					};
+					var blob = new Blob([data]);
+					fileWriter.write(blob);
+				});
+			});
+		}, read: function(filename, callback) {
+			fs.root.getFile(filename, {create: false}, function(fileEntry) {
+				fileEntry.file(function(file) {
+					var reader = new FileReader();
+					reader.onloadend = function(e) {
+						// this.result: arrayBuffer
+						callback(this.result);
+					};
+					reader.readAsArrayBuffer(file);
+				});
+			});
+		}, remove: function(filename, callback) {
+			remove(filename, callback);
+		}, ls: function(callback) {
+			readEntries(fs.root.createReader(), [], callback);
+		}
+	};
+});
+
+angular.module('roadglApp').
+factory('history', ['cache', function(cache) {
+	var undoHistory = [],
+		redoHistory = [];
+	return {
+		push: function(action, lanePositions, laneNum) {
+			var entry = {
+				laneNum: laneNum,
+				action: action,
+				filename: Date.now().toString()
+			};
+			console.log(entry);
+			undoHistory.push(entry);
+			for (var i = 0; i < redoHistory.length; i++) {
+				cache.remove(redoHistory[i].filename);
+			}
+			redoHistory = [];
+			cache.write(entry.filename, lanePositions, function() {
+				cache.ls(function(entries) {
+					console.log(entries);
+				});
+			});
+		},
+		undo: function(callback) {
+			if (undoHistory[undoHistory.length-1].action == "original") {
+				console.log("Nothing left to undo");
+				return;
+			}
+			var entry = undoHistory.pop();
+			redoHistory.push(entry);
+			var filename = "";
+			for (var i = undoHistory.length-1; i >= 0; i--) {
+				if (undoHistory[i].laneNum == entry.laneNum) {
+					filename = undoHistory[i].filename;
+					break;
+				}
+			}
+			if (i < 0) {
+				callback(entry.action, null, entry.laneNum);
+				return;
+			}
+			cache.read(filename, function(arrayBuffer) {
+				callback(entry.action, arrayBuffer, entry.laneNum);
+			});
+		},
+		redo: function(callback) {
+			if (redoHistory.length === 0) {
+				console.log("Nothing left to redo");
+				return;
+			}
+			var entry = redoHistory.pop();
+			undoHistory.push(entry);
+			cache.read(entry.filename, function(arrayBuffer) {
+				callback(entry.laneNum, entry.action, arrayBuffer);
+			});
+		}
+	};
+}]);

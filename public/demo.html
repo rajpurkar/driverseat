@@ -9,48 +9,13 @@
 	<script src="javascripts/OBJMTLLoader.js"></script>
 	<script src="javascripts/TypedArrayUtils.js"></script>
 	<script src="javascripts/jquery-2.1.1.min.js"></script>
-	<!-- <script src="javascripts/ngLazyBind.js"></script> -->
-	<!-- <script src="javascripts/history.js"></script> -->
-	<!-- <script src="javascripts/LazyJsonUndoRedo.min.js"></script> -->
 	<script src="/javascripts/BinaryLoader.js"></script>
 	<script src="/javascripts/async.js"></script>
-	<style>
-		body,html{
-			margin: 0px;
-		}
-
-		h1, h2, h3, h4, li, p, a{
-			 font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
-			font-weight: 100;
-			color: #fff;
-		}
-
-		#title{
-			margin: 10px;
-		}
-
-		#instructions{
-			margin-left: 10px;
-		}
-
-		#debug{
-			margin-left: 10px;
-		}
-
-		#overlay {
-		    width: 100%;
-		    height: 100%;
-		    position: absolute;
-		    top: 0;
-		    left: 0;
-		}
-	</style>
+	<link rel="stylesheet" href="stylesheets/style.css">
 </head>
 <body style="margin: 0px; padding: 0px;" ng-app="roadglApp">
 	<div ng-controller="AppCtrl">
-		<div ng-roadgl>
-		<canvas id="road">
-		</div>
+		<div><canvas id="road"></div>
 		<div id="overlay">
 			<div id="title">
 				<h3>Welcome to RoadGL</h3>
@@ -60,7 +25,7 @@
 				<h4>Space to Play/Pause</h4>
 			</div>
 			<div id="debug">
-				<p id="debugText"></p>
+				<p id="debugText">{{debugText}}</p>
 			</div>
 		</div>
 	</div>

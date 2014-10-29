@@ -120,11 +120,13 @@ function($scope, $window, util, key, history) {
 			intersects = raycaster.intersectObject(pointClouds.lanes[lane]);
 			if (intersects.length > 0) break;
 		}
+		if(intersects.length == 0 ) return;
 		//TODO find way to check if no points are selected
 		// if (lane >= pointClouds.lanes.length) return;
 
 		var i, nearestPoints, index;
 		var pointPos = intersects[0].object.geometry.attributes.position.array;
+		
 		if (key.isDown("shift")) {
 			// select range
 			var startPoint = selectedPoint,
@@ -216,7 +218,6 @@ function($scope, $window, util, key, history) {
 				break;
 			case key.keyMap.B:
 			case key.keyMap.b:
-				console.log('here');
 				$scope.carBack();
 
 		}
@@ -235,14 +236,12 @@ function($scope, $window, util, key, history) {
 	$scope.carRight= function(){
 		carOffset-=0.1
 		$scope.updateCamera(frameCount);
-		console.log(frameCount);
 		event.preventDefault();
 	};
 
 	$scope.carLeft = function(){
 		carOffset+=0.1
 		$scope.updateCamera(frameCount);
-		console.log(frameCount);
 		event.preventDefault();
 	};
 
@@ -251,7 +250,6 @@ function($scope, $window, util, key, history) {
 			frameCount-=10;	
 		}
 		$scope.updateCamera(frameCount);
-		console.log(frameCount);
 		event.preventDefault();
 	}
 

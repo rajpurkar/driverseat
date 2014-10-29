@@ -24,7 +24,8 @@ function($scope, $window, util, key, history) {
 		DRAG_RANGE = 2,
 		car,
 		action = { laneNum: 0, type: "" };
-	var offset = [0,1,-2];//[0, 5, -14];
+	var offset = [0, 5, -14];//[0,1,-2];
+	var carOffset = 0;
 
 	$scope.init = function() {
 		scene = new THREE.Scene();
@@ -184,7 +185,7 @@ function($scope, $window, util, key, history) {
 		offset[1] = - car.position.y + camera.position.y;
 		offset[2] = - car.position.z + camera.position.z;
 		$scope.$apply(function() {
-			$scope.debugText = JSON.stringify(offset);
+			//$scope.debugText = JSON.stringify(offset);
 		});
 	};
 
@@ -207,6 +208,17 @@ function($scope, $window, util, key, history) {
 				if (!event.ctrlKey) break;
 				$scope.redo();
 				break;
+			case key.keyMap.right:
+				$scope.carRight();
+				break;
+			case key.keyMap.left:
+				$scope.carLeft();
+				break;
+			case key.keyMap.B:
+			case key.keyMap.b:
+				console.log('here');
+				$scope.carBack();
+
 		}
 	};
 	
@@ -220,9 +232,34 @@ function($scope, $window, util, key, history) {
 		renderer.setSize(windowWidth, windowHeight);
 	};
 
+	$scope.carRight= function(){
+		carOffset-=0.1
+		$scope.updateCamera(frameCount);
+		console.log(frameCount);
+		event.preventDefault();
+	};
+
+	$scope.carLeft = function(){
+		carOffset+=0.1
+		$scope.updateCamera(frameCount);
+		console.log(frameCount);
+		event.preventDefault();
+	};
+
+	$scope.carBack = function(){
+		if(frameCount>=10){
+			frameCount-=10;	
+		}
+		$scope.updateCamera(frameCount);
+		console.log(frameCount);
+		event.preventDefault();
+	}
+
+
+
 	$scope.updateCamera = function(frameCount) {
 		var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
-		car.position.x = gpsPositions[3*frameCount+0];
+		car.position.x = gpsPositions[3*frameCount+0] + carOffset;
 		car.position.y = gpsPositions[3*frameCount+1] -1.1;
 		car.position.z = gpsPositions[3*frameCount+2];
 		
@@ -232,7 +269,6 @@ function($scope, $window, util, key, history) {
 		camera.lookAt(target);
 		controls.target.copy(target);
 		controls.update();
-
 	};
 	
 	$scope.animate = function() {
@@ -242,13 +278,10 @@ function($scope, $window, util, key, history) {
 
 	$scope.render = function() {
 		camera.updateMatrixWorld(true);
-		
 		mousePosition = new THREE.Vector3(mouse.x, mouse.y, 0.5);
 		projector.unprojectVector(mousePosition, camera);
 		raycaster.params = {"PointCloud" : {threshold: 0.1}};
 		raycaster.ray.set(camera.position, mousePosition.sub(camera.position).normalize());
-
-		
 		var intersects = raycaster.intersectObject(pointClouds.points);
 		if(intersects.length > 0){
 			// cursor.position.copy(intersects[0].point); // brush cursor
@@ -366,9 +399,9 @@ function($scope, $window, util, key, history) {
 				// map intensity (0-120) to RGB
 				if (data[i].length >= 4) {
 					var hue = 1 - data[i][3]/120;	//TODO: fix intensity scaling
-					colors[3*i+1]   = util.HUEtoRGB(hue+1/3);	//r
+					colors[3*i+1]   = util.HUEtoRGB(hue+1/2);	//r
 					colors[3*i+2] = util.HUEtoRGB(hue);		//g
-					colors[3*i+0] = util.HUEtoRGB(hue-1/3);	//b
+					colors[3*i+0] = util.HUEtoRGB(hue-1/2);	//b
 				} else {
 					colors[3*i+1] = color;
 					colors[3*i+2] = color;
@@ -438,7 +471,7 @@ function($scope, $window, util, key, history) {
 			car.scale.set( s, s, s );
 			car.position.set( 0, -1.2, 7 );
 			// TODO car gets in the way of lane editing
-			// scene.add( car );
+			scene.add( car );
 			callback(); 
 		});
 	};

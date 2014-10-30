@@ -36,3 +36,9 @@ h1, h2, h3, h4, li, p, a {
 	top: 0;
 	left: 0;
 }
+
+#videoPlayer {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}

@@ -1,0 +1,75 @@
+<html>
+    <body stky>        
+
+        <video id="video1" hidden preload autobuffer seekable>
+        <source src="/small.ogv" type="video/ogg"/>
+        </video>
+
+        <div id="buttonbar">
+            <button id="restart" onclick="restart();">[]</button> 
+            <button id="rew" onclick="skip(-1)">&lt;&lt;</button>
+            <button id="play" onclick="vidplay()">&gt;</button>
+            <button id="fastFwd" onclick="skip(1)">&gt;&gt;</button>
+        </div>         
+
+        <canvas id="projectionCanvas" width="320" height="240" style="border: 1px solid black;">
+        </canvas>
+
+        <script type="text/javascript">
+            window.onload = function() {
+                initCanvas();
+            }
+
+var playing = false;
+var context, canvas, video;
+function initCanvas() {
+    video = document.getElementById("video1");
+    canvas = document.getElementById("projectionCanvas");
+    context = canvas.getContext("2d");
+    video.addEventListener("seeked", paintFrame);
+    //video.addEventListener("play", paintFrame, false);
+}
+function paintFrame() {
+    requestAnimationFrame( function() { 
+            console.log("paintframe");
+            w = 320; h = 240;      
+            context.drawImage(video, 0, 0, w, h);
+            /*
+            context.beginPath();
+            context.moveTo(100, 150);
+            context.lineTo(450, 50);
+            context.stroke();
+            */
+            if (playing) { 
+                video.currentTime += 0.1;
+            }
+    }  );
+}
+
+function vidplay() {
+    var video = document.getElementById("video1");
+    var button = document.getElementById("play");
+    if (!playing) {
+        video.currentTime += 1.0 / 50.0; // trigger "seeked" event
+        playing = true;
+        button.textContent = "||";
+    } else {
+        playing = false;
+        button.textContent = ">";
+    }
+}
+
+function restart() {
+    var video = document.getElementById("video1");
+    video.currentTime = 0;
+}
+
+function skip(value) {
+    var video = document.getElementById("video1");
+    video.currentTime += value;
+    console.log(video.currentTime)
+}     
+
+</script>
+</body>
+</html>

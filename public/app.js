@@ -29,15 +29,17 @@ function($scope, $window, util, key, history) {
 
 	$scope.init = function() {
 		scene = new THREE.Scene();
+		//scene.fog = new THREE.Fog( 0xcce0ff, 500, 10000 );
 		camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 1, 100);
 		projector = new THREE.Projector();
 		raycaster = new THREE.Raycaster();
 		var canvas = document.getElementById("road");
 		renderer = new THREE.WebGLRenderer({canvas: canvas});
 		renderer.setSize(windowWidth, windowHeight);
+		//renderer.setClearColor( scene.fog.color );
 
 		controls = new THREE.OrbitControls(camera);
-
+		$scope.debugText = "Loading...";
 		async.parallel({
 			pointCloud: function(callback){
 				util.loadJSON(datafiles.points, function(data) {
@@ -79,7 +81,7 @@ function($scope, $window, util, key, history) {
 			}
 		},
 		function(err, results) {
-			console.log("Loaded!");
+			$scope.debugText = "";
 			$scope.execOnLoaded();
 		});
 	};

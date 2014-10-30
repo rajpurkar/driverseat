@@ -15,7 +15,7 @@
 </head>
 <body style="margin: 0px; padding: 0px;" ng-app="roadglApp">
 	<div ng-controller="AppCtrl">
-		<div><canvas id="road"></div>
+		<div><canvas id="road"><canvas></div>
 		<div id="overlay">
 			<div id="title">
 				<h3>Welcome to RoadGL</h3>
@@ -29,8 +29,16 @@
 			</div>
 		</div>
 	</div>
+	<div id="videoPlayer">
+		<video id="video" hidden preload autobuffer seekable>
+			<source src="big-buck-bunny_trailer.webm" type="video/webm">
+			<!-- <source src="/small.ogv" type="video/ogg"> -->
+		</video>
+		<div><canvas id="projectionCanvas"></canvas></div>
+	</div>
 	<script src="controllers.js"></script>
 	<script src="app.js"></script>
 	<script src="util.js"></script>
+	<script src="video.js"></script>
 </body>
 </html>

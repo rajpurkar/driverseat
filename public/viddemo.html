@@ -1,75 +1,82 @@
 <html>
-    <body stky>        
+<body>
+	<video id="video1" hidden preload autobuffer seekable>
+		<source src="big-buck-bunny_trailer.webm" type="video/webm">
+		<!-- <source src="/small.ogv" type="video/ogg"/> -->
+	</video>
 
-        <video id="video1" hidden preload autobuffer seekable>
-        <source src="/small.ogv" type="video/ogg"/>
-        </video>
+	<div id="buttonbar">
+		<button id="restart" onclick="video.restart();">[]</button> 
+		<button id="rew" onclick="video.skip(-1)">&lt;&lt;</button>
+		<button id="play" onclick="video.play()">&gt;</button>
+		<button id="fastFwd" onclick="video.skip(1)">&gt;&gt;</button>
+	</div>
 
-        <div id="buttonbar">
-            <button id="restart" onclick="restart();">[]</button> 
-            <button id="rew" onclick="skip(-1)">&lt;&lt;</button>
-            <button id="play" onclick="vidplay()">&gt;</button>
-            <button id="fastFwd" onclick="skip(1)">&gt;&gt;</button>
-        </div>         
+	<canvas id="projectionCanvas" style="border: 1px solid black;"></canvas>
+	<script type="text/javascript">
+		var video = (function() {
+			var playing = false;
+			var context, canvas, video;
+			var framerate = 25;//29.914;
+			var width = 320;//320
+			var height = 180;//240
 
-        <canvas id="projectionCanvas" width="320" height="240" style="border: 1px solid black;">
-        </canvas>
+			function initCanvas() {
+				video = document.getElementById("video1");
+				canvas = document.getElementById("projectionCanvas");
+				context = canvas.getContext("2d");
+				canvas.width = width;
+				canvas.height = height;
+				video.addEventListener("seeked", paintFrame);
+				//video.addEventListener("play", paintFrame, false);
+				video.addEventListener("loadedmetadata", function() {
+					console.log("loaded metadata");
+				}, false);
+			}
 
-        <script type="text/javascript">
-            window.onload = function() {
-                initCanvas();
-            }
+			function paintFrame() {
+				requestAnimationFrame(function(timestamp) { 
+					if (!playing) return;
 
-var playing = false;
-var context, canvas, video;
-function initCanvas() {
-    video = document.getElementById("video1");
-    canvas = document.getElementById("projectionCanvas");
-    context = canvas.getContext("2d");
-    video.addEventListener("seeked", paintFrame);
-    //video.addEventListener("play", paintFrame, false);
-}
-function paintFrame() {
-    requestAnimationFrame( function() { 
-            console.log("paintframe");
-            w = 320; h = 240;      
-            context.drawImage(video, 0, 0, w, h);
-            /*
-            context.beginPath();
-            context.moveTo(100, 150);
-            context.lineTo(450, 50);
-            context.stroke();
-            */
-            if (playing) { 
-                video.currentTime += 0.1;
-            }
-    }  );
-}
+					console.log(timestamp, "paintframe");
+					context.drawImage(video, 0, 0, width, height);
 
-function vidplay() {
-    var video = document.getElementById("video1");
-    var button = document.getElementById("play");
-    if (!playing) {
-        video.currentTime += 1.0 / 50.0; // trigger "seeked" event
-        playing = true;
-        button.textContent = "||";
-    } else {
-        playing = false;
-        button.textContent = ">";
-    }
-}
+					context.beginPath();
+					context.moveTo(100, 150);
+					context.lineTo(300, 50);
+					context.stroke();
 
-function restart() {
-    var video = document.getElementById("video1");
-    video.currentTime = 0;
-}
+					video.currentTime += 1/framerate;
+				});
+			}
 
-function skip(value) {
-    var video = document.getElementById("video1");
-    video.currentTime += value;
-    console.log(video.currentTime)
-}     
+			window.onload = function() {
+				initCanvas();
+			};
 
-</script>
+			return {
+				play: function() {
+					var button = document.getElementById("play");
+					if (!playing) {
+						// video.play();
+						video.currentTime += 1/framerate; // trigger "seeked" event
+						playing = true;
+						button.textContent = "||";
+					} else {
+						video.pause();
+						playing = false;
+						button.textContent = ">";
+					}
+				},
+				restart: function() {
+					video.currentTime = 0;
+				},
+				skip: function() {
+					video.currentTime += value;
+					console.log(video.currentTime);
+				}
+			};
+		}());
+	</script>
 </body>
 </html>

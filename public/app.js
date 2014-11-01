@@ -1,6 +1,6 @@
 angular.module('roadglApp').
-controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history',
-function($scope, $window, util, key, history) {
+controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
+function($scope, $window, util, key, history, video) {
 
 	var camera, scene, renderer,
 		projector, raycaster,
@@ -28,6 +28,8 @@ function($scope, $window, util, key, history) {
 	var carOffset = 0;
 
 	$scope.init = function() {
+		video.init();
+
 		scene = new THREE.Scene();
 		//scene.fog = new THREE.Fog( 0xcce0ff, 500, 10000 );
 		camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 1, 100);
@@ -122,7 +124,7 @@ function($scope, $window, util, key, history) {
 			intersects = raycaster.intersectObject(pointClouds.lanes[lane]);
 			if (intersects.length > 0) break;
 		}
-		if(intersects.length == 0 ) return;
+		if(intersects.length === 0 ) return;
 		//TODO find way to check if no points are selected
 		// if (lane >= pointClouds.lanes.length) return;
 
@@ -236,13 +238,13 @@ function($scope, $window, util, key, history) {
 	};
 
 	$scope.carRight= function(){
-		carOffset-=0.1
+		carOffset-=0.1;
 		$scope.updateCamera(frameCount);
 		event.preventDefault();
 	};
 
 	$scope.carLeft = function(){
-		carOffset+=0.1
+		carOffset+=0.1;
 		$scope.updateCamera(frameCount);
 		event.preventDefault();
 	};
@@ -253,7 +255,7 @@ function($scope, $window, util, key, history) {
 		}
 		$scope.updateCamera(frameCount);
 		event.preventDefault();
-	}
+	};
 
 
 
@@ -271,7 +273,8 @@ function($scope, $window, util, key, history) {
 		controls.update();
 	};
 	
-	$scope.animate = function() {
+	$scope.animate = function(timestamp) {
+		// console.log(timestamp);
 		requestAnimationFrame($scope.animate);
 		$scope.render();
 	};
@@ -302,6 +305,7 @@ function($scope, $window, util, key, history) {
 
 		if (key.isToggledOn("space")) {
 			$scope.updateCamera(frameCount);
+			video.nextFrame();
 			frameCount++;
 		}
 		if (frameCount+5 >= gpsPositions.length/3) {

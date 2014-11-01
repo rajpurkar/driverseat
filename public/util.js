@@ -1,5 +1,5 @@
 angular.module('roadglApp').
-factory('util', ['$http', function($http) {
+service('util', ['$http', function($http) {
 	return {
 		distance: function(a, b) {
 			return Math.sqrt((a[0]-b[0])*(a[0]-b[0]) + (a[1]-b[1])*(a[1]-b[1]) + (a[2]-b[2])*(a[2]-b[2]));

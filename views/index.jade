@@ -1,5 +1,33 @@
-extends layout
+doctype html
+html
+head
+    script(src='/javascripts/angular.min.js')
+    script(src='/javascripts/three.min.js')
+    script(src='/javascripts/PLYLoader.js')
+    script(src='/javascripts/OrbitControls.js')
+    script(src='/javascripts/DDSLoader.js')
+    script(src='/javascripts/MTLLoader.js')
+    script(src='/javascripts/OBJMTLLoader.js')
+    script(src='/javascripts/TypedArrayUtils.js')
+    script(src='/javascripts/jquery-2.1.1.min.js')
+    script(src='/javascripts/BinaryLoader.js')
+    script(src='/javascripts/async.js')
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    title RoadGL
+  body(style='margin: 0px; padding: 0px;', ng-app='roadglApp')
+    div(ng-controller='AppCtrl')
+      div
+        canvas#road
+      #overlay
+        #title
+          h3 RoadGL
+        #instructions
+          h2 Instructions
+          h4 Ctrl + Mouse to look around
+          h4 Space to Play/Pause
+        #debug
+          p#debugText {{debugText}}
+    script(src='/controllers.js')
+    script(src='/app.js')
+    script(src='/util.js')
 
-block content
-  h1= title
-  p Welcome to #{title}

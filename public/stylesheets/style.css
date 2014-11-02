@@ -1,43 +1,38 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-}
-
-a {
-  color: #00B7FF;
-}
-
 body, html {
 	margin: 0px;
-}
+	padding: 0px;
+	width: 100%;
+	height: 100%; 
+} 
 
 h1, h2, h3, h4, li, p, a {
-	 font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+	font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
 	font-weight: 100;
 	color: #fff;
+}
+.tab{
+	margin: 15px 0px;
+}
+
+#overlay {
+	width: 150px;
+	position: absolute;
+	top: 0;
+	left: 0;
+	margin: 20px 20px;
 }
 
 #title{
-	font-size: 30px;
-	font-weight: 100;
-	margin: 10px 10px;
-	padding: 0px 10px;
-
+	text-align: center;
 }
 
 #instructions{
-	margin-left: 10px;
-	width: 100px;
+	padding: 15px 15px;
 	background: rgba(50,50,50,0.8);
-	border-radius:10px; /* regular */
 	color: #fff;
-	padding: 30px;
 }
 
 #debug{
-	margin: 10px 10px;
-	width: 100px;
-	/*background: rgba(50,50,50,0.8);*/
 	border-radius:10px; /* regular */
 	color: #fff;
 	padding: 3px 10px;
@@ -45,12 +40,18 @@ h1, h2, h3, h4, li, p, a {
 	font-size: 60px;
 }
 
-#overlay {
+.actionBtn{
 	width: 100%;
-	height: 100%;
-	position: absolute;
-	top: 0;
-	left: 0;
+	height: 30px;
+	font-size: 20px;
+	background: rgba(150,50,50,0.8);
+	border: none;
+	color: #fff;
+	margin: 5px 0px;
+}
+
+.actionBtn:hover{
+	background: rgba(250,50,50,0.9);
 }
 
 #videoPlayer {

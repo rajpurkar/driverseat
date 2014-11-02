@@ -21,7 +21,7 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 		selectedPoint,
 		selectedPositions,	// index => position array
 		frameCount = 0, //TODO
-		DRAG_RANGE = 2,
+		DRAG_RANGE = 20,
 		car,
 		action = { laneNum: 0, type: "" };
 	var offset = [0, 5, -14];//[0,1,-2];
@@ -47,7 +47,6 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 		//renderer.setClearColor( scene.fog.color );
 
 		controls = new THREE.OrbitControls(camera);
-		controls.addEventListener('change', $scope.setCameraOffset);
 
 		$scope.debugText = "Loading...";
 		async.parallel({
@@ -114,6 +113,7 @@ $scope.execOnLoaded = function(){
 	document.addEventListener('mouseup', $scope.onDocumentMouseUp, false);
 	document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
 	document.addEventListener('mousemove', $scope.onDocumentMouseMove, false);
+	controls.addEventListener('change', $scope.setCameraOffset);
 	window.addEventListener('resize', $scope.onWindowResize, false);
 	$scope.addLighting();
 	$scope.updateCamera(0);
@@ -202,7 +202,6 @@ $scope.onDocumentMouseDown = function(event) {
 			case key.keyMap.del:
 			case key.keyMap.D:
 			case key.keyMap.d:
-				event.preventDefault();
 				$scope.deletePoints();
 				break;
 			case key.keyMap.Z:
@@ -216,9 +215,11 @@ $scope.onDocumentMouseDown = function(event) {
 				$scope.redo();
 				break;
 			case key.keyMap.right:
+				event.stopPropagation();
 				$scope.carRight();
 				break;
 			case key.keyMap.left:
+				event.stopPropagation();
 				$scope.carLeft();
 				break;
 			case key.keyMap.B:
@@ -226,6 +227,7 @@ $scope.onDocumentMouseDown = function(event) {
 				$scope.carBack();
 				break;
 		}
+
 	};
 	
 	$scope.onWindowResize = function() {

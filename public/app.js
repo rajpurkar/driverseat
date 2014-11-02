@@ -105,8 +105,7 @@ $scope.addLighting = function(){
 	scene.add( directionalLight );		
 };
 
-$scope.execOnLoaded = function(){
-	key.watchToggle("space");
+$scope.addEventListeners = function(){
 	document.addEventListener('mousedown', $scope.onDocumentMouseDown, false);
 	document.addEventListener('mousedown', $scope.rotateCamera, false);
 	document.addEventListener('mouseup', $scope.onDocumentMouseUp, false);
@@ -114,6 +113,13 @@ $scope.execOnLoaded = function(){
 	document.addEventListener('mousemove', $scope.onDocumentMouseMove, false);
 	controls.addEventListener('change', $scope.setCameraOffset);
 	window.addEventListener('resize', $scope.onWindowResize, false);
+	document.getElementById("undo").addEventListener("click", $scope.undo, false);
+	document.getElementById("redo").addEventListener("click",  $scope.redo, false);
+};
+
+$scope.execOnLoaded = function(){
+	key.watchToggle("space");
+	$scope.addEventListeners();
 	$scope.addLighting();
 	$scope.updateCamera(0);
 	$scope.animate();

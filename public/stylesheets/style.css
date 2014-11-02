@@ -10,6 +10,11 @@ h1, h2, h3, h4, li, p, a {
 	font-weight: 100;
 	color: #fff;
 }
+
+button:focus {
+	outline:0;
+}
+
 .tab{
 	margin: 15px 0px;
 }

@@ -1,7 +1,6 @@
 angular.module('roadglApp').
 controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 	function($scope, $window, util, key, history, video) {
-
 		var camera, scene, renderer,
 		projector, raycaster,
 		controls,
@@ -183,7 +182,6 @@ $scope.onDocumentMouseDown = function(event) {
 	};
 
 	$scope.onDocumentMouseMove = function(event) {
-		event.preventDefault();
 		mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 		mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 	};
@@ -222,10 +220,13 @@ $scope.onDocumentMouseDown = function(event) {
 				event.stopPropagation();
 				$scope.carLeft();
 				break;
-			case key.keyMap.B:
-			case key.keyMap.b:
+			case key.keyMap.down:
+				event.stopPropagation();
 				$scope.carBack();
 				break;
+			case key.keyMap.up:
+				event.stopPropagation();
+				$scope.carForward();
 		}
 
 	};
@@ -241,23 +242,27 @@ $scope.onDocumentMouseDown = function(event) {
 	};
 
 	$scope.carRight= function(){
-		carOffset-=0.1;
+		carOffset-=0.3;
 		$scope.updateCamera(frameCount);
-		event.preventDefault();
 	};
 
 	$scope.carLeft = function(){
-		carOffset+=0.1;
+		carOffset+=0.3;
 		$scope.updateCamera(frameCount);
-		event.preventDefault();
+	};
+
+	$scope.carForward = function(){
+		var numForward = 3;
+		frameCount += numForward;
+		$scope.updateCamera(frameCount);
 	};
 
 	$scope.carBack = function(){
-		if(frameCount>=10){
-			frameCount-=10;	
+		var numDecline = 3;
+		if(frameCount>=numDecline){
+			frameCount-=numDecline;	
 		}
 		$scope.updateCamera(frameCount);
-		event.preventDefault();
 	};
 
 

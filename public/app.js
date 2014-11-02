@@ -1,8 +1,8 @@
 angular.module('roadglApp').
 controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
-function($scope, $window, util, key, history, video) {
+	function($scope, $window, util, key, history, video) {
 
-	var camera, scene, renderer,
+		var camera, scene, renderer,
 		projector, raycaster,
 		controls,
 		geometries = {},
@@ -95,37 +95,38 @@ function($scope, $window, util, key, history, video) {
 			//$scope.debugText = JSON.stringify(offset);
 			$scope.execOnLoaded();
 		});
-	};
+};
 
-	$scope.addLighting = function(){
-		pointLight = new THREE.PointLight( 0xffaa00 );
-		scene.add( pointLight );
-		pointLight.position= car.position;
-		pointLight.position.x= car.position.x -5;
-		directionalLight = new THREE.DirectionalLight( 0xffffff );
-		directionalLight.position.set( 1, 1, 0.5 ).normalize();
-		scene.add( directionalLight );		
-	};
+$scope.addLighting = function(){
+	pointLight = new THREE.PointLight( 0xffaa00 );
+	scene.add( pointLight );
+	pointLight.position= car.position;
+	pointLight.position.x= car.position.x -5;
+	directionalLight = new THREE.DirectionalLight( 0xffffff );
+	directionalLight.position.set( 1, 1, 0.5 ).normalize();
+	scene.add( directionalLight );		
+};
 
-	$scope.execOnLoaded = function(){
-		key.watchToggle("space");
-		document.addEventListener('mousedown', $scope.onDocumentMouseDown, false);
-		document.addEventListener('mousedown', $scope.rotateCamera, false);
-		document.addEventListener('mouseup', $scope.onDocumentMouseUp, false);
-		document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
-		window.addEventListener('resize', $scope.onWindowResize, false);
-		$scope.addLighting();
-		$scope.updateCamera(0);
-		$scope.animate();
-	};
+$scope.execOnLoaded = function(){
+	key.watchToggle("space");
+	document.addEventListener('mousedown', $scope.onDocumentMouseDown, false);
+	document.addEventListener('mousedown', $scope.rotateCamera, false);
+	document.addEventListener('mouseup', $scope.onDocumentMouseUp, false);
+	document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
+	document.addEventListener('mousemove', $scope.onDocumentMouseMove, false);
+	window.addEventListener('resize', $scope.onWindowResize, false);
+	$scope.addLighting();
+	$scope.updateCamera(0);
+	$scope.animate();
+};
 
-	$scope.rotateCamera = function(event) {
-		if (!key.isDown("ctrl")) return;
-		controls.onMouseDown(event);
-	};
+$scope.rotateCamera = function(event) {
+	if (!key.isDown("ctrl")) return;
+	controls.onMouseDown(event);
+};
 
-	$scope.onDocumentMouseDown = function(event) {
-		if (key.isDown("ctrl")) return;
+$scope.onDocumentMouseDown = function(event) {
+	if (key.isDown("ctrl")) return;
 		// event.stopPropagation();
 		var intersects, lane;
 		for (lane in pointClouds.lanes) {
@@ -142,10 +143,10 @@ function($scope, $window, util, key, history, video) {
 		if (key.isDown("shift")) {
 			// select range
 			var startPoint = selectedPoint,
-				startPos = util.getPos(pointPos, startPoint.index);
+			startPos = util.getPos(pointPos, startPoint.index);
 			selectedPoint = intersects[0];
 			var endPoint = selectedPoint,
-				endPos = util.getPos(pointPos, endPoint.index);
+			endPos = util.getPos(pointPos, endPoint.index);
 			var midPoint = util.midpoint(startPos, endPos);
 			var range = util.distance(startPos, endPos) / 2 + 0.01;
 			nearestPoints = kdtrees["lane"+lane].nearest(midPoint, 100, range);
@@ -179,6 +180,12 @@ function($scope, $window, util, key, history, video) {
 				return;
 			}
 		}
+	};
+
+	$scope.onDocumentMouseMove = function(event) {
+		event.preventDefault();
+		mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+		mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 	};
 
 	$scope.onDocumentMouseUp = function() {
@@ -217,7 +224,7 @@ function($scope, $window, util, key, history, video) {
 			case key.keyMap.B:
 			case key.keyMap.b:
 				$scope.carBack();
-
+				break;
 		}
 	};
 	

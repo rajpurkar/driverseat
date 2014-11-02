@@ -27,6 +27,12 @@ function($scope, $window, util, key, history, video) {
 	var offset = [0, 5, -14];//[0,1,-2];
 	var carOffset = 0;
 
+	$scope.setCameraOffset = function(){
+		offset[0] = - car.position.x + camera.position.x;
+		offset[1] = - car.position.y + camera.position.y;
+		offset[2] = - car.position.z + camera.position.z;
+	};
+
 	$scope.init = function() {
 		video.init();
 
@@ -41,6 +47,8 @@ function($scope, $window, util, key, history, video) {
 		//renderer.setClearColor( scene.fog.color );
 
 		controls = new THREE.OrbitControls(camera);
+		controls.addEventListener('change', $scope.setCameraOffset);
+
 		$scope.debugText = "Loading...";
 		async.parallel({
 			pointCloud: function(callback){
@@ -84,6 +92,7 @@ function($scope, $window, util, key, history, video) {
 		},
 		function(err, results) {
 			$scope.debugText = "";
+			//$scope.debugText = JSON.stringify(offset);
 			$scope.execOnLoaded();
 		});
 	};
@@ -103,7 +112,6 @@ function($scope, $window, util, key, history, video) {
 		document.addEventListener('mousedown', $scope.onDocumentMouseDown, false);
 		document.addEventListener('mousedown', $scope.rotateCamera, false);
 		document.addEventListener('mouseup', $scope.onDocumentMouseUp, false);
-		document.addEventListener('mousemove', $scope.onDocumentMouseMove, false);
 		document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
 		window.addEventListener('resize', $scope.onWindowResize, false);
 		$scope.addLighting();
@@ -179,20 +187,6 @@ function($scope, $window, util, key, history, video) {
 		action.type = "";
 		document.removeEventListener('mousemove', $scope.dragPoint);
 		document.removeEventListener('mouseup', $scope.clearPoint);
-	};
-
-	$scope.onDocumentMouseMove = function(event) {
-		event.preventDefault();
-		mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-		mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-		
-		if (!key.isDown("ctrl")) return;
-		offset[0] = - car.position.x + camera.position.x;
-		offset[1] = - car.position.y + camera.position.y;
-		offset[2] = - car.position.z + camera.position.z;
-		$scope.$apply(function() {
-			//$scope.debugText = JSON.stringify(offset);
-		});
 	};
 
 	$scope.onDocumentKeyDown = function(event) {

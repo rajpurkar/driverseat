@@ -9,7 +9,6 @@ service('video', function() {
 	paintFrame = function() {
 		// console.log(timestamp, "paintframe");
 		ctx.drawImage(video, 0, 0, width, height);
-
 		// ctx.beginPath();
 		// ctx.moveTo(100, 150);
 		// ctx.lineTo(300, 50);
@@ -30,6 +29,9 @@ service('video', function() {
 		},
 		nextFrame: function() {
 			video.currentTime += 1/framerate;
+		},
+		restart: function() {
+			video.currentTime = 0;
 		}
 	};
 });

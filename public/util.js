@@ -7,6 +7,23 @@ service('util', ['$http', function($http) {
 		midpoint: function(a, b) {
 			return new Float32Array([(a[0]+b[0])/2, (a[1]+b[1])/2, (a[2]+b[2])/2]);
 		},
+		difference: function(a, b) {
+			return new Float32Array([a[0]-b[0], a[1]-b[1], a[2]-b[2]]);
+		},
+		sum: function(a, b) {
+			return new Float32Array([a[0]+b[0], a[1]+b[1], a[2]+b[2]]);
+		},
+		normalize: function(a) {
+			var magnitude = Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+			a[0] /= magnitude;
+			a[1] /= magnitude;
+			a[2] /= magnitude;
+		},
+		scale: function(a, scalar) {
+			a[0] *= scalar;
+			a[1] *= scalar;
+			a[2] *= scalar;
+		},
 		getPos: function(array, index) {
 			return array.subarray(3*index, 3*index+3);
 		},

@@ -1,37 +1,39 @@
 angular.module('roadglApp').
 service('video', function() {
-	var playing = false;
 	var ctx, canvas, video;
-	var framerate = 25;//29.914;
-	var width = 320;//320
-	var height = 180;//240
-
-	paintFrame = function() {
-		// console.log(timestamp, "paintframe");
-		ctx.drawImage(video, 0, 0, width, height);
-		// ctx.beginPath();
-		// ctx.moveTo(100, 150);
-		// ctx.lineTo(300, 50);
-		// ctx.stroke();
-	};
+    var images = new Array(); 
 
 	return {
-		init: function() {
+		init: function(dir,prefix) {
 			video = document.getElementById("video");
 			canvas = document.getElementById("projectionCanvas");
 			ctx = canvas.getContext("2d");
-			canvas.width = width;
-			canvas.height = height;
-			video.addEventListener("seeked", paintFrame);
-			video.addEventListener("loadedmetadata", function() {
-				console.log("loaded metadata");
-			}, false);
+            for (i = 0; i < 600; i++) { 
+                images[i] = new Image();
+                var n = i + 1;
+                images[i].onload = function() { 
+                    console.log("loaded image");
+                }
+                images[i].src = dir + "/" + prefix + n + ".jpg";
+            }
 		},
-		nextFrame: function() {
-			video.currentTime += 1/framerate;
-		},
-		restart: function() {
-			video.currentTime = 0;
-		}
+        displayPreloadedImage: function(canvasId, num) {
+            var j = images[num];
+            var c = document.getElementById(canvasId);
+            c.width = j.width;
+            c.height = j.height;
+            ctx.drawImage(j, 0, 0, j.width, j.height);
+        },
+        displayImage: function(canvasId, url) {
+            var j = new Image(); 
+            j.onload = function() {
+                var c = document.getElementById(canvasId);
+                c.width = j.width;
+                c.height = j.height;
+                var ctx = c.getContext("2d");
+                ctx.drawImage(j, 0, 0, j.width, j.height);
+            };
+            j.src = url;
+        },
 	};
 });

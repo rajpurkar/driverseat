@@ -11,10 +11,13 @@ html
 		script(src='/javascripts/jquery-2.1.1.min.js')
 		script(src='/javascripts/BinaryLoader.js')
 		script(src='/javascripts/async.js')
+		script(src='/javascripts/jpg.js')
+		script(src='/javascripts/fpsmeter.js')
 		link(rel='stylesheet', href='/stylesheets/style.css')
 		title RoadGL
 	body(ng-app='roadglApp')
 		div(ng-controller='AppCtrl')
+			div#fps
 			canvas#road
 				canvas
 			#overlay
@@ -31,8 +34,6 @@ html
 				#debug.tab
 					p#debugText {{debugText}}
 		#videoPlayer
-			video#video(hidden='hidden', preload='preload', autobuffer='autobuffer', seekable='seekable')
-				source(src='/big-buck-bunny_trailer.webm', type='video/webm')
 			div
 				canvas#projectionCanvas
 		script(src='/controllers.js')

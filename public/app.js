@@ -4,6 +4,7 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 		var camera, scene, renderer,
 		projector, raycaster,
 		controls,
+        fpsMeter,
 		geometries = {},
 		pointClouds = {},
 		kdtrees = {},
@@ -34,11 +35,12 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 	};
 
 	$scope.init = function() {
-		video.init();
+		video.init("http://stanford.edu/~sameep/280N_a604", "re_");
+        fpsMeter = new FPSMeter(document.getElementById("fps"));
 
 		scene = new THREE.Scene();
 		//scene.fog = new THREE.Fog( 0xcce0ff, 500, 10000 );
-		camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 1, 100);
+		camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 1, 1000);
 		projector = new THREE.Projector();
 		raycaster = new THREE.Raycaster();
 		var canvas = document.getElementById("road");
@@ -340,13 +342,16 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 
 		if (key.isToggledOn("space")) {
 			$scope.updateCamera(frameCount);
-			video.nextFrame();
+			//video.nextFrame();
 			frameCount++;
 		}
+        video.displayPreloadedImage("projectionCanvas", frameCount);
 		var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
 		if (frameCount+5 >= gpsPositions.length/3) {
 			frameCount = 0;
 		}
+
+        fpsMeter.tick();
 
 		renderer.render(scene, camera);
 	};

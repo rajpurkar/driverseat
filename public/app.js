@@ -134,7 +134,9 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 	$scope.onDocumentMouseDown = function(event) {
 		if (key.isDown("ctrl")) return;
 		// event.stopPropagation();
+
 		var intersects, lane;
+		$scope.updateMouse();
 		for (lane in pointClouds.lanes) {
 			intersects = raycaster.intersectObject(pointClouds.lanes[lane]);
 			if (intersects.length > 0) break;
@@ -306,8 +308,6 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 		$scope.updateCamera(frameCount);
 	};
 
-
-
 	$scope.updateCamera = function(frameCount) {
 		var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
 		car.position.x = gpsPositions[3*frameCount+0] + carOffset;
@@ -321,6 +321,13 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 		controls.target.copy(target);
 		controls.update();
 	};
+
+	$scope.updateMouse = function() {
+		var mousePosition = new THREE.Vector3(mouse.x, mouse.y, 0.5);
+		projector.unprojectVector(mousePosition, camera);
+		raycaster.params = {"PointCloud" : {threshold: 0.1}};
+		raycaster.ray.set(camera.position, mousePosition.sub(camera.position).normalize());
+	};
 	
 	$scope.animate = function(timestamp) {
 		// console.log(timestamp);
@@ -330,33 +337,13 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 
 	$scope.render = function() {
 		camera.updateMatrixWorld(true);
-		mousePosition = new THREE.Vector3(mouse.x, mouse.y, 0.5);
-		projector.unprojectVector(mousePosition, camera);
-		raycaster.params = {"PointCloud" : {threshold: 0.1}};
-		raycaster.ray.set(camera.position, mousePosition.sub(camera.position).normalize());
-		var intersects = raycaster.intersectObject(pointClouds.points);
-		if(intersects.length > 0){
-			// cursor.position.copy(intersects[0].point); // brush cursor
-			// Paint the points with the cursor while pressing <shift>
-			if (key.isDown("shift")) {
-				var pointColors = geometries.points.attributes.color.array;
-				for (var i = 0; i < intersects.length; i++) {
-					var index = 3*intersects[i].index;
-					pointColors[index] = 255;
-					pointColors[index+1] = 255;
-					pointColors[index+2] = 255;
-				}
-				geometries.points.attributes.color.needsUpdate = true;
-			}
-		}
-
-		var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
 
 		if (key.isToggledOn("space")) {
 			$scope.updateCamera(frameCount);
 			video.nextFrame();
 			frameCount++;
 		}
+		var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
 		if (frameCount+5 >= gpsPositions.length/3) {
 			frameCount = 0;
 		}
@@ -365,6 +352,7 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 	};
 
 	$scope.dragPoint = function() {
+		$scope.updateMouse();
 		var intersects = raycaster.intersectObject(selectedPlane.object);
 		if (intersects.length > 0) {
 			// var index = selectedPoint.index;

@@ -35,7 +35,7 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 	};
 
 	$scope.init = function() {
-		video.init("http://stanford.edu/~sameep/280N_a604", "re_");
+		//video.init("http://stanford.edu/~sameep/280N_a604", "re_");
         fpsMeter = new FPSMeter(document.getElementById("fps"));
 
 		scene = new THREE.Scene();
@@ -89,7 +89,10 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 				$scope.addCar(function(geometry, materials){
 					callback(null, 5);
 				});
-			}
+			},
+            video: function(callback) { 
+                video.init("http://stanford.edu/~sameep/280N_a604", "re_", callback);
+            }
 		},
 		function(err, results) {
 			$scope.debugText = "";
@@ -334,6 +337,7 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 	$scope.animate = function(timestamp) {
 		// console.log(timestamp);
 		requestAnimationFrame($scope.animate);
+        //setTimeout($scope.animate, 2);
 		$scope.render();
 	};
 
@@ -344,8 +348,9 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 			$scope.updateCamera(frameCount);
 			//video.nextFrame();
 			frameCount++;
+            video.displayImage("projectionCanvas", frameCount);
 		}
-        video.displayPreloadedImage("projectionCanvas", frameCount);
+        //video.displayPreloadedImage("projectionCanvas", frameCount);
 		var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
 		if (frameCount+5 >= gpsPositions.length/3) {
 			frameCount = 0;

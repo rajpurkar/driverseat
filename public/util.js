@@ -21,6 +21,28 @@ service('util', ['$http', function($http) {
 		a[2] *= scalar;
 	}
 	var INTERPOLATE_STEP = 0.5;
+
+	/**
+	 * Algorithm to calculate a single RGB channel (0-1.0) from HSL hue (0-1.0)
+	 */
+	function HUEtoRGB(hue) {
+		if (hue < 0) {
+			hue += 1;
+		} else if (hue > 1) {
+			hue -= 1;
+		}
+		var rgb = 0;
+		if (hue < 1/6) {
+			rgb = hue*6;
+		} else if (hue < 1/2) {
+			rgb = 1;
+		} else if (hue < 2/3) {
+			rgb = (2/3 - hue)*6;
+		}
+		return rgb;
+		// return Math.round(rgb * 255);
+	}
+
 	return {
 		distance: distance,
 		midpoint: function(a, b) {
@@ -48,24 +70,22 @@ service('util', ['$http', function($http) {
 		getPos: function(array, index) {
 			return array.subarray(3*index, 3*index+3);
 		},
+		HUEtoRGB: HUEtoRGB,
 		/**
-		 * Algorithm to calculate a single RGB channel (0-255) from HSL hue (0-1.0)
+		 * Generate a color (for use with laneNum 1,2,3...)
 		 */
-		HUEtoRGB: function(hue) {
-			if (hue < 0) {
-				hue += 1;
-			} else if (hue > 1) {
-				hue -= 1;
+		generateRGB: function(seed) {
+			seed = ((parseInt(seed, 10) * 17) % 100) / 100;
+			var color = {
+				r: HUEtoRGB(seed+1/3),
+				g: HUEtoRGB(seed),
+				b: HUEtoRGB(seed-1/3)
+			};
+			if (seed < 0.76 && seed > 0.56) {
+				color.r += 0.5;
+				color.g += 0.5;
 			}
-			var rgb = 0;
-			if (hue < 1/6) {
-				rgb = hue*6;
-			} else if (hue < 1/2) {
-				rgb = 1;
-			} else if (hue < 2/3) {
-				rgb = (2/3 - hue)*6;
-			}
-			return Math.round(rgb * 255);
+			return color;
 		},
 		loadJSON: function(url, success, fail) {
 		$http.get(url)

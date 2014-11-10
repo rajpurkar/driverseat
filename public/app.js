@@ -68,7 +68,8 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 				util.loadJSON(datafiles.lanes, function(data) {
 					pointClouds.lanes = {};
 					for (var lane in data){
-						var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], 0.15, 255);
+						var color = util.generateRGB(lane);
+						var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], 0.15, color);
 						scene.add(laneCloud);	
 						pointClouds.lanes[lane] = laneCloud;
 						var positions = laneCloud.geometry.attributes.position.array;
@@ -178,7 +179,7 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 				selectedPositions = {};
 				selectedPositions[action.laneNum+"_"+startPoint.index] = startPos;
 				selectedPositions[action.laneNum2+"_"+endPoint.index] = endPos;
-				util.paintPoint(geometries["lane"+lane].attributes.color, endPoint.index, 255, 0, 0);
+				util.paintPoint(geometries["lane"+lane].attributes.color, endPoint.index, 255, 255, 255);
 				return;
 			}
 			// select range
@@ -194,22 +195,23 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 			for (i = 0; i < nearestPoints.length; i++) {
 				index = nearestPoints[i][0].pos;
 				selectedPositions[index] = util.getPos(pointPos, index);
-				util.paintPoint(geometries["lane"+lane].attributes.color, index, 255, 0, 0);
+				util.paintPoint(geometries["lane"+lane].attributes.color, index, 255, 255, 255);
 			}
 			return;
 		}
 		// select point for dragging
 		action = { laneNum: lane, type: "" };
 		selectedPoint = intersects[0];
+		var color = util.generateRGB(lane);
 		for (index in selectedPositions) {
 			var pointKey = index.split("_");
 			if (pointKey.length > 1) {
 				// util.paintPoint(geometries["lane"+pointKey[0]].attributes.color, pointKey[1], 255, 255, 255);
 				continue;
 			}
-			util.paintPoint(geometries["lane"+lane].attributes.color, index, 255, 255, 255);
+			util.paintPoint(geometries["lane"+lane].attributes.color, index, color.r, color.g, color.b);
 		}
-		util.paintPoint(geometries["lane"+lane].attributes.color, selectedPoint.index, 255, 0, 0);
+		util.paintPoint(geometries["lane"+lane].attributes.color, selectedPoint.index, 255, 255, 255);
 		nearestPoints = kdtrees["lane"+lane].nearest(util.getPos(pointPos, selectedPoint.index), 100, DRAG_RANGE);
 		selectedPositions = {};
 		for (i = 0; i < nearestPoints.length; i++) {
@@ -403,16 +405,28 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 		}
 	};
 
+	$scope.colorLane = function(colors, laneNum) {
+		var color = util.generateRGB(laneNum);
+		for (var i = 0; 3*i < colors.length; i++) {
+			colors[3*i+0] = color.r;
+			colors[3*i+1] = color.g;
+			colors[3*i+2] = color.b;
+		}
+	};
+
 	$scope.clearPoint = function() {
-		util.paintPoint(selectedPoint.object.geometry.attributes.color, selectedPoint.index, 255, 255, 255);
+		var color = util.generateRGB(action.laneNum);
+		util.paintPoint(selectedPoint.object.geometry.attributes.color, selectedPoint.index, color.r, color.g, color.b);
 	};
 
 	$scope.newLane = function(laneNum, arrayBuffer) {
-		var laneCloud = $scope.generatePointCloud("lane"+laneNum, arrayBuffer, 0.15, 255);
+		var color = util.generateRGB(laneNum);
+		var laneCloud = $scope.generatePointCloud("lane"+laneNum, arrayBuffer, 0.15, color);
 		scene.add(laneCloud);
 		pointClouds.lanes[laneNum] = laneCloud;
 		newPositions = laneCloud.geometry.attributes.position;
 		kdtrees["lane"+laneNum] = new THREE.TypedArrayUtils.Kdtree(newPositions.array, util.distance, 3);
+
 	};
 
 	$scope.deleteLane = function(laneNum) {
@@ -449,7 +463,7 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 		var positions = positionArrs[0];
 		var colors = pointClouds.lanes[lanes[0]].geometry.attributes.color;
 		var newColors = new Float32Array(lenNewPositions);
-		for (var i = 0; i < lenNewPositions; i++) newColors[i] = 255;
+		$scope.colorLane(newColors, lanes[0]);
 		delete positions.array;
 		delete colors.array;
 		positions.array = newPositions;
@@ -527,7 +541,7 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 		newPositions.set(fillPositions, positions.array.length);
 
 		var newColors = new Float32Array(lenNewPositions);
-		for (var i = 0; i < lenNewPositions; i++) newColors[i] = 255;
+		$scope.colorLane(newColors, laneNum);
 
 		delete positions.array;
 		delete colors.array;
@@ -545,7 +559,7 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 		var nearestPoints = kdtrees["lane"+laneNum].nearest(endPos, 1, util.INTERPOLATE_STEP);
 		if (nearestPoints.length === 0) return;
 		var index = nearestPoints[0][0].pos;
-		util.paintPoint(geometries["lane"+laneNum].attributes.color, index, 255, 0, 0);
+		util.paintPoint(geometries["lane"+laneNum].attributes.color, index, 255, 255, 255);
 		selectedPoint = {
 			object: pointClouds.lanes[laneNum],
 			index: index
@@ -586,7 +600,11 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 		if (dataType === "[object Float32Array]" || dataType === "[object ArrayBuffer]") {
 			positions = new Float32Array(data);
 			colors = new Float32Array(positions.length);
-			for (i = 0; i < colors.length; i++) colors[i] = color;
+			for (i = 0; 3*i < colors.length; i++) {
+				colors[3*i+0] = color.r;
+				colors[3*i+1] = color.g;
+				colors[3*i+2] = color.b;
+			}
 		} else {
 			positions = new Float32Array(3*data.length);
 			colors    = new Float32Array(3*data.length);
@@ -597,14 +615,21 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 				positions[3*i+2] = data[i][0];	//z
 				// map intensity (0-120) to RGB
 				if (data[i].length >= 4) {
-					var hue = 1 - data[i][3]/120;	//TODO: fix intensity scaling
-					colors[3*i+1]   = util.HUEtoRGB(hue+1/2);	//r
-					colors[3*i+2] = util.HUEtoRGB(hue);		//g
-					colors[3*i+0] = util.HUEtoRGB(hue-1/2);	//b
+					colors[3*i+0] = 255;
+					colors[3*i+1] = 255;
+					colors[3*i+2] = 255;
+					// var hue = 1 - data[i][3]/120;	//TODO: fix intensity scaling
+					// colors[3*i+1] = util.HUEtoRGB(hue+1/2);	//r
+					// colors[3*i+2] = util.HUEtoRGB(hue);		//g
+					// colors[3*i+0] = util.HUEtoRGB(hue-1/2);	//b
+				} else if (typeof color === "undefined") {
+					colors[3*i+0] = 255;
+					colors[3*i+1] = 255;
+					colors[3*i+2] = 255;
 				} else {
-					colors[3*i+1] = color;
-					colors[3*i+2] = color;
-					colors[3*i+0] = color;
+					colors[3*i+0] = color.r;
+					colors[3*i+1] = color.g;
+					colors[3*i+2] = color.b;
 				}
 			}
 		}
@@ -726,8 +751,7 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 			var laneColors = geometries["lane"+laneNum].attributes.color;
 			lanePositions.array = new Float32Array(arrayBuffer);
 			laneColors.array = new Float32Array(lanePositions.array.length);
-			for (var i = 0; i < laneColors.array.length; i++)
-				laneColors.array[i] = 255;
+			$scope.colorLane(laneColors.array, laneNum);
 			lanePositions.needsUpdate = true;
 			laneColors.needsUpdate = true;
 			if (action == "split" || action == "join") {
@@ -752,8 +776,7 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 			var laneColors = geometries["lane"+laneNum].attributes.color;
 			lanePositions.array = new Float32Array(arrayBuffer);
 			laneColors.array = new Float32Array(lanePositions.array.length);
-			for (var i = 0; i < laneColors.array.length; i++)
-				laneColors.array[i] = 255;
+			$scope.colorLane(laneColors.array, laneNum);
 			lanePositions.needsUpdate = true;
 			laneColors.needsUpdate = true;
 		});

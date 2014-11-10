@@ -20,6 +20,7 @@ service('util', ['$http', function($http) {
 		a[1] *= scalar;
 		a[2] *= scalar;
 	}
+	var INTERPOLATE_STEP = 0.5;
 	return {
 		distance: distance,
 		midpoint: function(a, b) {
@@ -29,9 +30,8 @@ service('util', ['$http', function($http) {
 		sum: sum,
 		normalize: normalize,
 		scale: scale,
+		INTERPOLATE_STEP: INTERPOLATE_STEP,
 		interpolate: function(startPos, endPos) {
-			var INTERPOLATE_STEP = 0.5;
-
 			var fillPositions = [];
 			var stepVec = difference(endPos, startPos);
 			normalize(stepVec);
@@ -98,7 +98,7 @@ factory('key', function() {
 		tab: 9,
 		enter: 13,
 		shift: 16, ctrl: 17, alt: 18,
-		escape: 27,
+		esc: 27,
 		space: 32,
 		pageup: 33, pagedown: 34, end: 35, home: 36,
 		left: 37, up: 38, right: 39, down: 40,

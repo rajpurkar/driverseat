@@ -1,28 +1,49 @@
 angular.module('roadglApp').
 service('util', ['$http', function($http) {
+	function distance(a, b) {
+		return Math.sqrt((a[0]-b[0])*(a[0]-b[0]) + (a[1]-b[1])*(a[1]-b[1]) + (a[2]-b[2])*(a[2]-b[2]));
+	}
+	function difference(a, b) {
+		return new Float32Array([a[0]-b[0], a[1]-b[1], a[2]-b[2]]);
+	}
+	function sum(a, b) {
+		return new Float32Array([a[0]+b[0], a[1]+b[1], a[2]+b[2]]);
+	}
+	function normalize(a) {
+		var magnitude = Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+		a[0] /= magnitude;
+		a[1] /= magnitude;
+		a[2] /= magnitude;
+	}
+	function scale(a, scalar) {
+		a[0] *= scalar;
+		a[1] *= scalar;
+		a[2] *= scalar;
+	}
 	return {
-		distance: function(a, b) {
-			return Math.sqrt((a[0]-b[0])*(a[0]-b[0]) + (a[1]-b[1])*(a[1]-b[1]) + (a[2]-b[2])*(a[2]-b[2]));
-		},
+		distance: distance,
 		midpoint: function(a, b) {
 			return new Float32Array([(a[0]+b[0])/2, (a[1]+b[1])/2, (a[2]+b[2])/2]);
 		},
-		difference: function(a, b) {
-			return new Float32Array([a[0]-b[0], a[1]-b[1], a[2]-b[2]]);
-		},
-		sum: function(a, b) {
-			return new Float32Array([a[0]+b[0], a[1]+b[1], a[2]+b[2]]);
-		},
-		normalize: function(a) {
-			var magnitude = Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
-			a[0] /= magnitude;
-			a[1] /= magnitude;
-			a[2] /= magnitude;
-		},
-		scale: function(a, scalar) {
-			a[0] *= scalar;
-			a[1] *= scalar;
-			a[2] *= scalar;
+		difference: difference,
+		sum: sum,
+		normalize: normalize,
+		scale: scale,
+		interpolate: function(startPos, endPos) {
+			var INTERPOLATE_STEP = 0.5;
+
+			var fillPositions = [];
+			var stepVec = difference(endPos, startPos);
+			normalize(stepVec);
+			scale(stepVec, INTERPOLATE_STEP);
+			var currPos = startPos;
+			while (distance(currPos, endPos) > INTERPOLATE_STEP) {
+				currPos = sum(currPos, stepVec);
+				fillPositions.push(currPos[0]);
+				fillPositions.push(currPos[1]);
+				fillPositions.push(currPos[2]);
+			}
+			return fillPositions;
 		},
 		getPos: function(array, index) {
 			return array.subarray(3*index, 3*index+3);
@@ -190,7 +211,7 @@ factory('history', ['cache', function(cache) {
 	return {
 		push: function(action, lanePositions, laneNum) {
 			var entry = {
-				laneNum: laneNum,
+				laneNum: parseInt(laneNum, 10),
 				action: action,
 				filename: Date.now().toString()
 			};

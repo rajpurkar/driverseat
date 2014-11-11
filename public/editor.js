@@ -11,11 +11,24 @@ function(util, key, history) {
 		history.push("original", positions, laneNum);
 	}
 
+	function changeDragRange(){
+		DRAG_RANGE = document.getElementById('drrange').value;
+	}
+
+	function handleSlider(){
+		//todo: modularize
+		changeDragRange();
+		var input = document.querySelector('#drrange');
+		input.addEventListener('input', changeDragRange);	
+	}
+
 	function init(scope) {
 		$scope = scope;
 		document.addEventListener('mousedown', onDocumentMouseDown, false);
 		document.addEventListener('mouseup', onDocumentMouseUp, false);
 		document.addEventListener('keydown', onDocumentKeyDown, false);
+		handleSlider();
+		
 	}
 
 	function onDocumentKeyDown(event) {

@@ -1,5 +1,6 @@
 html
 	head
+		script(src='/javascripts/jquery-2.1.1.min.js')
 		script(src='/javascripts/angular.min.js')
 		script(src='/javascripts/three.min.js')
 		script(src='/javascripts/PLYLoader.js')
@@ -8,7 +9,6 @@ html
 		script(src='/javascripts/MTLLoader.js')
 		script(src='/javascripts/OBJMTLLoader.js')
 		script(src='/javascripts/TypedArrayUtils.js')
-		script(src='/javascripts/jquery-2.1.1.min.js')
 		script(src='/javascripts/BinaryLoader.js')
 		script(src='/javascripts/async.js')
 		script(src='/javascripts/fpsmeter.js')
@@ -16,11 +16,12 @@ html
 		title RoadGL
 	body(ng-app='roadglApp')
 		div(ng-controller='AppCtrl')
-			div#fps
 			canvas#road
 				canvas
 			#overlay
 				#instructions.tab
+					h1 
+						=track
 					h2 Instructions
 					h4 Ctrl + Mouse to look around
 					h4 Space to Play/Pause
@@ -30,8 +31,16 @@ html
 						|Undo
 					button#redo.actionBtn(type="button")
 						|Redo
+				#doneDiv.tab
+					button#done.actionBtn(type="button")
+						|Done
 				#debug.tab
 					p#debugText {{debugText}}
+			#rightOverlay
+				#fps
+				#slideDiv.tab
+					h3 Drag range
+					input#drrange(type="range", min="1", max="60", value="15", step="5")
 		#videoPlayer
 			div
 				canvas#projectionCanvas

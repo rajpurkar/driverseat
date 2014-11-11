@@ -27,6 +27,14 @@ button:focus {
 	margin: 20px 20px;
 }
 
+#rightOverlay {
+	width: 150px;
+	position: absolute;
+	top: 0;
+	right: 0;
+	margin: 20px 20px;
+}
+
 #title{
 	text-align: center;
 }
@@ -54,6 +62,23 @@ button:focus {
 	color: #fff;
 	margin: 5px 0px;
 }
+
+#slideDiv{
+	background: rgba(50,50,50,0.8);
+	padding: 10px 10px;
+}
+
+#done{
+	background: rgba(50,150,50,0.8);
+}
+
+#done:hover{
+	background: rgba(50,150,50,0.8);
+}
+
+#slideDiv{
+}
+
 
 .actionBtn:hover{
 	background: rgba(250,50,50,0.9);

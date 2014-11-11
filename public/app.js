@@ -90,8 +90,14 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 					callback(null, 5);
 				});
 			},
-            video: function(callback) { 
-                video.init("http://stanford.edu/~sameep/280N_a604", "re_", callback);
+            video: function(callback) {
+                JSZipUtils.getBinaryContent('assets/re.zip', function(err, data) {
+                if(err) {
+                    throw err; // or handle err
+                }
+                video.init(data);
+                callback(null, 'video_init');
+            });
             }
 		},
 		function(err, results) {
@@ -348,8 +354,8 @@ controller('AppCtrl', ['$scope', '$window', 'util', 'key', 'history', 'video',
 			$scope.updateCamera(frameCount);
 			//video.nextFrame();
 			frameCount++;
-            video.displayImage("projectionCanvas", frameCount);
 		}
+        video.displayImage("projectionCanvas", frameCount);
         //video.displayPreloadedImage("projectionCanvas", frameCount);
 		var gpsPositions = pointClouds.gps.geometry.attributes.position.array;
 		if (frameCount+5 >= gpsPositions.length/3) {

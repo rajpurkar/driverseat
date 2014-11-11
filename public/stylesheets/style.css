@@ -45,12 +45,16 @@ button:focus {
 	color: #fff;
 }
 
-#debug{
-	border-radius:10px; /* regular */
+#tips{
+	padding: 5px 15px;
+	background: rgba(50,50,50,0.8);
 	color: #fff;
-	padding: 3px 10px;
-	position: absolute;
-	font-size: 60px;
+}
+
+#debug{
+	color: #fff;
+	width: 100%;
+	font-size: 30px;
 }
 
 .actionBtn{

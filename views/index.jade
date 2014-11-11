@@ -26,6 +26,9 @@ html
 					h4 Ctrl + Mouse to look around
 					h4 Space to Play/Pause
 					h4 Arrow Keys to move car
+				#tips.tab
+					p 'f' to fork
+					p 'a' to append
 				#actions.tab
 					button#undo.actionBtn(type="button")
 						|Undo
@@ -34,13 +37,13 @@ html
 				#doneDiv.tab
 					button#done.actionBtn(type="button")
 						|Done
-				#debug.tab
-					p#debugText {{debugText}}
 			#rightOverlay
 				#fps.tab
 				#slideDiv.tab
 					h3 Drag range
 					input#drrange(type="range", min="1", max="60", value="15", step="5")
+				#debug.tab
+					p#debugText {{debugText}}
 		#videoPlayer
 			div
 				canvas#projectionCanvas

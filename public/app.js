@@ -37,7 +37,7 @@ function($scope, $window, editor, util, key, video) {
 
 		$scope.scene = new THREE.Scene();
 		//scene.fog = new THREE.Fog( 0xcce0ff, 500, 10000 );
-		camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 1, 1000);
+		camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 1, 10000);
 		projector = new THREE.Projector();
 		$scope.raycaster = new THREE.Raycaster();
 		var canvas = document.getElementById("road");
@@ -51,14 +51,14 @@ function($scope, $window, editor, util, key, video) {
 		async.parallel({
 			pointCloud: function(callback){
 				util.loadJSON(datafiles.points, function(data) {
-					$scope.pointClouds.points = $scope.generatePointCloud("points", data, 0.01);
+					$scope.pointClouds.points = $scope.generatePointCloud("points", data, 0.004);
 					$scope.scene.add($scope.pointClouds.points);
 					callback(null, 1);
 				});
 			},
 			gps: function(callback){
 				util.loadJSON(datafiles.gps, function(data) {
-					$scope.pointClouds.gps = $scope.generatePointCloud("gps", data, 0.01);
+					$scope.pointClouds.gps = $scope.generatePointCloud("gps", data, 0.1);
 					callback(null, 2);
 				});
 			},
@@ -67,7 +67,7 @@ function($scope, $window, editor, util, key, video) {
 					$scope.pointClouds.lanes = {};
 					for (var lane in data){
 						var color = util.generateRGB(lane);
-						var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], 0.15, color);
+						var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], 0.35, color);
 						$scope.scene.add(laneCloud);	
 						$scope.pointClouds.lanes[lane] = laneCloud;
 						var positions = laneCloud.geometry.attributes.position.array;
@@ -97,7 +97,7 @@ function($scope, $window, editor, util, key, video) {
 	};
 
 	$scope.addLighting = function(){
-		pointLight = new THREE.PointLight( 0xffaa00 );
+		pointLight = new THREE.PointLight( 0xffffff );
 		$scope.scene.add( pointLight );
 		pointLight.position= car.position;
 		pointLight.position.x= car.position.x -5;
@@ -175,6 +175,7 @@ function($scope, $window, editor, util, key, video) {
 
 	$scope.carRight= function(){
 		carOffset-=0.3;
+
 		$scope.updateCamera(frameCount);
 	};
 
@@ -197,14 +198,20 @@ function($scope, $window, editor, util, key, video) {
 		$scope.updateCamera(frameCount);
 	};
 
-	$scope.updateCamera = function(frameCount) {
+	$scope.getCarPosition = function(frameCount){
 		var gpsPositions = $scope.pointClouds.gps.geometry.attributes.position.array;
-		car.position.x = gpsPositions[3*frameCount+0] + carOffset;
-		car.position.y = gpsPositions[3*frameCount+1] -1.1;
-		car.position.z = gpsPositions[3*frameCount+2];
-		
+		var x = gpsPositions[3*frameCount+0] + carOffset;
+		var y = gpsPositions[3*frameCount+1] -1.1;
+		var z = gpsPositions[3*frameCount+2];
+		return {x: x, y:y, z:z};
+	}
+
+	$scope.updateCamera = function(frameCount) {
+		var lastCarPosition = new THREE.Vector3(0, 0, 0);
+		var pos = $scope.getCarPosition(frameCount);
+		angular.extend(car.position, pos);
+		car.lookAt($scope.getCarPosition(frameCount + 5));
 		camera.position.set(car.position.x + offset[0], car.position.y + offset[1], car.position.z + offset[2]);
-		
 		var target = car.position;
 		camera.lookAt(target);
 		controls.target.copy(target);
@@ -243,6 +250,14 @@ function($scope, $window, editor, util, key, video) {
 		renderer.render($scope.scene, camera);
 	};
 
+	$scope.fillColor = function(colors, data, r, g, b){
+		for (i = 0; i < data.length; i++) {
+			colors[3*i+0] = r;
+			colors[3*i+1] = g;
+			colors[3*i+2] = b;
+		}
+	};
+
 	$scope.generatePointCloud = function(name, data, size, color) {
 		$scope.geometries[name] = new THREE.BufferGeometry();
 		var positions, colors;
@@ -250,7 +265,6 @@ function($scope, $window, editor, util, key, video) {
 		var dataType = Object.prototype.toString.call(data);
 		if (dataType === "[object Float32Array]" || dataType === "[object ArrayBuffer]") {
 			positions = new Float32Array(data);
-			colors = new Float32Array(positions.length);
 			for (i = 0; 3*i < colors.length; i++) {
 				colors[3*i+0] = color.r;
 				colors[3*i+1] = color.g;
@@ -259,37 +273,26 @@ function($scope, $window, editor, util, key, video) {
 		} else {
 			positions = new Float32Array(3*data.length);
 			colors    = new Float32Array(3*data.length);
+			console.log(name);
 			for (i = 0; i < data.length; i++) {
 				//Note: order is changed
 				positions[3*i]   = data[i][1];	//x
 				positions[3*i+1] = data[i][2];	//y
 				positions[3*i+2] = data[i][0];	//z
-				// map intensity (0-120) to RGB
-				if (data[i].length >= 4) {
-					colors[3*i+0] = 255;
-					colors[3*i+1] = 255;
-					colors[3*i+2] = 255;
-					// var hue = 1 - data[i][3]/120;	//TODO: fix intensity scaling
-					// colors[3*i+1] = util.HUEtoRGB(hue+1/2);	//r
-					// colors[3*i+2] = util.HUEtoRGB(hue);		//g
-					// colors[3*i+0] = util.HUEtoRGB(hue-1/2);	//b
-				} else if (typeof color === "undefined") {
-					colors[3*i+0] = 255;
-					colors[3*i+1] = 255;
-					colors[3*i+2] = 255;
-				} else {
-					colors[3*i+0] = color.r;
-					colors[3*i+1] = color.g;
-					colors[3*i+2] = color.b;
-				}
+			}
+		
+			if (data[0].length >= 4) {
+				$scope.fillColor(colors, data, 20, 100,20);
+			} else if (typeof color === "undefined") {
+				$scope.fillColor(colors, data, 255, 255, 255);
+			} else {
+				$scope.fillColor(colors,data, color.r, color.g, color.b);
 			}
 		}
-
 		$scope.geometries[name].addAttribute('position', new THREE.BufferAttribute(positions, 3));
 		$scope.geometries[name].addAttribute('color', new THREE.BufferAttribute(colors, 3));
 		var material = new THREE.PointCloudMaterial({ size: size, vertexColors: true });
 		pointCloud = new THREE.PointCloud($scope.geometries[name], material);
-
 		return pointCloud;
 	};
 
@@ -297,7 +300,7 @@ function($scope, $window, editor, util, key, video) {
 		var camaroMaterials = {
 			body: {
 				Orange: new THREE.MeshLambertMaterial( {
-					color: 0xff6600,
+					color: 0xff0000,
 					combine: THREE.MixOperation,
 					reflectivity: 0.3
 				} )
@@ -330,7 +333,7 @@ function($scope, $window, editor, util, key, video) {
 		var loader = new THREE.BinaryLoader();
 		loader.load("/files/CamaroNoUv_bin.js", function(geometry) { 
 			var materials = camaroMaterials;
-			var s = 0.27, m = new THREE.MeshFaceMaterial();
+			var s = 0.23, m = new THREE.MeshFaceMaterial();
 			m.materials[ 0 ] = materials.body.Orange; // car body
 			m.materials[ 1 ] = materials.chrome; // wheels chrome
 			m.materials[ 2 ] = materials.chrome; // grille chrome

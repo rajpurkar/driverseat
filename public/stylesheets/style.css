@@ -16,7 +16,7 @@ button:focus {
 }
 
 .tab{
-	margin: 15px 0px;
+	margin-bottom: 15px;
 }
 
 #overlay {
@@ -73,12 +73,11 @@ button:focus {
 }
 
 #done:hover{
-	background: rgba(50,150,50,0.8);
+	background: rgba(50,150,50,0.9);
 }
 
 #slideDiv{
 }
-
 
 .actionBtn:hover{
 	background: rgba(250,50,50,0.9);

@@ -1,39 +1,30 @@
 angular.module('roadglApp').
 service('video', function() {
 	var ctx, canvas, video;
-    var images = new Array(); 
+    var images = new Array();
+    var zLoader;
+    var currentImage = new Image();
+    var scaling = 1;
 
 	return {
-		init: function(dir,prefix) {
+		init: function(data) {
+            zLoader = new JSZip(data);
 			video = document.getElementById("video");
 			canvas = document.getElementById("projectionCanvas");
 			ctx = canvas.getContext("2d");
-            for (i = 0; i < 600; i++) { 
-                images[i] = new Image();
-                var n = i + 1;
-                images[i].onload = function() { 
-                    console.log("loaded image");
-                }
-                images[i].src = dir + "/" + prefix + n + ".jpg";
-            }
 		},
-        displayPreloadedImage: function(canvasId, num) {
-            var j = images[num];
-            var c = document.getElementById(canvasId);
-            c.width = j.width;
-            c.height = j.height;
-            ctx.drawImage(j, 0, 0, j.width, j.height);
-        },
-        displayImage: function(canvasId, url) {
-            var j = new Image(); 
+        displayImage: function(canvasId, framenum) {
+            var j = currentImage; 
             j.onload = function() {
                 var c = document.getElementById(canvasId);
-                c.width = j.width;
-                c.height = j.height;
                 var ctx = c.getContext("2d");
-                ctx.drawImage(j, 0, 0, j.width, j.height);
+                c.width = j.width * scaling;
+                c.height = j.height * scaling;
+                ctx.drawImage(j, 0, 0, c.width, c.height);
             };
-            j.src = url;
+            var n = framenum + 1;
+            var data = zLoader.file("re_" + n + ".jpg").asBinary();
+            j.src = "data:image/jpg;base64,"+btoa(data); 
         },
 	};
 });

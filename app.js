@@ -5,8 +5,9 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var app = express();
 var fs = require('fs');
+var moment = require('moment');
+var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -19,6 +20,22 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'), {maxAge: '1d'}));
+
+app.post('/save', function(req, res, next){
+    var lanes = req.body.lanes; 
+    var track = req.body.track; 
+    var filename = track + ":" + moment().unix();
+    var path = '/tmp';
+    fs.writeFile(path+ "/" + filename, lanes, function(err) {
+        if(err) {
+            console.log(err);
+            res.status(500).end();
+        } else {
+            console.log("The file was saved!");
+            res.status(200).end();
+        }
+    });
+});
 
 app.get('/', function(req, res, next){
    var track = req.query.route;
@@ -43,12 +60,6 @@ function level2Search(path) {
 
 app.get('/list', function(req, res, next){
     res.render('files', {dir: level2Search('./public/sample')});
-});
-
-app.post('/save', function(req, res, next){
-    var lanes = req.query.lanes;   
-    console.log(lanes.length);
-    res.send(200);
 });
 
 // catch 404 and forward to error handler

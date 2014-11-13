@@ -40,7 +40,7 @@ app.post('/save', function(req, res, next){
 app.get('/', function(req, res, next){
    var track = req.query.route;
    var numCams = req.query.cameras;
-   if(!track) track = "4-2-14-Monterey";
+   if(!track) track = "gilroy/to_gilroy_b";
    if(!numCams) numCams = 2;
    res.render('index', {track: track, numCameras: numCams})
 });
@@ -59,7 +59,7 @@ function level2Search(path) {
 }
 
 app.get('/list', function(req, res, next){
-    res.render('files', {dir: level2Search('./public/sample')});
+    res.render('files', {dir: level2Search('./public/runs')});
 });
 
 // catch 404 and forward to error handler

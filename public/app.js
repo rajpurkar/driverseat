@@ -15,14 +15,15 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 		mouse = { x: 1, y: 1 },
 		windowWidth = $window.innerWidth,
 		windowHeight = $window.innerHeight,
+		title = document.getElementById("title").textContent.substr(1),
 		datafiles = {
-            points: "gilroy/from_gilroy_f/map.json.zip",
-			gps: "gilroy/from_gilroy_f/gps.json.zip",
-			lanes: "gilroy/from_gilroy_f/lanes_done.json.zip",
-			planes: "gilroy/from_gilroy_f/planes.json.zip",
-			video: "gilroy/from_gilroy_f/cam_2.zip",
-            radar: "gilroy/from_gilroy_f/radar.json.zip",
-            params: "q50_4_3_14_params.json"
+            points: "/runs/" + title + "/map.json.zip",
+			gps: "/runs/" + title + "/gps.json.zip",
+			lanes: "/runs/" + title + "/lanes_done.json.zip",
+			planes: "/runs/" + title + "/planes.json.zip",
+			video: "/runs/" + title + "/cam_2.zip",
+            radar: "/runs/" + title + "/radar.json.zip",
+            params: "/q50_4_3_14_params.json"
 		},
 		frameCount = 0,
 		offset = [0, 5, -14],//[0,1,-2],
@@ -260,7 +261,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 	$scope.updateMouse = function() {
 		var mousePosition = new THREE.Vector3(mouse.x, mouse.y, 0.5);
 		projector.unprojectVector(mousePosition, camera);
-		$scope.raycaster.params = {"PointCloud" : {threshold: 0.1}};
+		$scope.raycaster.params = {"PointCloud" : {threshold: 0.3}};
 		$scope.raycaster.ray.set(camera.position, mousePosition.sub(camera.position).normalize());
 	};
 	
@@ -307,6 +308,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 		var dataType = Object.prototype.toString.call(data);
 		if (dataType === "[object Float32Array]" || dataType === "[object ArrayBuffer]") {
 			positions = new Float32Array(data);
+			colors = new Float32Array(data);
 			for (i = 0; 3*i < colors.length; i++) {
 				colors[3*i+0] = color.r;
 				colors[3*i+1] = color.g;

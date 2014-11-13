@@ -8,6 +8,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 	$scope.kdtrees = {};
 	var camera, renderer,
 		projector,
+        radar_data,
 		controls,
         fpsMeter,
         params,
@@ -50,10 +51,6 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 		//renderer.setClearColor( scene.fog.color );
 
 		controls = new THREE.OrbitControls(camera);
-        util.loadJSON(datafiles.params, function(data) {
-            params = data;
-            videoProjection.init(params);
-        });
 
 		$scope.debugText = "Loading...";
 		async.parallel({
@@ -122,12 +119,20 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
                     if(err) throw err; // or handle err
                     var loader = util.loadDataFromZip;
                     var data = JSON.parse(loader(gzipped_data, "radar.json"));
-                    radar.init(data, params, $scope.scene);
+                    radar_data = data; 
 					callback(null, "radar_init");
 				});
-			}
-		},
+			},
+            params: function(callback) { 
+                util.loadJSON(datafiles.params, function(data) {
+                    params = data;
+                    callback(null, "params");
+             });
+		    },
+        },
 		function(err, results) {
+            radar.init(radar_data, params, $scope.scene);
+            videoProjection.init(params);
 			$scope.debugText = "";
 			//$scope.debugText = JSON.stringify(offset);
 			$scope.execOnLoaded();

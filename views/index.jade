@@ -1,17 +1,15 @@
 html
 	head
-		script(src='/javascripts/jquery-2.1.1.min.js')
+		script(type='text/javascript', src='/vendor/jquery.js')
 		script(src='/javascripts/angular.min.js')
 		script(src='/javascripts/three.min.js')
-		script(src='/javascripts/PLYLoader.js')
 		script(src='/javascripts/OrbitControls.js')
-		script(src='/javascripts/DDSLoader.js')
-		script(src='/javascripts/MTLLoader.js')
-		script(src='/javascripts/OBJMTLLoader.js')
 		script(src='/javascripts/TypedArrayUtils.js')
 		script(src='/javascripts/BinaryLoader.js')
 		script(src='/javascripts/async.js')
 		script(src='/javascripts/fpsmeter.js')
+		script(type='text/javascript', src='/vendor/bootstrap.min.js')
+		link(rel="stylesheet", href='/vendor/bootstrap.min.css')
 		link(rel='stylesheet', href='/stylesheets/style.css')
 		title RoadGL
 	body(ng-app='roadglApp')
@@ -19,16 +17,19 @@ html
 			canvas#road
 				canvas
 			#overlay
-				#instructions.tab
-					h1 
+				#title.tab
+					h4 
 						=track
-					h2 Instructions
-					h4 Ctrl + Mouse to look around
-					h4 Space to Play/Pause
-					h4 Arrow Keys to move car
+				#instructions.tab
+					h3 Instructions
+					p Ctrl + Mouse to look around
+					p Space to Play/Pause
+					p Arrow Keys to move car
 				#tips.tab
+					h3 Click a point and then:
 					p 'f' to fork
 					p 'a' to append
+					p Esc to exit!
 				#actions.tab
 					button#undo.actionBtn(type="button")
 						|Undo
@@ -44,9 +45,19 @@ html
 					input#drrange(type="range", min="1", max="60", value="15", step="5")
 				#debug.tab
 					p#debugText {{debugText}}
-		#videoPlayer
-			div
-				canvas#projectionCanvas
+			#videoPlayerWrap
+				#videoPlayer
+					canvas#projectionCanvas
+				nav
+					.text-center
+						ul.pagination#cameraOpts
+							li.active
+								a(href='#') 1
+							- for (var i = 2; i < numCameras+1; ++i) {
+								li
+									a(href='#')
+										= i
+							- }
 		script(src='/controllers.js')
 		script(src='/app.js')
 		script(src='/editor.js')

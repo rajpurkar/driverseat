@@ -20,7 +20,7 @@ button:focus {
 }
 
 #overlay {
-	width: 150px;
+	width: 200px;
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -28,11 +28,25 @@ button:focus {
 }
 
 #rightOverlay {
-	width: 150px;
+	width: 200px;
 	position: absolute;
 	top: 0;
 	right: 0;
 	margin: 20px 20px;
+}
+
+.pagination>li>a, .pagination>li>span{
+	padding: 5px 12px;
+	border:none;
+	color: #000;
+	line-height: 1.0;
+	background: rgba(180, 180, 180, 0.95);
+}
+
+#cameraOpts{
+	margin:0px;
+	padding-left: 0px;
+	border-radius: 0px;
 }
 
 #title{
@@ -87,8 +101,12 @@ button:focus {
 	background: rgba(250,50,50,0.9);
 }
 
-#videoPlayer {
+#videoPlayerWrap {
 	position: absolute;
 	right: 10px;
 	bottom: 10px;
+}
+
+#videoPlayer{
+	width:100%;
 }

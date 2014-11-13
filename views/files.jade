@@ -3,7 +3,6 @@ html
 		script(type='text/javascript', src='/vendor/jquery.js')
 		script(type='text/javascript', src='/vendor/bootstrap.min.js')
 		link(rel="stylesheet", href='/vendor/bootstrap.min.css')
-	
 		link(rel='stylesheet', href='/stylesheets/files.css')
 		title RoadGLFiles
 	body
@@ -17,10 +16,13 @@ html
 							| Paving the path for tomorrow
 						#header-info
 						h4 Choose the track you would like to label
-						ul
-							for dir in dirs
-								li
-									a(href="/?route=" + dir)
-										=dir
-											|   (2 hours)
-						
+						- each vals, key in dir
+							.level1
+								h3
+									= key
+								- each val in vals
+									.level2
+										a(href="/?route=" + key + "%2F" + val)
+											h4 
+												= val
+							

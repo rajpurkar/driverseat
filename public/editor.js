@@ -1,6 +1,6 @@
 angular.module('roadglApp').
-factory('editor', ['util', 'key', 'history',
-function(util, key, history) {
+factory('editor', ['util', 'key', 'history', '$http',
+function(util, key, history, $http) {
 	var $scope,
 		selectedPoint,
 		selectedPositions = {}, // index => position array
@@ -29,6 +29,21 @@ function(util, key, history) {
 		document.addEventListener('keydown', onDocumentKeyDown, false);
 		handleSlider();
 		
+	}
+
+	function done(){
+		var trackname = document.getElementById("title").textContent; //todo: change the way this is done 
+		var d= {};
+		for(var laneNum in $scope.pointClouds.lanes){
+			d[laneNum] = $scope.geometries["lane"+laneNum].attributes.position.array;
+		}
+		$http({
+		    method: 'POST',
+		    url: '/save',
+		    data: {lanes: "placeholder", track: trackname}
+		}).success(function () {
+			$scope.debugText = 'Saved!';
+		});
 	}
 
 	function onDocumentKeyDown(event) {
@@ -97,7 +112,7 @@ function(util, key, history) {
 			return;
 		}
 
-		for (lane in $scope.pointClouds.lanes) {
+		for (var lane in $scope.pointClouds.lanes) {
 			intersects = $scope.raycaster.intersectObject($scope.pointClouds.lanes[lane]);
 			if (intersects.length > 0) break;
 		}
@@ -440,6 +455,7 @@ function(util, key, history) {
 		initLane: initLane,
 		init: init,
 		undo: undo,
-		redo: redo
+		redo: redo,
+		done: done
 	};
 }]);

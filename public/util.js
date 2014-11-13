@@ -100,6 +100,28 @@ service('util', ['$http', function($http) {
 				}
 			});
 		},
+        loadDataFromZip: function(zip_data_buffer, fname_in_zip) 
+        {
+            var loader = new JSZip(zip_data_buffer);
+            return loader.file(fname_in_zip).asBinary();
+        },
+        
+        Matrix4FromJSON4x4: function(j) {
+            return new THREE.Matrix4(
+                j[0][0], j[0][1], j[0][2], j[0][3],
+                j[1][0], j[1][1], j[1][2], j[1][3],
+                j[2][0], j[2][1], j[2][2], j[2][3],
+                j[3][0], j[3][1], j[3][2], j[3][3]
+            );
+        },
+        Matrix4FromJSON3x3: function(j) {
+            return new THREE.Matrix4(
+                j[0][0], j[0][1], j[0][2], 0,
+                j[1][0], j[1][1], j[1][2], 0,
+                j[2][0], j[2][1], j[2][2], 0,
+                0,       0,       0,       1
+            );
+        },
 		paintPoint: function(pointColors, index, r, g, b) {
 			pointColors.array[3*index] = r;
 			pointColors.array[3*index+1] = g;

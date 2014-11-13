@@ -16,24 +16,39 @@ app.set('view engine', 'jade');
 //app.use(favicon(__dirname + '/public/favicon.ico'));
 app.use(logger('dev'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'), {maxAge: '1d'}));
 
 app.get('/', function(req, res, next){
    var track = req.query.route;
+   var numCams = req.query.cameras;
    if(!track) track = "4-2-14-Monterey";
-   res.render('index', {track: track})
+   if(!numCams) numCams = 2;
+   res.render('index', {track: track, numCameras: numCams})
 });
 
-function getDirectories(path) {
-  return fs.readdirSync(path).filter(function (file) {
-    return fs.statSync(path+'/'+file).isDirectory();
+function level2Search(path) {
+  var dirs = fs.readdirSync(path);
+  var list = {};
+  dirs.forEach(function (file) {
+    if(fs.statSync(path+'/'+file).isDirectory()){
+      list[file] = fs.readdirSync(path+"/" + file).filter(function (file2){
+        return fs.statSync(path+'/'+file + "/" + file2).isDirectory();
+      });
+    }
   });
+  return list;
 }
 
 app.get('/list', function(req, res, next){
-    res.render('files', {dirs: getDirectories('./public/sample')});
+    res.render('files', {dir: level2Search('./public/sample')});
+});
+
+app.post('/save', function(req, res, next){
+    var lanes = req.query.lanes;   
+    console.log(lanes.length);
+    res.send(200);
 });
 
 // catch 404 and forward to error handler

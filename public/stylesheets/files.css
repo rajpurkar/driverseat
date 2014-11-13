@@ -25,6 +25,16 @@ a, a:focus, a:hover{
 	font-size: 20px;
 }
 
+.level1{
+	font-size: 20px;
+}
+
+.level2 > a{
+	font-size: 10px;
+	text-indent: 10px;
+	line-height: 1em;
+}
+
 a:hover{
 	color: #500;
 }

@@ -1,6 +1,6 @@
 angular.module('roadglApp').
-controller('AppCtrl', ['$scope', '$window', 'editor', 'util', 'key', 'video',
-function($scope, $window, editor, util, key, video) {
+controller('AppCtrl', ['$scope', '$window', 'editor', 'util', 'key', 'video', 'videoProjection', 'radar',
+function($scope, $window, editor, util, key, video, videoProjection, radar) {
 	$scope.scene = null;
 	$scope.raycaster = null;
 	$scope.geometries = {};
@@ -10,16 +10,19 @@ function($scope, $window, editor, util, key, video) {
 		projector,
 		controls,
         fpsMeter,
+        params,
 		groundNormals = [],
 		mouse = { x: 1, y: 1 },
 		windowWidth = $window.innerWidth,
 		windowHeight = $window.innerHeight,
 		datafiles = {
-			points: "files/datafile.json",
-			gps: "files/gpsfile.json",
-			lanes: "files/lanesfile.json",
-			planes: "files/planesfile.json",
-			video: "files/videofile.zip"
+            points: "gilroy/from_gilroy_f/map.json.zip",
+			gps: "gilroy/from_gilroy_f/gps.json.zip",
+			lanes: "gilroy/from_gilroy_f/lanes_done.json.zip",
+			planes: "gilroy/from_gilroy_f/planes.json.zip",
+			video: "gilroy/from_gilroy_f/cam_2.zip",
+            radar: "gilroy/from_gilroy_f/radar.json.zip",
+            params: "q50_4_3_14_params.json"
 		},
 		frameCount = 0,
 		offset = [0, 5, -14],//[0,1,-2],
@@ -37,7 +40,7 @@ function($scope, $window, editor, util, key, video) {
 
 		$scope.scene = new THREE.Scene();
 		//scene.fog = new THREE.Fog( 0xcce0ff, 500, 10000 );
-		camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 1, 10000);
+		camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 0.01, 10000);
 		projector = new THREE.Projector();
 		$scope.raycaster = new THREE.Raycaster();
 		var canvas = document.getElementById("road");
@@ -46,24 +49,36 @@ function($scope, $window, editor, util, key, video) {
 		//renderer.setClearColor( scene.fog.color );
 
 		controls = new THREE.OrbitControls(camera);
+        util.loadJSON(datafiles.params, function(data) {
+            params = data;
+            videoProjection.init(params);
+        });
 
 		$scope.debugText = "Loading...";
 		async.parallel({
 			pointCloud: function(callback){
-				util.loadJSON(datafiles.points, function(data) {
-					$scope.pointClouds.points = $scope.generatePointCloud("points", data, 0.004);
-					$scope.scene.add($scope.pointClouds.points);
-					callback(null, 1);
-				});
+                JSZipUtils.getBinaryContent(datafiles.points, function(err, data) {
+                    if(err) throw err; // or handle err
+                    var loader = util.loadDataFromZip;
+                    var points = JSON.parse(loader(data, "map.json"));
+                    $scope.pointClouds.points = $scope.generatePointCloud("points", points, 0.004);
+                    $scope.scene.add($scope.pointClouds.points);
+                    callback(null, 'map_load');
+                });
 			},
 			gps: function(callback){
-				util.loadJSON(datafiles.gps, function(data) {
-					$scope.pointClouds.gps = $scope.generatePointCloud("gps", data, 0.1);
-					callback(null, 2);
-				});
+                JSZipUtils.getBinaryContent(datafiles.gps, function(err, data) {
+                    if(err) throw err; // or handle err
+                    var loader = util.loadDataFromZip;
+                    $scope.gps = JSON.parse(loader(data, "gps.json"));
+                    callback(null, 'gps_load');
+                });
 			},
 			lanes: function(callback){
-				util.loadJSON(datafiles.lanes, function(data) {
+                JSZipUtils.getBinaryContent(datafiles.lanes, function(err, gzipped_data) {
+                    if(err) throw err; // or handle err
+                    var loader = util.loadDataFromZip;
+                    var data = JSON.parse(loader(gzipped_data, "lanes_done.json")); 
 					$scope.pointClouds.lanes = {};
 					for (var lane in data){
 						var color = util.generateRGB(lane);
@@ -78,7 +93,10 @@ function($scope, $window, editor, util, key, video) {
 				});
 			},
 			planes: function(callback){
-				util.loadJSON(datafiles.planes, function(data) {
+                JSZipUtils.getBinaryContent(datafiles.planes, function(err, gzipped_data) {
+                    if(err) throw err; // or handle err
+                    var loader = util.loadDataFromZip;
+                    var data = JSON.parse(loader(gzipped_data, "planes.json")); 
 					$scope.addPlanes(data);
 					callback(null, 4);
 				});
@@ -90,13 +108,23 @@ function($scope, $window, editor, util, key, video) {
 			},
             video: function(callback) {
                 JSZipUtils.getBinaryContent(datafiles.video, function(err, data) {
-                if(err) {
-                    throw err; // or handle err
-                }
-                video.init(data);
-                callback(null, 'video_init');
-            });
-            }
+                    if(err) {
+                        throw err; // or handle err
+                    }
+                    video.init(data);
+                    callback(null, 'video_init');
+                });
+            },
+			radar: function(callback){
+                console.log(datafiles.radar);
+                JSZipUtils.getBinaryContent(datafiles.radar, function(err, gzipped_data) {
+                    if(err) throw err; // or handle err
+                    var loader = util.loadDataFromZip;
+                    var data = JSON.parse(loader(gzipped_data, "radar.json"));
+                    radar.init(data, params, $scope.scene);
+					callback(null, "radar_init");
+				});
+			}
 		},
 		function(err, results) {
 			$scope.debugText = "";
@@ -196,7 +224,8 @@ function($scope, $window, editor, util, key, video) {
 
 	$scope.carForward = function(){
 		var numForward = 3;
-		frameCount += numForward;
+        if (frameCount + numForward < $scope.gps.length) 
+		    frameCount += numForward;
 		$scope.updateCamera(frameCount);
 	};
 
@@ -209,10 +238,10 @@ function($scope, $window, editor, util, key, video) {
 	};
 
 	$scope.getCarPosition = function(frameCount){
-		var gpsPositions = $scope.pointClouds.gps.geometry.attributes.position.array;
-		var x = gpsPositions[3*frameCount+0] + carOffset;
-		var y = gpsPositions[3*frameCount+1] -1.1;
-		var z = gpsPositions[3*frameCount+2];
+        var pos = $scope.gps[frameCount];
+        var x = pos[1][3] + carOffset;
+        var y = pos[2][3] - 1.1;
+        var z = pos[0][3];
 		return {x: x, y:y, z:z};
 	}
 
@@ -245,16 +274,18 @@ function($scope, $window, editor, util, key, video) {
 	$scope.render = function() {
 		camera.updateMatrixWorld(true);
 
+        $scope.updateCamera(frameCount);
 		if (key.isToggledOn("space")) {
 			$scope.updateCamera(frameCount);
-			//video.nextFrame();
-			frameCount++;
-		}
-		var gpsPositions = $scope.pointClouds.gps.geometry.attributes.position.array;
+            if (frameCount + 1 < $scope.gps.length) 
+                frameCount += 1;
+        }
         video.displayImage("projectionCanvas", frameCount);
-		if (frameCount+5 >= gpsPositions.length/3) {
-			frameCount = 0;
-		}
+        for (var idx in $scope.pointClouds.lanes) {
+            videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount]);
+        }
+        //videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.points, $scope.gps[frameCount]); 
+        radar.displayReturns(frameCount, $scope.gps[frameCount]);
 
         fpsMeter.tick();
 
@@ -284,7 +315,7 @@ function($scope, $window, editor, util, key, video) {
 		} else {
 			positions = new Float32Array(3*data.length);
 			colors    = new Float32Array(3*data.length);
-			console.log(name);
+			//console.log(name);
 			for (i = 0; i < data.length; i++) {
 				//Note: order is changed
 				positions[3*i]   = data[i][1];	//x

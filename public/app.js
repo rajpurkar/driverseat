@@ -114,6 +114,7 @@ function($scope, $window, editor, util, key, video) {
 		window.addEventListener('resize', $scope.onWindowResize, false);
 		document.getElementById("undo").addEventListener("click", editor.undo, false);
 		document.getElementById("redo").addEventListener("click", editor.redo, false);
+		document.getElementById("done").addEventListener("click", editor.done, false);
 	};
 
 	$scope.execOnLoaded = function(){
@@ -282,9 +283,9 @@ function($scope, $window, editor, util, key, video) {
 			}
 		
 			if (data[0].length >= 4) {
-				$scope.fillColor(colors, data, 20, 100,20);
+				$scope.fillColor(colors, data, 0.6, 0.6,0.6);
 			} else if (typeof color === "undefined") {
-				$scope.fillColor(colors, data, 255, 255, 255);
+				$scope.fillColor(colors, data, 1, 1, 1);
 			} else {
 				$scope.fillColor(colors,data, color.r, color.g, color.b);
 			}
@@ -347,7 +348,7 @@ function($scope, $window, editor, util, key, video) {
 			car = new THREE.Mesh( geometry, m );
 			// car.rotation.set( - Math.PI / 2, 0, -Math.PI /2);
 			car.scale.set( s, s, s );
-			car.position.set( 0, -1.2, 7 );
+			car.position.set( 0, -1.5, 7 );
 			// TODO car gets in the way of lane editing
 			$scope.scene.add( car );
 			callback(); 

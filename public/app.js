@@ -18,7 +18,8 @@ function($scope, $window, editor, util, key, video) {
 			points: "files/datafile.json",
 			gps: "files/gpsfile.json",
 			lanes: "files/lanesfile.json",
-			planes: "files/planesfile.json"
+			planes: "files/planesfile.json",
+			video: "files/videofile.zip"
 		},
 		frameCount = 0,
 		offset = [0, 5, -14],//[0,1,-2],
@@ -32,7 +33,6 @@ function($scope, $window, editor, util, key, video) {
 	};
 
 	$scope.init = function() {
-		video.init("http://stanford.edu/~sameep/280N_a604", "re_");
         fpsMeter = new FPSMeter(document.getElementById("fps"));
 
 		$scope.scene = new THREE.Scene();
@@ -87,7 +87,16 @@ function($scope, $window, editor, util, key, video) {
 				$scope.addCar(function(geometry, materials){
 					callback(null, 5);
 				});
-			}
+			},
+            video: function(callback) {
+                JSZipUtils.getBinaryContent(datafiles.video, function(err, data) {
+                if(err) {
+                    throw err; // or handle err
+                }
+                video.init(data);
+                callback(null, 'video_init');
+            });
+            }
 		},
 		function(err, results) {
 			$scope.debugText = "";
@@ -229,6 +238,7 @@ function($scope, $window, editor, util, key, video) {
 	$scope.animate = function(timestamp) {
 		// console.log(timestamp);
 		requestAnimationFrame($scope.animate);
+        //setTimeout($scope.animate, 2);
 		$scope.render();
 	};
 
@@ -240,8 +250,8 @@ function($scope, $window, editor, util, key, video) {
 			//video.nextFrame();
 			frameCount++;
 		}
-        video.displayPreloadedImage("projectionCanvas", frameCount);
 		var gpsPositions = $scope.pointClouds.gps.geometry.attributes.position.array;
+        video.displayImage("projectionCanvas", frameCount);
 		if (frameCount+5 >= gpsPositions.length/3) {
 			frameCount = 0;
 		}

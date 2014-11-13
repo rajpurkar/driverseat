@@ -213,7 +213,7 @@ function($scope, $window, editor, util, key, video) {
 		var y = gpsPositions[3*frameCount+1] -1.1;
 		var z = gpsPositions[3*frameCount+2];
 		return {x: x, y:y, z:z};
-	}
+	};
 
 	$scope.updateCamera = function(frameCount) {
 		var lastCarPosition = new THREE.Vector3(0, 0, 0);
@@ -275,6 +275,7 @@ function($scope, $window, editor, util, key, video) {
 		var dataType = Object.prototype.toString.call(data);
 		if (dataType === "[object Float32Array]" || dataType === "[object ArrayBuffer]") {
 			positions = new Float32Array(data);
+			colors    = new Float32Array(data);
 			for (i = 0; 3*i < colors.length; i++) {
 				colors[3*i+0] = color.r;
 				colors[3*i+1] = color.g;
@@ -283,7 +284,6 @@ function($scope, $window, editor, util, key, video) {
 		} else {
 			positions = new Float32Array(3*data.length);
 			colors    = new Float32Array(3*data.length);
-			console.log(name);
 			for (i = 0; i < data.length; i++) {
 				//Note: order is changed
 				positions[3*i]   = data[i][1];	//x

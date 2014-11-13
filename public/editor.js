@@ -235,7 +235,7 @@ function(util, key, history) {
 
 	function newLane(laneNum, arrayBuffer) {
 		var color = util.generateRGB(laneNum);
-		var laneCloud = $scope.generatePointCloud("lane"+laneNum, arrayBuffer, 0.15, color);
+		var laneCloud = $scope.generatePointCloud("lane"+laneNum, arrayBuffer, 0.35, color);
 		$scope.scene.add(laneCloud);
 		$scope.pointClouds.lanes[laneNum] = laneCloud;
 		var newPositions = laneCloud.geometry.attributes.position;

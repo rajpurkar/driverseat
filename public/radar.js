@@ -3,6 +3,7 @@ service('radar', ['util', function(util) {
 
     var boxes = [ ];
     var scene; 
+    var lastFrameNum = -1;
     var MAX_NUMBER_RADAR_OBJECTS = 64;
     var log; 
     var params;
@@ -47,6 +48,8 @@ service('radar', ['util', function(util) {
 	    },
         displayReturns: function(framenum, imu_loc_t) {
 
+            if (framenum == lastFrameNum) return; 
+
             var returns; 
             for (var timestamp in log[framenum])
                 returns = log[framenum][timestamp];
@@ -83,6 +86,7 @@ service('radar', ['util', function(util) {
                             -100000, 1000000, 1000000); // in a land, far, far away...
                 }
             }
+            lastFrameNum = framenum;
         }
     }
 }]);

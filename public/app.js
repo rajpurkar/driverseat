@@ -59,7 +59,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
                     if(err) throw err; // or handle err
                     var loader = util.loadDataFromZip;
                     var points = JSON.parse(loader(data, "map.json"));
-                    $scope.pointClouds.points = $scope.generatePointCloud("points", points, 0.004);
+                    $scope.pointClouds.points = $scope.generatePointCloud("points", points, 0.1);
                     $scope.scene.add($scope.pointClouds.points);
                     callback(null, 'map_load');
                 });
@@ -80,7 +80,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 					$scope.pointClouds.lanes = {};
 					for (var lane in data){
 						var color = util.generateRGB(lane);
-						var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], 0.35, color);
+						var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], 0.05, color);
 						$scope.scene.add(laneCloud);	
 						$scope.pointClouds.lanes[lane] = laneCloud;
 						var positions = laneCloud.geometry.attributes.position.array;
@@ -255,7 +255,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 		var lastCarPosition = new THREE.Vector3(0, 0, 0);
 		var pos = $scope.getCarPosition(frameCount);
 		angular.extend(car.position, pos);
-		car.lookAt($scope.getCarPosition(frameCount + 5));
+		car.lookAt($scope.getCarPosition(frameCount + 1));
 		camera.position.set(car.position.x + offset[0], car.position.y + offset[1], car.position.z + offset[2]);
 		var target = car.position;
 		camera.lookAt(target);

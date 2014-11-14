@@ -6,6 +6,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 	$scope.geometries = {};
 	$scope.pointClouds = {};
 	$scope.kdtrees = {};
+	$scope.pointSize = 0.1;
 	var camera, renderer,
 		projector,
         radar_data,
@@ -80,7 +81,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 					$scope.pointClouds.lanes = {};
 					for (var lane in data){
 						var color = util.generateRGB(lane);
-						var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], 0.05, color);
+						var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], $scope.pointSize, color);
 						$scope.scene.add(laneCloud);	
 						$scope.pointClouds.lanes[lane] = laneCloud;
 						var positions = laneCloud.geometry.attributes.position.array;
@@ -91,10 +92,10 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 				});
 			},
 			planes: function(callback){
-                JSZipUtils.getBinaryContent(datafiles.planes, function(err, gzipped_data) {
-                    if(err) throw err; // or handle err
-                    var loader = util.loadDataFromZip;
-                    var data = JSON.parse(loader(gzipped_data, "planes.json")); 
+				JSZipUtils.getBinaryContent(datafiles.planes, function(err, gzipped_data) {
+					if(err) throw err; // or handle err
+					var loader = util.loadDataFromZip;
+					var data = JSON.parse(loader(gzipped_data, "planes.json")); 
 					$scope.addPlanes(data);
 					callback(null, 4);
 				});
@@ -104,34 +105,34 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 					callback(null, 5);
 				});
 			},
-            video: function(callback) {
-                JSZipUtils.getBinaryContent(datafiles.video, function(err, data) {
-                    if(err) {
-                        throw err; // or handle err
-                    }
-                    video.init(data);
-                    callback(null, 'video_init');
-                });
-            },
+			video: function(callback) {
+				JSZipUtils.getBinaryContent(datafiles.video, function(err, data) {
+					if(err) {
+						throw err; // or handle err
+					}
+					video.init(data);
+					callback(null, 'video_init');
+				});
+			},
 			radar: function(callback){
-                console.log(datafiles.radar);
-                JSZipUtils.getBinaryContent(datafiles.radar, function(err, gzipped_data) {
-                    if(err) throw err; // or handle err
-                    var loader = util.loadDataFromZip;
-                    var data = JSON.parse(loader(gzipped_data, "radar.json"));
-                    radar_data = data; 
+				console.log(datafiles.radar);
+				JSZipUtils.getBinaryContent(datafiles.radar, function(err, gzipped_data) {
+					if(err) throw err; // or handle err
+					var loader = util.loadDataFromZip;
+					var data = JSON.parse(loader(gzipped_data, "radar.json"));
+					radar_data = data; 
 					callback(null, "radar_init");
 				});
 			},
-            params: function(callback) { 
-                util.loadJSON(datafiles.params, function(data) {
-                    params = data;
-                    callback(null, "params");
-             });
-		    },
-        },
-		function(err, results) {
-            radar.init(radar_data, params, $scope.scene);
+			params: function(callback) { 
+				util.loadJSON(datafiles.params, function(data) {
+					params = data;
+					callback(null, "params");
+				});
+			}
+		},
+			function(err, results) {
+				radar.init(radar_data, params, $scope.scene);
             videoProjection.init(params);
 			$scope.debugText = "";
 			//$scope.debugText = JSON.stringify(offset);

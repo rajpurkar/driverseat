@@ -38,9 +38,9 @@ function(util, key, history, $http) {
 			d[laneNum] = $scope.geometries["lane"+laneNum].attributes.position.array;
 		}
 		$http({
-		    method: 'POST',
-		    url: '/save',
-		    data: {lanes: "placeholder", track: trackname}
+			method: 'POST',
+			url: '/save',
+			data: {lanes: "placeholder", track: trackname}
 		}).success(function () {
 			$scope.debugText = 'Saved!';
 		});
@@ -112,7 +112,7 @@ function(util, key, history, $http) {
 			return;
 		}
 
-		for (var lane in $scope.pointClouds.lanes) {
+		for (lane in $scope.pointClouds.lanes) {
 			intersects = $scope.raycaster.intersectObject($scope.pointClouds.lanes[lane]);
 			if (intersects.length > 0) break;
 		}
@@ -180,7 +180,7 @@ function(util, key, history, $http) {
 			intersects = $scope.raycaster.intersectObject(planes[i]);
 			if (intersects.length > 0) {
 				selectedPlane = intersects[0];
-				document.addEventListener('mousemove', dragPoint);
+				// document.addEventListener('mousemove', dragPoint);
 				return;
 			}
 		}
@@ -240,7 +240,10 @@ function(util, key, history, $http) {
 			return key.slice(0,4) == "lane";
 		}).map(function(key) {
 			return parseInt(key.slice(4), 10);
-		}).sort();
+		}).sort(function(a, b) {
+			return a - b;
+		});
+		console.log(lanes);
 		var laneNum;
 		for (laneNum = 0; laneNum <= lanes.length; laneNum++) {
 			if (lanes[laneNum] != laneNum) break;
@@ -250,7 +253,7 @@ function(util, key, history, $http) {
 
 	function newLane(laneNum, arrayBuffer) {
 		var color = util.generateRGB(laneNum);
-		var laneCloud = $scope.generatePointCloud("lane"+laneNum, arrayBuffer, 0.35, color);
+		var laneCloud = $scope.generatePointCloud("lane"+laneNum, arrayBuffer, $scope.pointSize, color);
 		$scope.scene.add(laneCloud);
 		$scope.pointClouds.lanes[laneNum] = laneCloud;
 		var newPositions = laneCloud.geometry.attributes.position;

@@ -185,6 +185,7 @@ factory('cache', function() {
 	window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
 	var storageSize = 5*1024*1024;
 	var fs;
+	//TODO use persistent storage
 	window.requestFileSystem(window.TEMPORARY, storageSize, function(fileSystem) {
 		fs = fileSystem;
 		readEntries(fs.root.createReader(), [], function(entries) {
@@ -249,7 +250,8 @@ factory('cache', function() {
 angular.module('roadglApp').
 factory('history', ['cache', function(cache) {
 	var undoHistory = [],
-		redoHistory = [];
+		redoHistory = [],
+		maxHistorySize = 300;	//TODO max size should depend on available storage size
 	return {
 		push: function(action, lanePositions, laneNum) {
 			var entry = {
@@ -268,6 +270,9 @@ factory('history', ['cache', function(cache) {
 					console.log(entries);
 				});
 			});
+			if (undoHistory.length > maxHistorySize) {
+				cache.remove(undoHistory.shift().filename);
+			}
 		},
 		undo: function(callback) {
 			if (undoHistory[undoHistory.length-1].action == "original") {

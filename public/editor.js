@@ -169,7 +169,7 @@ function(util, key, history, $http) {
 			util.paintPoint($scope.geometries["lane"+lane].attributes.color, index, color.r, color.g, color.b);
 		}
 		util.paintPoint($scope.geometries["lane"+lane].attributes.color, selectedPoint.index, 255, 255, 255);
-		nearestPoints = $scope.kdtrees["lane"+lane].nearest(util.getPos(pointPos, selectedPoint.index), 100, DRAG_RANGE);
+		nearestPoints = $scope.kdtrees["lane"+lane].nearest(util.getPos(pointPos, selectedPoint.index), 300, DRAG_RANGE);
 		selectedPositions = {};
 		for (i = 0; i < nearestPoints.length; i++) {
 			index = nearestPoints[i][0].pos;
@@ -180,7 +180,7 @@ function(util, key, history, $http) {
 			intersects = $scope.raycaster.intersectObject(planes[i]);
 			if (intersects.length > 0) {
 				selectedPlane = intersects[0];
-				// document.addEventListener('mousemove', dragPoint);
+				document.addEventListener('mousemove', dragPoint);
 				return;
 			}
 		}
@@ -192,6 +192,7 @@ function(util, key, history, $http) {
 			clearPoint();
 			selectedPoint = null;
 			selectedPositions = {};
+			dragPointDists = {};
 		}
 		if (action.type != "append")
 			action.type = "";
@@ -199,6 +200,8 @@ function(util, key, history, $http) {
 		document.removeEventListener('mouseup', clearPoint);
 	}
 
+	var dragPointDists = {};
+	var dragPointMaxDist;
 	function dragPoint() {
 		//TODO factor
 		$scope.updateMouse();
@@ -208,9 +211,18 @@ function(util, key, history, $http) {
 			var pointPosition = selectedPoint.object.geometry.attributes.position;
 			var newPos = new THREE.Vector3();
 			newPos.subVectors(intersects[0].point, selectedPlane.point);
-			for (var index in selectedPositions) {
-				var dist = util.distance(selectedPositions[selectedPoint.index], selectedPositions[index]);
-				var weight = (Math.cos(Math.PI/DRAG_RANGE * dist) + 1)/2;
+			var index, dist;
+			if (Object.keys(dragPointDists).length === 0) {
+				dragPointMaxDist = 0;
+				for (index in selectedPositions) {
+					dist = util.distance(selectedPositions[selectedPoint.index], selectedPositions[index]);
+					dragPointDists[index] = dist;
+					if (dist > dragPointMaxDist) dragPointMaxDist = dist;
+				}
+			}
+			for (index in selectedPositions) {
+				dist = dragPointDists[index];
+				var weight = (Math.cos(Math.PI/dragPointMaxDist * dist) + 1)/2;
 				pointPosition.array[3*index] = weight * newPos.x + selectedPositions[index][0];
 				pointPosition.array[3*index+1] = weight * newPos.y + selectedPositions[index][1];
 				pointPosition.array[3*index+2] = weight * newPos.z + selectedPositions[index][2];

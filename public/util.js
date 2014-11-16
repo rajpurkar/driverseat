@@ -181,19 +181,34 @@ factory('key', function() {
 });
 
 angular.module('roadglApp').
-factory('cache', function() {
+factory('cache', ['$q', '$timeout', function($q, $timeout) {
+    
+    //see https://github.com/maciel310/angular-filesystem/blob/master/src/filesystem.js
+    function safeResolve(deferral, message) {
+        $timeout(function() {
+            deferral.resolve(message);
+        });
+    }
+    function safeReject(deferral, message) {
+        $timeout(function() {
+            deferral.reject(message);
+        });
+    }
+	var fsDefer = $q.defer();
+
 	window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
 	var storageSize = 5*1024*1024;
-	var fs;
 	window.requestFileSystem(window.TEMPORARY, storageSize, function(fileSystem) {
-		fs = fileSystem;
-		readEntries(fs.root.createReader(), [], function(entries) {
+        safeResolve(fsDefer, fileSystem);
+		//fs = fileSystem;
+		readEntries(fileSystem.root.createReader(), [], function(entries) {
 			for (var i = 0; i < entries.length; i++) {
 				remove(entries[i].name);
 			}
 		});
 	}, function(fe) {
 		console.log("Error loading filesystem", fe);
+        safeReject(fsDefer, {text: "error loading fs", error: fe});
 	});
 
 	function readEntries(dirReader, entries, callback) {
@@ -208,43 +223,52 @@ factory('cache', function() {
 	}
 
 	function remove(filename, callback) {
-		fs.root.getFile(filename, {create: false}, function(fileEntry) {
-			fileEntry.remove(function() {
-				if (callback) callback();
-			});
-		});
+        fsDefer.promise.then(function(fs) { 
+            fs.root.getFile(filename, {create: false}, function(fileEntry) {
+                fileEntry.remove(function() {
+                    if (callback) callback();
+                });
+            });
+        });
 	}
 
 	return {
 		write: function(filename, data, callback) {
-			fs.root.getFile(filename, {create: true}, function(fileEntry) {
-				fileEntry.createWriter(function(fileWriter) {
-					fileWriter.onwriteend = callback;
-					fileWriter.onerror = function(e) {
-						console.log("Write failed:", e);
-					};
-					var blob = new Blob([data]);
-					fileWriter.write(blob);
-				});
-			});
-		}, read: function(filename, callback) {
-			fs.root.getFile(filename, {create: false}, function(fileEntry) {
-				fileEntry.file(function(file) {
-					var reader = new FileReader();
-					reader.onloadend = function(e) {
-						// this.result: arrayBuffer
-						callback(this.result);
-					};
-					reader.readAsArrayBuffer(file);
-				});
-			});
+            //var error = new Error();
+            //throw error.stack;
+            fsDefer.promise.then(function(fs) { 
+                fs.root.getFile(filename, {create: true}, function(fileEntry) {
+                    fileEntry.createWriter(function(fileWriter) {
+                        fileWriter.onwriteend = callback;
+                        fileWriter.onerror = function(e) {
+                            console.log("Write failed:", e);
+                        };
+                        var blob = new Blob([data]);
+                        fileWriter.write(blob);
+                    });
+                });
+            });
+        }, 
+        read: function(filename, callback) {
+			fsDefer.promise.then(function(fs) { 
+                fs.root.getFile(filename, {create: false}, function(fileEntry) {
+                    fileEntry.file(function(file) {
+                        var reader = new FileReader();
+                        reader.onloadend = function(e) {
+                            // this.result: arrayBuffer
+                            callback(this.result);
+                        };
+                        reader.readAsArrayBuffer(file);
+                    });
+                });
+            });
 		}, remove: function(filename, callback) {
 			remove(filename, callback);
 		}, ls: function(callback) {
-			readEntries(fs.root.createReader(), [], callback);
+			fsDefer.promise.then(function(fs) { readEntries(fs.root.createReader(), [], callback); });
 		}
 	};
-});
+}]);
 
 angular.module('roadglApp').
 factory('history', ['cache', function(cache) {
@@ -257,7 +281,7 @@ factory('history', ['cache', function(cache) {
 				action: action,
 				filename: Date.now().toString()
 			};
-			console.log(entry);
+			//console.log(entry);
 			undoHistory.push(entry);
 			for (var i = 0; i < redoHistory.length; i++) {
 				cache.remove(redoHistory[i].filename);
@@ -265,7 +289,7 @@ factory('history', ['cache', function(cache) {
 			redoHistory = [];
 			cache.write(entry.filename, lanePositions, function() {
 				cache.ls(function(entries) {
-					console.log(entries);
+					//console.log(entries);
 				});
 			});
 		},

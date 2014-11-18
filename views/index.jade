@@ -40,7 +40,11 @@ html
 						|Redo
 				#doneDiv.tab
 					button#done.actionBtn(type="button")
-						|Done
+						|Save
+				#doneDiv.tab
+					a(href="/")
+						button#quit.actionBtn(type="button")
+							|Quit	
 			#rightOverlay
 				#fps.tab
 				#slideDiv.tab
@@ -51,7 +55,7 @@ html
 			#videoPlayerWrap
 				#videoPlayer
 					canvas#projectionCanvas
-				nav
+				nav.hidden
 					.text-center
 						ul.pagination#cameraOpts
 							li.active

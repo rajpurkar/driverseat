@@ -29,31 +29,12 @@ a, a:focus, a:hover{
 	font-size: 20px;
 }
 
-.level2 > a{
-	font-size: 10px;
+.level2{
+	font-size: 14px;
 	text-indent: 10px;
 	line-height: 1em;
 }
 
 a:hover{
 	color: #500;
-}
-
-#header-section {
-	padding-top: 120px;
-	padding-bottom: 180px;
-	position: relative;
-	height: 100%;
-	overflow: hidden;
-	color: white;
-	background: url('/files/bg.png');
-	background-size: cover;
-	background-repeat: no-repeat;
-}
-
-#intro{
-	background: rgba(240,240,240, 0.8);
-	border-radius: 30px;
-	padding: 30px;
-	color: #000;
 }

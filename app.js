@@ -7,6 +7,15 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var fs = require('fs');
 var moment = require('moment');
+var session = require('express-session')
+var mongoose = require('mongoose');
+
+mongoose.connect(process.env.MONGOHQ_URL || 'mongodb://localhost/roadgl');
+
+var hash = require('./routes/hash').hash;
+var auth = require('./routes/auth');
+var User = require('./routes/user');
+var util = require('./routes/util');
 var app = express();
 
 // view engine setup
@@ -19,7 +28,20 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(session({secret: "woah cat", saveUninitialized: true, resave: false}));
 app.use(express.static(path.join(__dirname, 'public'), {maxAge: '1d'}));
+
+app.use(function (req, res, next) {
+    var err = req.session.error,
+    msg = req.session.success;
+    delete req.session.error;
+    delete req.session.success;
+    res.locals.message = '';
+    if (err) res.locals.message = '<p class="msg error">' + err + '</p>';
+    if (msg) res.locals.message = '<p class="msg success">' + msg + '</p>';
+    next();
+});
+
 
 app.post('/save', function(req, res, next){
     var lanes = req.body.lanes; 
@@ -37,29 +59,76 @@ app.post('/save', function(req, res, next){
     });
 });
 
-app.get('/', function(req, res, next){
-   var track = req.query.route;
-   var numCams = req.query.cameras;
-   if(!track) track = "gilroy/to_gilroy_b";
-   if(!numCams) numCams = 2;
-   res.render('index', {track: track, numCameras: numCams})
+app.get("/signup", function (req, res) {
+    if (req.session.user) {
+        res.redirect("/");
+    } else {
+        res.render("login");
+    }
 });
 
-function level2Search(path) {
-  var dirs = fs.readdirSync(path);
-  var list = {};
-  dirs.forEach(function (file) {
-    if(fs.statSync(path+'/'+file).isDirectory()){
-      list[file] = fs.readdirSync(path+"/" + file).filter(function (file2){
-        return fs.statSync(path+'/'+file + "/" + file2).isDirectory();
-      });
-    }
-  });
-  return list;
-}
+app.post("/signup", userExist, function (req, res) {
+    var password = req.body.password;
+    var username = req.body.username;
+    var fullname = req.body.fullname;
 
-app.get('/list', function(req, res, next){
-    res.render('files', {dir: level2Search('./public/runs')});
+    hash(password, function (err, salt, hash) {
+        if (err) throw err;
+        var user = new User({
+            username: username,
+            fullname: fullname,
+            salt: salt,
+            hash: hash,
+        }).save(function (err, newUser) {
+            if (err) throw err;
+            auth.authenticate(newUser.username, password, function(err, user){
+                if(user){
+                    req.session.regenerate(function(){
+                        req.session.user = user;
+                        res.redirect('/');
+                    });
+                }
+            });
+        });
+    });
+});
+
+app.get("/login", function (req, res) {
+    res.render("login");
+});
+
+app.post("/login", function (req, res) {
+    auth.authenticate(req.body.username, req.body.password, function (err, user) {
+        if (user) {
+            req.session.regenerate(function () {
+                req.session.user = user;
+                res.redirect('/');
+            });
+        } else {
+            req.session.error = 'Authentication failed, please check your ' + ' username and password.';
+            res.redirect('/login');
+        }
+    });
+});
+
+app.post('/logout', function (req, res) {
+    req.session.destroy(function () {
+        res.redirect('/');
+    });
+});
+
+app.get('/show', function(req, res, next){
+    var track = req.query.route;
+    var numCams = req.query.cameras;
+    if(!track) track = "gilroy/to_gilroy_b";
+    if(!numCams) numCams = 2;
+    res.render('index', {track: track, numCameras: numCams});
+});
+
+app.get("/", requiredAuthentication, function (req, res) {
+  User.find(function(error, users){
+        res.render('browser', {dir: util.level2Search('./public/runs'), users: users, user: req.session.user.username});
+    });
 });
 
 // catch 404 and forward to error handler
@@ -68,7 +137,6 @@ app.use(function(req, res, next) {
     err.status = 404;
     next(err);
 });
-
 // error handlers
 
 // development error handler
@@ -93,6 +161,28 @@ app.use(function(err, req, res, next) {
     });
 });
 
+
+function requiredAuthentication(req, res, next) {
+    if (req.session.user) {
+        next();
+    } else {
+        req.session.error = 'Access denied!';
+        res.redirect('/login');
+    }
+}
+
+function userExist(req, res, next) {
+    User.count({
+        username: req.body.username
+    }, function (err, count) {
+        if (count === 0) {
+            next();
+        } else {
+            req.session.error = "User Exist";
+            res.redirect("/");
+        }
+    });
+}
 
 module.exports = app;
 

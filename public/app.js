@@ -152,9 +152,9 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 
 	$scope.addEventListeners = function(){
 		document.addEventListener('mousedown', $scope.rotateCamera, false);
-		document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
 		document.addEventListener('mousemove', $scope.onDocumentMouseMove, false);
 		controls.addEventListener('change', $scope.setCameraOffset);
+		document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
 		window.addEventListener('resize', $scope.onWindowResize, false);
 		document.getElementById("undo").addEventListener("click", editor.undo, false);
 		document.getElementById("redo").addEventListener("click", editor.redo, false);
@@ -186,12 +186,6 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 		var preventDefault = true;
 		switch (event.keyCode) {
 			case key.keyMap.space:
-				break;
-			case key.keyMap.right:
-				$scope.carRight();
-				break;
-			case key.keyMap.left:
-				$scope.carLeft();
 				break;
 			case key.keyMap.down:
 				$scope.carBack();

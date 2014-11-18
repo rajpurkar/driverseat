@@ -1,0 +1,54 @@
+html
+	head
+		script(type='text/javascript', src='/vendor/jquery.js')
+		script(type='text/javascript', src='/vendor/bootstrap.min.js')
+		link(rel="stylesheet", href='/vendor/bootstrap.min.css')
+		link(rel='stylesheet', href='/stylesheets/files.css')
+		title RoadGLFiles
+	body
+		.navbar.navbar-default.navbar-static-top(role='navigation')
+			.container
+				.navbar-header
+					button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+						span.sr-only Toggle navigation
+						span.icon-bar
+						span.icon-bar
+						span.icon-bar
+					a.navbar-brand(href='/') RoadGL
+				.navbar-collapse.collapse
+					ul.nav.navbar-nav.navbar-right
+						li
+							a(href='/')
+								| Welcome #{user}
+						li
+							form.navbar-form(action="/logout", method="post")
+								button.btn.btn-default(type="submit")
+									| Logout
+		.container
+			- if (message){
+				.alert.alert-warning.alert-dismissible.fade.in(role='alert')
+					button.close(type='button', class="close", data-dismiss='alert')
+						span(aria-hidden='true')&times;
+						span.sr-only Close
+					p!=message
+			-}
+			.row
+				.col-md-5
+					h1
+						strong RoadGL
+					h3
+						| Paving the path for tomorrow
+						h4 Choose the track you would like to label
+						.panel-group(role='tablist')
+					.panel.panel-default
+						- each vals, key in dir
+							a.collapsed(data-toggle='collapse', href='#' + key, aria-expanded='false', aria-controls=key)
+								.panel-heading(role='tab', id="heading" + key)
+									h4.panel-title.level1
+										= key
+							.panel-collapse.collapse(id=key, role='tabpanel', aria-labelledby="heading" + key, aria-expanded='false', style='height: 0px;')
+								ul.list-group
+									- each val in vals
+											a(href="/show?route=" + key + "%2F" + val)
+												li.list-group-item.level2
+													= val

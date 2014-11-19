@@ -57,12 +57,6 @@ service('videoProjection', ['util', function(util) {
         projectPoints: function(canvasId, cloud, imu_loc_t) {
             var data = cloud.geometry.attributes.position.array;
             var color_data = cloud.geometry.attributes.color.array;
-            //var copy = data;
-            
-            var copy = new Float32Array(data.length);
-            for (var i = 0; i < data.length; i++) {
-                copy[i] = data[i];
-            }
            
             var imu_transforms_t = util.Matrix4FromJSON4x4(imu_loc_t);
             var inv_imu_transforms_t = new THREE.Matrix4();
@@ -75,18 +69,19 @@ service('videoProjection', ['util', function(util) {
             T.multiply(T_from_i_to_l); // imu_t -> lidar_t
             T.multiply(inv_imu_transforms_t); // imu_0 -> imu_t
             T.multiply(T_THREE_to_imu_0); // from THREE_JS frame to imu_0
-
-            // run
-            T.applyToVector3Array(copy);
-
+            var M = T.elements;
             var c = document.getElementById(canvasId);
             var ctx = c.getContext("2d");
 
             var scaling = 4;
-            for (var idx = 0; idx < copy.length/3; idx+=3) {
-                var u = copy[3*idx+0];
-                var v = copy[3*idx+1];
-                var s = copy[3*idx+2];
+            for (var idx = 0; idx < data.length/3; idx+=3) {
+                var x = data[3*idx+0];
+                var y = data[3*idx+1];
+                var z = data[3*idx+2];
+
+                var u = M[0]*x + M[4]*y + M[8]*z + M[12];
+                var v = M[1]*x + M[5]*y + M[9]*z + M[13];
+                var s = M[2]*x + M[6]*y + M[10]*z + M[14];
 
                 var px = u/(s*scaling);
                 var py = v/(s*scaling);
@@ -101,12 +96,6 @@ service('videoProjection', ['util', function(util) {
                 }
             }
             
-            /*
-                var inv_T = new THREE.Matrix4();
-                inv_T.getInverse(T);
-                inv_T.applyToVector3Array(copy);
-            */
-
         },
 	};
 }]);

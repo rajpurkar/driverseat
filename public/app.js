@@ -43,7 +43,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 
 		$scope.scene = new THREE.Scene();
 		//scene.fog = new THREE.Fog( 0xcce0ff, 500, 10000 );
-		camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 0.01, 10000);
+		camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 0.01, 500);
 		projector = new THREE.Projector();
 		$scope.raycaster = new THREE.Raycaster();
 		var canvas = document.getElementById("road");
@@ -105,15 +105,23 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 					callback(null, 5);
 				});
 			},
-			video: function(callback) {
-				JSZipUtils.getBinaryContent(datafiles.video, function(err, data) {
-					if(err) {
-						throw err; // or handle err
-					}
-					video.init(data);
-					callback(null, 'video_init');
-				});
-			},
+            video: function(callback) {
+                /*
+                var player_onload = function(player) { 
+                    video.init(player);
+                    callback(null, 'video_init');
+                }
+                var canvas = document.getElementById('projectionCanvas');
+                jsmpeg_video = new jsmpeg(datafiles.video, {onload:player_onload, forceCanvas2D: true});
+                */
+                JSZipUtils.getBinaryContent(datafiles.video, function(err, data) {
+                    if(err) {
+                        throw err; // or handle err
+                    }
+                    video.init(data);
+                    callback(null, 'video_init');
+                });
+            },
 			radar: function(callback){
 				console.log(datafiles.radar);
 				JSZipUtils.getBinaryContent(datafiles.radar, function(err, gzipped_data) {
@@ -287,9 +295,21 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
             if (frameCount + 1 < $scope.gps.length) 
                 frameCount += 1;
         }
-        video.displayImage("projectionCanvas", frameCount);
-        for (var idx in $scope.pointClouds.lanes) {
-            videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount]);
+        var img_disp = video.displayImage("projectionCanvas", frameCount);
+        if (img_disp) { 
+            for (var idx in $scope.pointClouds.lanes) {
+                videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount]);
+            }
+        } else {
+            var canv = document.getElementById("projectionCanvas");
+            var ctx = canv.getContext("2d");
+            ctx.clearRect(0,0,canv.width, canv.height);
+            ctx.fillStyle="blue";
+            ctx.fillRect(0,0,canv.width,canv.height);
+            ctx.fillStyle="white";
+            ctx.font = "bold 20px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("Buffering", canv.width/2, canv.height/2);
         }
         //videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.points, $scope.gps[frameCount]); 
         radar.displayReturns(frameCount, $scope.gps[frameCount]);

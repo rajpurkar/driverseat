@@ -9,14 +9,28 @@ var fs = require('fs');
 var moment = require('moment');
 var session = require('express-session')
 var mongoose = require('mongoose');
-
-mongoose.connect(process.env.MONGOHQ_URL || 'mongodb://localhost/roadgl');
-
 var hash = require('./routes/hash').hash;
 var auth = require('./routes/auth');
 var User = require('./routes/user');
 var util = require('./routes/util');
 var app = express();
+
+try {
+    var filename = "./credentials";
+    if (fs.existsSync(filename)) {
+        var data = fs.readFileSync(filename, 'utf-8'),
+            credList = data.replace(' ', '').trim().split(','),
+            user = credList[0], pass = credList[1],
+            url = 'mongodb://' + user + ':' + pass + '@ds053140.mongolab.com:53140/roadgldatabase';
+        console.log('Connected to Remote DB!');
+        mongoose.connect(process.env.MONGOHQ_URL || url);
+    }else{
+        mongoose.connect(process.env.MONGOHQ_URL || 'mongodb://localhost/roadgl');
+        console.log('Connected to Local DB! Remember to start your mongodb');
+    }
+} catch (err) {
+    console.log(err);
+}
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

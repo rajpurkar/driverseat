@@ -1,59 +1,23 @@
-doctype html
-html
-	head
-		title RoadGL
-		script(type='text/javascript', src='/vendor/jquery.js')
-		script(type='text/javascript', src='/vendor/bootstrap.min.js')
-		link(rel="stylesheet", href='/vendor/bootstrap.min.css')
-		link(rel='stylesheet', href='/stylesheets/files.css')
-	body
-		.navbar.navbar-default.navbar-static-top(role='navigation')
-			.container
-				.navbar-header
-					button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='.navbar-collapse')
-						span.sr-only Toggle navigation
-						span.icon-bar
-						span.icon-bar
-						span.icon-bar
-					a.navbar-brand(href='/') RoadGL
-		.container
-			- if (message){
-				.alert.alert-warning.alert-dismissible.fade.in(role='alert')
-					button.close(type='button', class="close", data-dismiss='alert')
-						span(aria-hidden='true')&times;
-						span.sr-only Close
-					p!=message
-			-}
-			.col-sm-3
-				.row
-					h1 Signup
-					form(action="/signup", method="post", autocomplete="off" )
-						.form-group
-							label(for="fullname")
-								| Name
-							input#fullname.form-control(type="text", name="fullname", required)
-						.form-group
-							label(for="username")
-								| Username
-							input#username.form-control(type="text", name="username", required)
-						.form-group
-							label(for="password")
-								| Password
-							input#password.form-control(type="password", name="password", required)
-						.form-group
-							button.btn.btn-default(type="submit")
-								| Submit
-				.row
-					h1 Login
-					form(action="/login", method="post")
-						.form-group
-							label(for="username")
-								| Username
-							input.form-control(type="text", name="username", required)
-						.form-group
-							label(for="password")
-								| Password
-							input.form-control(type="password", name="password", required)
-						.form-group
-							button.btn.btn-default(type="submit")
-								| Submit
+extends uilayout 
+
+block extraheads
+	link(rel='stylesheet', href='/stylesheets/files.css')
+	
+block content
+	.container
+		include errormessage
+		.col-sm-3
+			.row
+				h1 Login
+				form(action="/login", method="post")
+					.form-group
+						label(for="username")
+							| Username
+						input.form-control(type="text", name="username", required)
+					.form-group
+						label(for="password")
+							| Password
+						input.form-control(type="password", name="password", required)
+					.form-group
+						button.btn.btn-default(type="submit")
+							| Submit

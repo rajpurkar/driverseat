@@ -1,25 +1,27 @@
 var User = require('./user');
 var hash = require('./hash').hash;
 
-module.exports = {
-    authenticate: function(name,pass,fn){
-        if (!module.parent) console.log('authenticating %s:%s', name, pass);
-        User.findOne({
-            username: name
-        },
-        function (err, user) {
-            if (user) {
-                if (err) return fn(new Error('cannot find user'));
-                hash(pass, user.salt, function (err, hash) {
-                    if (err) return fn(err);
-                    if (hash == user.hash) return fn(null, user);
-                    fn(new Error('invalid password'));
-                });
-            } else {
-                return fn(new Error('cannot find user'));
-            }
-        });
+function authenticate(name,pass,fn){
+    if (!module.parent) console.log('authenticating %s:%s', name, pass);
+    User.findOne({
+        username: name
     },
+    function (err, user) {
+        if (user) {
+            if (err) return fn(new Error('cannot find user'));
+            hash(pass, user.salt, function (err, hash) {
+                if (err) return fn(err);
+                if (hash == user.hash) return fn(null, user);
+                fn(new Error('invalid password'));
+            });
+        } else {
+            return fn(new Error('cannot find user'));
+        }
+    });
+}
+
+module.exports = {
+    authenticate: authenticate,
     userExist: function(req, res, next) {
         User.count({
             username: req.body.username
@@ -49,10 +51,10 @@ module.exports = {
                 username: username,
                 fullname: fullname,
                 salt: salt,
-                hash: hash,
+                hash: hash
             }).save(function (err, newUser) {
                 if (err) throw err;
-                auth.authenticate(newUser.username, password, function(err, user){
+                authenticate(newUser.username, password, function(err, user){
                     if(user){
                         req.session.regenerate(function(){
                             req.session.user = user;
@@ -63,4 +65,4 @@ module.exports = {
             });
         });
     }
-}
+};

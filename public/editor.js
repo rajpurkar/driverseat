@@ -148,7 +148,8 @@ function(util, key, history, $http) {
             selectedPoint = intersects[0];
             endPoint = selectedPoint;
             endPos = util.getPos(pointPos, endPoint.index);
-            var endPointDists = util.difference(startPos, endPos).map(function(i) { return Math.abs(i); });
+            //TODO change util.difference to use regular arrays
+            var endPointDists = Array.prototype.slice.call(util.difference(startPos, endPos)).map(function(i) { return Math.abs(i); });
             selectedPositionsDir = endPointDists.indexOf(Math.max.apply(Math, endPointDists));
             var midPoint = util.midpoint(startPos, endPos);
             var range = util.distance(startPos, endPos) / 2 + 0.01;
@@ -277,7 +278,6 @@ function(util, key, history, $http) {
         $scope.scene.add(laneCloud);
         $scope.pointClouds.lanes[laneNum] = laneCloud;
         var newPositions = laneCloud.geometry.attributes.position;
-        console.log(newPositions);
         $scope.kdtrees["lane"+laneNum] = new THREE.TypedArrayUtils.Kdtree(newPositions.array, util.distance, 3);
     }
 

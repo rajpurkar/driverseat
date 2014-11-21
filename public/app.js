@@ -308,7 +308,8 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 		var dataType = Object.prototype.toString.call(data);
 		if (dataType === "[object Float32Array]" || dataType === "[object ArrayBuffer]") {
 			positions = new Float32Array(data);
-			colors    = new Float32Array(data);
+            console.log(positions);
+			colors    = new Float32Array(positions.length);
 			for (i = 0; 3*i < colors.length; i++) {
 				colors[3*i+0] = color.r;
 				colors[3*i+1] = color.g;

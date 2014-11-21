@@ -1,22 +1,10 @@
 html
 	head
-		script(type='text/javascript', src='/vendor/jquery.js')
-		script(src='/javascripts/angular.min.js')
-		script(src='/javascripts/three.min.js')
-		script(src='/javascripts/OrbitControls.js')
-		script(src='/javascripts/TypedArrayUtils.js')
-		script(src='/javascripts/BinaryLoader.js')
-		script(src='/javascripts/async.js')
-		script(src='/javascripts/fpsmeter.js')
-		script(src='/javascripts/jszip.js')
-		script(src='/javascripts/jszip-utils.js')
-		script(src='/javascripts/numeric-1.2.6.js')
-		script(src='/javascripts/jpeg_encoder_basic.js')
-		script(src='/javascripts/jsmpg.js')
-		script(type='text/javascript', src='/vendor/bootstrap.min.js')
+		link(rel='shortcut icon', href='/favicon.ico', type='image/x-icon')
+		link(rel='icon', href='/favicon.ico', type='image/x-icon')
 		link(rel="stylesheet", href='/vendor/bootstrap.min.css')
-		link(rel='stylesheet', href='/stylesheets/style.css')
-		title RoadGL
+		link(rel='stylesheet', href='/stylesheets/editor.css')
+		title=title
 	body(ng-app='roadglApp')
 		div(ng-controller='AppCtrl')
 			canvas#road
@@ -42,7 +30,11 @@ html
 						|Redo
 				#doneDiv.tab
 					button#done.actionBtn(type="button")
-						|Done
+						|Save
+				#doneDiv.tab
+					a(href="/")
+						button#quit.actionBtn(type="button")
+							|Quit	
 			#rightOverlay
 				#fps.tab
 				#slideDiv.tab
@@ -53,7 +45,7 @@ html
 			#videoPlayerWrap
 				#videoPlayer
 					canvas#projectionCanvas
-				nav
+				nav.hidden
 					.text-center
 						ul.pagination#cameraOpts
 							li.active
@@ -63,6 +55,20 @@ html
 									a(href='#')
 										= i
 							- }
+		script(src='/vendor/jquery.js')
+		script(src='/vendor/bootstrap.min.js')
+		script(src='/javascripts/angular.min.js')
+		script(src='/javascripts/three.min.js')
+		script(src='/javascripts/OrbitControls.js')
+		script(src='/javascripts/TypedArrayUtils.js')
+		script(src='/javascripts/BinaryLoader.js')
+		script(src='/javascripts/async.js')
+		script(src='/javascripts/fpsmeter.js')
+		script(src='/javascripts/jszip.js')
+		script(src='/javascripts/jszip-utils.js')
+		script(src='/javascripts/numeric-1.2.6.js')
+		script(src='/javascripts/jpeg_encoder_basic.js')
+		script(src='/javascripts/jsmpg.js')
 		script(src='/controllers.js')
 		script(src='/app.js')
 		script(src='/editor.js')

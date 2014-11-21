@@ -1,0 +1,25 @@
+extends uilayout
+
+block content
+	.container
+		include errormessage
+		.row
+			.col-md-7
+				h1
+					strong RoadGL
+				h3
+					| Paving the path for tomorrow
+					h4 Choose the track you would like to label
+					.panel-group(role='tablist')
+						.panel.panel-default
+							- each vals, key in dir
+								a.collapsed(data-toggle='collapse', href='#' + key, aria-expanded='false', aria-controls=key)
+									.panel-heading(role='tab', id="heading" + key)
+										h4.panel-title.level1
+											= key
+								.panel-collapse.collapse(id=key, role='tabpanel', aria-labelledby="heading" + key, aria-expanded='false', style='height: 0px;')
+									ul.list-group
+										- each val in vals
+												a(href="/edit?route=" + key + "%2F" + val)
+													li.list-group-item.level2
+														= val

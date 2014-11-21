@@ -107,7 +107,7 @@ function(util, key, history, $http) {
             }
             if (intersects.length === 0) return;
             var point = intersects[0].point;
-            var newPos = [point.x, point.y, point.z];
+            var newPos = new Float32Array([point.x, point.y, point.z]);
             if (action.type == "fork")
                 forkLane(newPos);
             else
@@ -181,7 +181,7 @@ function(util, key, history, $http) {
         selectedPositions = {};
         for (i = 0; i < nearestPoints.length; i++) {
             index = nearestPoints[i][0].pos;
-            selectedPositions[index] = util.getPos(pointPos, index);
+            selectedPositions[index] = new Float32Array(util.getPos(pointPos, index));
         }
         //TODO: find nearest plane instead of raycasting
         for (i = 0; i < planes.length; i++) {
@@ -217,9 +217,9 @@ function(util, key, history, $http) {
         if (intersects.length > 0) {
             // var index = selectedPoint.index;
             var pointPosition = selectedPoint.object.geometry.attributes.position;
-            // var newPos = new THREE.Vector3();
-            var newPos = util.difference(intersects[0].point, selectedPlane.point);
-            // newPos.subVectors(intersects[0].point, selectedPlane.point);
+            var newPos = new THREE.Vector3();
+            // var newPos = util.difference(intersects[0].point, selectedPlane.point);
+            newPos.subVectors(intersects[0].point, selectedPlane.point);
             var index, dist;
             if (Object.keys(dragPointDists).length === 0) {
                 dragPointMaxDist = 0;
@@ -232,9 +232,9 @@ function(util, key, history, $http) {
             for (index in selectedPositions) {
                 dist = dragPointDists[index];
                 var weight = (Math.cos(Math.PI/dragPointMaxDist * dist) + 1)/2;
-                pointPosition.array[3*index] = weight * newPos[0] + selectedPositions[index][0];
-                pointPosition.array[3*index+1] = weight * newPos[1] + selectedPositions[index][1];
-                pointPosition.array[3*index+2] = weight * newPos[2] + selectedPositions[index][2];
+                pointPosition.array[3*index] = weight * newPos.x + selectedPositions[index][0];
+                pointPosition.array[3*index+1] = weight * newPos.y + selectedPositions[index][1];
+                pointPosition.array[3*index+2] = weight * newPos.z + selectedPositions[index][2];
             }
             pointPosition.needsUpdate = true;
             action.type = "drag";
@@ -277,6 +277,7 @@ function(util, key, history, $http) {
         $scope.scene.add(laneCloud);
         $scope.pointClouds.lanes[laneNum] = laneCloud;
         var newPositions = laneCloud.geometry.attributes.position;
+        console.log(newPositions);
         $scope.kdtrees["lane"+laneNum] = new THREE.TypedArrayUtils.Kdtree(newPositions.array, util.distance, 3);
     }
 
@@ -429,7 +430,7 @@ function(util, key, history, $http) {
     function forkLane(endPos) {
 		if (selectedPoint === null) return;
         var pointPos = selectedPoint.object.geometry.attributes.position.array;
-        var startPos = util.getPos(pointPos, selectedPoint.index);
+        var startPos = new Float32Array(util.getPos(pointPos, selectedPoint.index));
         var fillPositions = util.interpolate(startPos, endPos);
 
         var newPositions = new Float32Array(fillPositions);

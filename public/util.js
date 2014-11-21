@@ -4,10 +4,10 @@ service('util', ['$http', function($http) {
 		return Math.sqrt((a[0]-b[0])*(a[0]-b[0]) + (a[1]-b[1])*(a[1]-b[1]) + (a[2]-b[2])*(a[2]-b[2]));
 	}
 	function difference(a, b) {
-		return [a[0]-b[0], a[1]-b[1], a[2]-b[2]];
+		return new Float32Array([a[0]-b[0], a[1]-b[1], a[2]-b[2]]);
 	}
 	function sum(a, b) {
-		return [a[0]+b[0], a[1]+b[1], a[2]+b[2]];
+		return new Float32Array([a[0]+b[0], a[1]+b[1], a[2]+b[2]]);
 	}
 	function normalize(a) {
 		var magnitude = Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);

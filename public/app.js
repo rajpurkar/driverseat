@@ -43,7 +43,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 
 		$scope.scene = new THREE.Scene();
 		//scene.fog = new THREE.Fog( 0xcce0ff, 500, 10000 );
-		camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 0.01, 10000);
+		camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 0.01, 200);
 		projector = new THREE.Projector();
 		$scope.raycaster = new THREE.Raycaster();
 		var canvas = document.getElementById("road");

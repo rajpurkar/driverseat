@@ -404,7 +404,7 @@ function(util, key, history, $http) {
     }
 
     function appendLane(endPos) {
-		if (selectedPoint === null) return;
+        if (selectedPoint === null) return;
         var laneNum = action.laneNum;
         var positions = selectedPoint.object.geometry.attributes.position;
         var colors = selectedPoint.object.geometry.attributes.color;
@@ -430,7 +430,7 @@ function(util, key, history, $http) {
     }
 
     function forkLane(endPos) {
-		if (selectedPoint === null) return;
+        if (selectedPoint === null) return;
         var pointPos = selectedPoint.object.geometry.attributes.position.array;
         var startPos = new Float32Array(util.getPos(pointPos, selectedPoint.index));
         var fillPositions = util.interpolate(startPos, endPos);

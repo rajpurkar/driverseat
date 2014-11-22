@@ -131,8 +131,8 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 				});
 			}
 		},
-			function(err, results) {
-				radar.init(radar_data, params, $scope.scene);
+        function(err, results) {
+            radar.init(radar_data, params, $scope.scene);
             videoProjection.init(params);
 			$scope.debugText = "";
 			//$scope.debugText = JSON.stringify(offset);
@@ -308,7 +308,6 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 		var dataType = Object.prototype.toString.call(data);
 		if (dataType === "[object Float32Array]" || dataType === "[object ArrayBuffer]") {
 			positions = new Float32Array(data);
-            console.log(positions);
 			colors    = new Float32Array(positions.length);
 			for (i = 0; 3*i < colors.length; i++) {
 				colors[3*i+0] = color.r;

@@ -283,16 +283,15 @@ factory('history', ['cache', function(cache) {
 				action: action,
 				filename: Date.now().toString()
 			};
-			//console.log(entry);
 			undoHistory.push(entry);
 			for (var i = 0; i < redoHistory.length; i++) {
 				cache.remove(redoHistory[i].filename);
 			}
 			redoHistory = [];
 			cache.write(entry.filename, lanePositions, function() {
-				cache.ls(function(entries) {
-					//console.log(entries);
-				});
+				// cache.ls(function(entries) {
+				//     console.log(entries);
+				// });
 			});
 			if (undoHistory.length > maxHistorySize) {
 				cache.remove(undoHistory.shift().filename);

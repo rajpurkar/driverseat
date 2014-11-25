@@ -17,7 +17,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
         mouse = { x: 1, y: 1 },
         windowWidth = $window.innerWidth,
         windowHeight = $window.innerHeight,
-        title = document.getElementById("title").textContent.substr(1),
+        title = document.getElementById("title").textContent,
         datafiles = {
             points: "/runs/" + title + "/map.json.zip",
             gps: "/runs/" + title + "/gps.json.zip",

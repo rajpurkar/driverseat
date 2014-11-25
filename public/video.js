@@ -30,13 +30,8 @@ service('video', function() {
                 c.height = j.height * scaling;
                 ctx.drawImage(j, 0, 0, c.width, c.height);
             };
-            if (images[framenum] == undefined) {
-
-            var n = framenum + 1;
-            var data = zLoader.file(n + ".jpg").asBinary();
-            images[framenum] = data;
-            }
-            j.src = "data:image/jpg;base64,"+btoa(images[framenum]); 
+            j.src = "data:image/jpg;base64,"+btoa(images[framenum]);
+            return true;
         },
 	};
 });

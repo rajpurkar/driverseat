@@ -1,7 +1,7 @@
 var User = require('./user');
 var hash = require('./hash').hash;
 
-var authenticate = function(name,pass,fn){
+function authenticate(name,pass,fn){
     if (!module.parent) console.log('authenticating %s:%s', name, pass);
     User.findOne({
         username: name
@@ -51,7 +51,7 @@ module.exports = {
                 username: username,
                 fullname: fullname,
                 salt: salt,
-                hash: hash,
+                hash: hash
             }).save(function (err, newUser) {
                 if (err) throw err;
                 authenticate(newUser.username, password, function(err, user){
@@ -65,4 +65,4 @@ module.exports = {
             });
         });
     }
-}
+};

@@ -7,6 +7,9 @@ service('boundingBoxes', function() {
             boundingBoxesData = data;
         },
         drawBoundingBoxes: function(canvasId, frameNum) {
+            var c = document.getElementById(canvasId);
+            var ctx = c.getContext("2d");
+
             if (frameNum < boundingBoxesData.length) {
                 var boxes = boundingBoxesData[frameNum];
                 for (var i = 0; i < boxes.length; i++) {
@@ -16,8 +19,6 @@ service('boundingBoxes', function() {
                     var width = rect[2]/4;
                     var height = rect[3]/4;
 
-                    var c = document.getElementById(canvasId);
-                    var ctx = c.getContext("2d");
                     ctx.rect(x, y, width, height);
                     ctx.stroke();
                 }

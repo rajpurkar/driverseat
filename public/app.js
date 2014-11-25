@@ -134,10 +134,16 @@ function($scope, $window, editor, util, key, video, videoProjection, radar, boun
                 });
             },
             boundingBoxes: function(callback) {
-                util.loadJSON(datafiles.boundingBoxes, function(data) {
-                    boundingBoxes.init(data);
-                    callback(null, "bounding_boxes_init");
-                });
+                util.loadJSON(
+                    datafiles.boundingBoxes,
+                    function(data) {
+                      boundingBoxes.init(data);
+                      callback(null, "bounding_boxes_init");
+                    },
+                    function(data) {
+                      console.log("Cannot open bounding boxes file: " + datafiles.boundingBoxes);
+                      callback(null, "bounding_boxes_init");
+                    });
             },
             params: function(callback) {
                 util.loadJSON(datafiles.params, function(data) {

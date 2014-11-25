@@ -7,10 +7,10 @@ service('boundingBoxes', function() {
             boundingBoxesData = data;
         },
         drawBoundingBoxes: function(canvasId, frameNum) {
-            var c = document.getElementById(canvasId);
-            var ctx = c.getContext("2d");
+            if (boundingBoxesData && frameNum < boundingBoxesData.length) {
+                var c = document.getElementById(canvasId);
+                var ctx = c.getContext("2d");
 
-            if (frameNum < boundingBoxesData.length) {
                 var boxes = boundingBoxesData[frameNum];
                 for (var i = 0; i < boxes.length; i++) {
                     var rect = boxes[i].rect;

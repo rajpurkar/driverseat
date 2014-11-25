@@ -86,6 +86,13 @@ def get_args_parser():
     return parser
 
 def main():
+    """
+    Example command:
+    python public/files/pkl_to_json.py \
+        -b public/runs/4-10-14-pleasanton/237_b \
+           public/runs/4-10-14-pleasanton/238_a \
+        -o
+    """
     parser = get_args_parser()
     args = parser.parse_args()
     if args.base_paths:

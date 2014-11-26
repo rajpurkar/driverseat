@@ -19,10 +19,10 @@ service('video', function() {
                 var frameNum = parseInt(item.name.split('.jpg')[0]);
                 images[frameNum] = item.asBinary();
             });
-           
+
 		},
-        displayImage: function(canvasId, framenum) {
-            var j = new Image(); 
+        displayImage: function(canvasId, frameNum) {
+            var j = new Image();
             j.onload = function() {
                 var c = document.getElementById(canvasId);
                 var ctx = c.getContext("2d");
@@ -30,7 +30,7 @@ service('video', function() {
                 c.height = j.height * scaling;
                 ctx.drawImage(j, 0, 0, c.width, c.height);
             };
-            j.src = "data:image/jpg;base64,"+btoa(images[framenum]);
+            j.src = "data:image/jpg;base64,"+btoa(images[frameNum]);
             return true;
         },
 	};

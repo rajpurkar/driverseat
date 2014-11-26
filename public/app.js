@@ -21,6 +21,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
         controls,
         fpsMeter,
         params,
+        boundingBoxes,
         groundNormals = [],
         mouse = INITIAL_MOUSE,
         windowWidth = $window.innerWidth,
@@ -33,7 +34,8 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
             planes: "/runs/" + title + "/planes.json.zip",
             video: "/runs/" + title + "/cam_2.zip",
             radar: "/runs/" + title + "/radar.json.zip",
-            params: "/q50_4_3_14_params.json"
+            params: "/q50_4_3_14_params.json",
+            boundingBoxes: "/runs/" + title + "/bbs-cam2.json"
         },
         frameCount = INITIAL_FRAME,
         offset = INITIAL_OFFSET,
@@ -83,7 +85,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
                 JSZipUtils.getBinaryContent(datafiles.lanes, function(err, gzipped_data) {
                     if(err) throw err; // or handle err
                     var loader = util.loadDataFromZip;
-                    var data = JSON.parse(loader(gzipped_data, "lanes_done.json")); 
+                    var data = JSON.parse(loader(gzipped_data, "lanes_done.json"));
                     $scope.pointClouds.lanes = {};
                     for (var lane in data){
                         var color = util.generateRGB(lane);
@@ -101,7 +103,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
                 JSZipUtils.getBinaryContent(datafiles.planes, function(err, gzipped_data) {
                     if(err) throw err; // or handle err
                     var loader = util.loadDataFromZip;
-                    var data = JSON.parse(loader(gzipped_data, "planes.json")); 
+                    var data = JSON.parse(loader(gzipped_data, "planes.json"));
                     $scope.addPlanes(data);
                     callback(null, 4);
                 });
@@ -113,7 +115,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
             },
             video: function(callback) {
                 /*
-                var player_onload = function(player) { 
+                var player_onload = function(player) {
                     video.init(player);
                     callback(null, 'video_init');
                 }
@@ -134,11 +136,23 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
                     if(err) throw err; // or handle err
                     var loader = util.loadDataFromZip;
                     var data = JSON.parse(loader(gzipped_data, "radar.json"));
-                    radar_data = data; 
+                    radar_data = data;
                     callback(null, "radar_init");
                 });
             },
-            params: function(callback) { 
+            boundingBoxes: function(callback) {
+                util.loadJSON(
+                    datafiles.boundingBoxes,
+                    function(data) {
+                      boundingBoxes.init(data);
+                      callback(null, "bounding_boxes_init");
+                    },
+                    function(data) {
+                      console.log("Cannot open bounding boxes file: " + datafiles.boundingBoxes);
+                      callback(null, "bounding_boxes_init");
+                    });
+            },
+            params: function(callback) {
                 util.loadJSON(datafiles.params, function(data) {
                     params = data;
                     callback(null, "params");
@@ -161,7 +175,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
         pointLight.position.x= car.position.x -5;
         directionalLight = new THREE.DirectionalLight( 0xffffff );
         directionalLight.position.set( 1, 1, 0.5 ).normalize();
-        $scope.scene.add( directionalLight );		
+        $scope.scene.add( directionalLight );
     };
 
     $scope.addEventListeners = function(){
@@ -228,7 +242,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 
     $scope.carForward = function(){
         var numForward = 3;
-        if (frameCount + numForward < $scope.gps.length) 
+        if (frameCount + numForward < $scope.gps.length)
             frameCount += numForward;
         $scope.updateCamera(frameCount);
     };
@@ -236,7 +250,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
     $scope.carBack = function(){
         var numDecline = 3;
         if(frameCount>=numDecline){
-            frameCount-=numDecline;	
+            frameCount-=numDecline;
         }
         $scope.updateCamera(frameCount);
     };
@@ -250,15 +264,17 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
     };
 
     $scope.updateCamera = function(frameCount) {
-        var lastCarPosition = new THREE.Vector3(0, 0, 0);
-        var pos = $scope.getCarPosition(frameCount);
-        angular.extend(car.position, pos);
-        car.lookAt($scope.getCarPosition(frameCount + 1));
-        camera.position.set(car.position.x + offset[0], car.position.y + offset[1], car.position.z + offset[2]);
-        var target = car.position;
-        camera.lookAt(target);
-        controls.target.copy(target);
-        controls.update();
+        if (frameCount + 1 < $scope.gps.length) {
+            var lastCarPosition = new THREE.Vector3(0, 0, 0);
+            var pos = $scope.getCarPosition(frameCount);
+            angular.extend(car.position, pos);
+            car.lookAt($scope.getCarPosition(frameCount + 1));
+            camera.position.set(car.position.x + offset[0], car.position.y + offset[1], car.position.z + offset[2]);
+            var target = car.position;
+            camera.lookAt(target);
+            controls.target.copy(target);
+            controls.update();
+        }
     };
 
     $scope.updateMouse = function() {
@@ -277,15 +293,14 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
 
     $scope.render = function() {
         camera.updateMatrixWorld(true);
-
         $scope.updateCamera(frameCount);
         if (key.isToggledOn("space")) {
             $scope.updateCamera(frameCount);
-            if (frameCount + 1 < $scope.gps.length) 
+            if (frameCount + 1 < $scope.gps.length)
                 frameCount += 1;
         }
         var img_disp = video.displayImage("projectionCanvas", frameCount);
-        if (img_disp) { 
+        if (img_disp) {
             for (var idx in $scope.pointClouds.lanes) {
                 videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount]);
             }
@@ -300,9 +315,10 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
             ctx.textAlign = "center";
             ctx.fillText("Buffering", canv.width/2, canv.height/2);
         }
-        //videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.points, $scope.gps[frameCount]); 
-        radar.displayReturns(frameCount, $scope.gps[frameCount]);
 
+        //videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.points, $scope.gps[frameCount]);
+        radar.displayReturns(frameCount, $scope.gps[frameCount]);
+        boundingBoxes.drawBoundingBoxes("projectionCanvas", frameCount);
         fpsMeter.tick();
 
         renderer.render($scope.scene, camera);
@@ -389,7 +405,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
         };
 
         var loader = new THREE.BinaryLoader();
-        loader.load("/files/CamaroNoUv_bin.js", function(geometry) { 
+        loader.load("/files/CamaroNoUv_bin.js", function(geometry) {
             var materials = camaroMaterials;
             var s = 0.23, m = new THREE.MeshFaceMaterial();
             m.materials[ 0 ] = materials.body.Orange; // car body
@@ -408,7 +424,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
             car.position.set( 0, -1.5, 7 );
             // TODO car gets in the way of lane editing
             $scope.scene.add( car );
-            callback(); 
+            callback();
         });
     };
 

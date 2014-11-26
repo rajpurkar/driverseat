@@ -1,4 +1,4 @@
-angular.module('roadglApp').
+myApp.
 service('boundingBoxes', function() {
     var boundingBoxesData;
 

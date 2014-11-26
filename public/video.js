@@ -1,4 +1,4 @@
-angular.module('roadglApp').
+myApp.
 service('video', function() {
 	var ctx, canvas, video;
     var images = new Array();

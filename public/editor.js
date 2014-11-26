@@ -1,6 +1,5 @@
-angular.module('roadglApp').
-factory('editor', ['util', 'key', 'history', '$http',
-function(util, key, history, $http) {
+myApp.
+factory('editor', function(util, key, history, $http) {
     var $scope,
     selectedPoint = null,
     selectedPositions = {}, // index => position array
@@ -502,4 +501,4 @@ function(util, key, history, $http) {
         redo: redo,
         done: done
     };
-}]);
+});

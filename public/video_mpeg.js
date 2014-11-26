@@ -1,4 +1,4 @@
-angular.module('roadglApp').
+myApp.
 service('video_mpeg', function() {
     var images;
     var scaling = 1;

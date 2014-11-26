@@ -1,5 +1,5 @@
-angular.module('roadglApp').
-service('videoProjection', ['util', function(util) {
+myApp.
+service('videoProjection', function(util) {
 
     var T_THREE_to_imu_0 = new THREE.Matrix4();
     var T_from_l_to_i = new THREE.Matrix4();
@@ -98,4 +98,4 @@ service('videoProjection', ['util', function(util) {
             
         },
 	};
-}]);
+});

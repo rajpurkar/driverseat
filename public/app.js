@@ -1,6 +1,7 @@
-angular.module('roadglApp').
-controller('AppCtrl', ['$scope', '$window', 'editor', 'util', 'key', 'video', 'videoProjection', 'radar', 'boundingBoxes',
-function($scope, $window, editor, util, key, video, videoProjection, radar, boundingBoxes) {
+var myApp = angular.module('roadglApp', []);//['ngAnimate']);
+
+myApp.
+controller('AppCtrl', function($scope, $window, editor, util, key, video, videoProjection, radar, boundingBoxes) {
     //constants
     var INITIAL_OFFSET = [0, 5, -14],
         INITIAL_MOUSE = { x: 1, y: 1 },
@@ -464,5 +465,5 @@ function($scope, $window, editor, util, key, video, videoProjection, radar, boun
     };
 
     $scope.init();
-}]);
+});
 

@@ -1,5 +1,5 @@
-angular.module('roadglApp').
-service('util', ['$http', function($http) {
+myApp.
+service('util', function($http) {
     function distance(a, b) {
         return Math.sqrt((a[0]-b[0])*(a[0]-b[0]) + (a[1]-b[1])*(a[1]-b[1]) + (a[2]-b[2])*(a[2]-b[2]));
     }
@@ -129,9 +129,9 @@ service('util', ['$http', function($http) {
             pointColors.needsUpdate = true;
         }
     };
-}]);
+});
 
-angular.module('roadglApp').
+myApp.
 factory('key', function() {
     var pressedKeys = [];
     var toggleKeys = {};
@@ -180,8 +180,8 @@ factory('key', function() {
     };
 });
 
-angular.module('roadglApp').
-factory('cache', ['$q', '$timeout', function($q, $timeout) {
+myApp.
+factory('cache', function($q, $timeout) {
 
     //see https://github.com/maciel310/angular-filesystem/blob/master/src/filesystem.js
     function safeResolve(deferral, message) {
@@ -269,10 +269,10 @@ factory('cache', ['$q', '$timeout', function($q, $timeout) {
             fsDefer.promise.then(function(fs) { readEntries(fs.root.createReader(), [], callback); });
         }
     };
-}]);
+});
 
-angular.module('roadglApp').
-factory('history', ['cache', function(cache) {
+myApp.
+factory('history', function(cache) {
     var undoHistory = [],
     redoHistory = [],
     maxHistorySize = 300;	//TODO max size should depend on available storage size
@@ -331,4 +331,4 @@ factory('history', ['cache', function(cache) {
             });
         }
     };
-}]);
+});

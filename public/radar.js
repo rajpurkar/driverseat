@@ -1,5 +1,5 @@
-angular.module('roadglApp').
-service('radar', ['util', function(util) {
+myApp.
+service('radar', function(util) {
 
     var boxes = [ ];
     var scene; 
@@ -89,4 +89,4 @@ service('radar', ['util', function(util) {
             lastFrameNum = framenum;
         }
     }
-}]);
+});

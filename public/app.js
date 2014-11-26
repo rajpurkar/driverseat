@@ -1,6 +1,6 @@
 angular.module('roadglApp').
-controller('AppCtrl', ['$scope', '$window', 'editor', 'util', 'key', 'video', 'videoProjection', 'radar',
-function($scope, $window, editor, util, key, video, videoProjection, radar) {
+controller('AppCtrl', ['$scope', '$window', 'editor', 'util', 'key', 'video', 'videoProjection', 'radar', 'boundingBoxes',
+function($scope, $window, editor, util, key, video, videoProjection, radar, boundingBoxes) {
     //constants
     var INITIAL_OFFSET = [0, 5, -14],
         INITIAL_MOUSE = { x: 1, y: 1 },
@@ -21,7 +21,6 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
         controls,
         fpsMeter,
         params,
-        boundingBoxes,
         groundNormals = [],
         mouse = INITIAL_MOUSE,
         windowWidth = $window.innerWidth,
@@ -161,10 +160,9 @@ function($scope, $window, editor, util, key, video, videoProjection, radar) {
         },
             function(err, results) {
                 radar.init(radar_data, params, $scope.scene);
-            videoProjection.init(params);
-            $scope.debugText = "";
-            //$scope.debugText = JSON.stringify(offset);
-            $scope.execOnLoaded();
+                videoProjection.init(params);
+                $scope.debugText = "";
+                $scope.execOnLoaded();
         });
     };
 

@@ -1,4 +1,4 @@
-var myApp = angular.module('roadglApp', []);//['ngAnimate']);
+var myApp = angular.module('roadglApp', ['angular-loading-bar']);
 
 myApp.
 controller('AppCtrl', function($scope, $window, editor, util, key, video, videoProjection, radar, boundingBoxes) {
@@ -160,9 +160,6 @@ controller('AppCtrl', function($scope, $window, editor, util, key, video, videoP
             }
         },
             function(err, results) {
-                radar.init(radar_data, params, $scope.scene);
-                videoProjection.init(params);
-                $scope.debugText = "";
                 $scope.execOnLoaded();
         });
     };
@@ -189,8 +186,10 @@ controller('AppCtrl', function($scope, $window, editor, util, key, video, videoP
     };
 
     $scope.execOnLoaded = function(){
+        $scope.debugText = "";
         editor.init($scope);
-
+        radar.init(radar_data, params, $scope.scene);
+        videoProjection.init(params);        
         key.watchToggle("space");
         $scope.addEventListeners();
         $scope.addLighting();

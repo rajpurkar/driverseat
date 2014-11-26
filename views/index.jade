@@ -2,8 +2,9 @@ html
 	head
 		link(rel='shortcut icon', href='/favicon.ico', type='image/x-icon')
 		link(rel='icon', href='/favicon.ico', type='image/x-icon')
-		link(rel="stylesheet", href='/vendor/bootstrap.min.css')
+		link(rel='stylesheet', href='/vendor/bootstrap.min.css')
 		link(rel='stylesheet', href='/stylesheets/editor.css')
+		link(rel='stylesheet', href='/vendor/loading-bar.css')
 		title=title
 	body(ng-app='roadglApp')
 		div(ng-controller='AppCtrl')
@@ -57,6 +58,7 @@ html
 		script(src='/vendor/jquery.js')
 		script(src='/vendor/bootstrap.min.js')
 		script(src='/javascripts/angular.min.js')
+		script(src='/vendor/loading-bar.js')
 		script(src='/javascripts/three.min.js')
 		script(src='/javascripts/OrbitControls.js')
 		script(src='/javascripts/TypedArrayUtils.js')

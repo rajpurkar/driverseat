@@ -1,42 +1,34 @@
-var myApp = angular.module('roadglApp', ['angular-loading-bar']);
+var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 
 myApp.
-controller('AppCtrl', function($scope, $window, editor, util, key, video, videoProjection, radar, boundingBoxes) {
+controller('AppCtrl', function($scope, $window, editor, loading, util, key, video, videoProjection, radar, boundingBoxes, cfpLoadingBar) {
     //constants
     var INITIAL_OFFSET = [0, 5, -14],
         INITIAL_MOUSE = { x: 1, y: 1 },
-        INITIAL_FRAME = 0,
-        LANE_POINT_SIZE = 0.08,
-        LIDAR_POINT_SIZE = 0.12;
-
+        INITIAL_FRAME = 0;
+    
     $scope.scene = null;
     $scope.raycaster = null;
     $scope.geometries = {};
     $scope.pointClouds = {};
     $scope.kdtrees = {};
-   
+    $scope.lanesData = {};
+    $scope.videoData;
+    $scope.radarData;
+    $scope.boundingBoxData;
+    $scope.datafiles;
+    $scope.LANE_POINT_SIZE = 0.08;
+    $scope.LIDAR_POINT_SIZE = 0.12;
+    $scope.params;
     //variables
     var camera, renderer,
         projector,
-        radar_data,
         controls,
         fpsMeter,
-        params,
         groundNormals = [],
         mouse = INITIAL_MOUSE,
         windowWidth = $window.innerWidth,
         windowHeight = $window.innerHeight,
-        title = document.getElementById("title").textContent,
-        datafiles = {
-            points: "/runs/" + title + "/map.json.zip",
-            gps: "/runs/" + title + "/gps.json.zip",
-            lanes: "/runs/" + title + "/lanes_done.json.zip",
-            planes: "/runs/" + title + "/planes.json.zip",
-            video: "/runs/" + title + "/cam_2.zip",
-            radar: "/runs/" + title + "/radar.json.zip",
-            params: "/q50_4_3_14_params.json",
-            boundingBoxes: "/runs/" + title + "/bbs-cam2.json"
-        },
         frameCount = INITIAL_FRAME,
         offset = INITIAL_OFFSET,
         car;
@@ -58,111 +50,13 @@ controller('AppCtrl', function($scope, $window, editor, util, key, video, videoP
         renderer = new THREE.WebGLRenderer({canvas: canvas});
         renderer.setSize(windowWidth, windowHeight);
         //renderer.setClearColor( scene.fog.color );
-
         controls = new THREE.OrbitControls(camera);
-
         $scope.debugText = "Loading...";
-        async.parallel({
-            pointCloud: function(callback){
-                JSZipUtils.getBinaryContent(datafiles.points, function(err, data) {
-                    if(err) throw err; // or handle err
-                    var loader = util.loadDataFromZip;
-                    var points = JSON.parse(loader(data, "map.json"));
-                    $scope.pointClouds.points = $scope.generatePointCloud("points", points, LIDAR_POINT_SIZE);
-                    $scope.scene.add($scope.pointClouds.points);
-                    callback(null, 'map_load');
-                });
-            },
-            gps: function(callback){
-                JSZipUtils.getBinaryContent(datafiles.gps, function(err, data) {
-                    if(err) throw err; // or handle err
-                    var loader = util.loadDataFromZip;
-                    $scope.gps = JSON.parse(loader(data, "gps.json"));
-                    callback(null, 'gps_load');
-                });
-            },
-            lanes: function(callback){
-                JSZipUtils.getBinaryContent(datafiles.lanes, function(err, gzipped_data) {
-                    if(err) throw err; // or handle err
-                    var loader = util.loadDataFromZip;
-                    var data = JSON.parse(loader(gzipped_data, "lanes_done.json"));
-                    $scope.pointClouds.lanes = {};
-                    for (var lane in data){
-                        var color = util.generateRGB(lane);
-                        var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], LANE_POINT_SIZE, color);
-                        $scope.scene.add(laneCloud);	
-                        $scope.pointClouds.lanes[lane] = laneCloud;
-                        var positions = laneCloud.geometry.attributes.position.array;
-                        $scope.kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3);
-                        editor.initLane(positions, lane);
-                    }
-                    callback(null, 3);
-                });
-            },
-            planes: function(callback){
-                JSZipUtils.getBinaryContent(datafiles.planes, function(err, gzipped_data) {
-                    if(err) throw err; // or handle err
-                    var loader = util.loadDataFromZip;
-                    var data = JSON.parse(loader(gzipped_data, "planes.json"));
-                    $scope.addPlanes(data);
-                    callback(null, 4);
-                });
-            },
-            car: function(callback){
-                $scope.addCar(function(geometry, materials){
-                    callback(null, 5);
-                });
-            },
-            video: function(callback) {
-                /*
-                var player_onload = function(player) {
-                    video.init(player);
-                    callback(null, 'video_init');
-                }
-                var canvas = document.getElementById('projectionCanvas');
-                jsmpeg_video = new jsmpeg(datafiles.video, {onload:player_onload, forceCanvas2D: true});
-                */
-                JSZipUtils.getBinaryContent(datafiles.video, function(err, data) {
-                    if(err) {
-                        throw err; // or handle err
-                    }
-                    video.init(data);
-                    callback(null, 'video_init');
-                });
-            },
-            radar: function(callback){
-                console.log(datafiles.radar);
-                JSZipUtils.getBinaryContent(datafiles.radar, function(err, gzipped_data) {
-                    if(err) throw err; // or handle err
-                    var loader = util.loadDataFromZip;
-                    var data = JSON.parse(loader(gzipped_data, "radar.json"));
-                    radar_data = data;
-                    callback(null, "radar_init");
-                });
-            },
-            boundingBoxes: function(callback) {
-                util.loadJSON(
-                    datafiles.boundingBoxes,
-                    function(data) {
-                      boundingBoxes.init(data);
-                      callback(null, "bounding_boxes_init");
-                    },
-                    function(data) {
-                      console.log("Cannot open bounding boxes file: " + datafiles.boundingBoxes);
-                      callback(null, "bounding_boxes_init");
-                    });
-            },
-            params: function(callback) {
-                util.loadJSON(datafiles.params, function(data) {
-                    params = data;
-                    callback(null, "params");
-                });
-            }
-        },
-            function(err, results) {
-                $scope.execOnLoaded();
-        });
+        cfpLoadingBar.start();
+        loading.init($scope);
+        loading.loaders($scope.execOnLoaded);
     };
+
 
     $scope.addLighting = function(){
         pointLight = new THREE.PointLight( 0xffffff );
@@ -186,15 +80,22 @@ controller('AppCtrl', function($scope, $window, editor, util, key, video, videoP
     };
 
     $scope.execOnLoaded = function(){
-        $scope.debugText = "";
+        video.init($scope.videoData);
         editor.init($scope);
-        radar.init(radar_data, params, $scope.scene);
-        videoProjection.init(params);        
+        radar.init($scope.radarData, $scope.params, $scope.scene);
+        videoProjection.init($scope.params);        
+        if($scope.boundingBoxData) boundingBoxes.init($scope.boundingBoxData);
+        for(var lane in $scope.lanesData){
+            editor.initLane($scope.lanesData[lane], lane);
+        }
+
         key.watchToggle("space");
         $scope.addEventListeners();
         $scope.addLighting();
         $scope.updateCamera(0);
         $scope.animate();
+        cfpLoadingBar.complete();
+        $scope.debugText = "";
     };
 
     $scope.rotateCamera = function(event) {

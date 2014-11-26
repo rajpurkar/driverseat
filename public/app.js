@@ -1,12 +1,20 @@
 angular.module('roadglApp').
-controller('AppCtrl', ['$scope', '$window', 'editor', 'util', 'key', 'video', 'videoProjection', 'radar', 'boundingBoxes',
-function($scope, $window, editor, util, key, video, videoProjection, radar, boundingBoxes) {
+controller('AppCtrl', ['$scope', '$window', 'editor', 'util', 'key', 'video', 'videoProjection', 'radar',
+function($scope, $window, editor, util, key, video, videoProjection, radar) {
+    //constants
+    var INITIAL_OFFSET = [0, 5, -14],
+        INITIAL_MOUSE = { x: 1, y: 1 },
+        INITIAL_FRAME = 0,
+        LANE_POINT_SIZE = 0.08,
+        LIDAR_POINT_SIZE = 0.12;
+
     $scope.scene = null;
     $scope.raycaster = null;
     $scope.geometries = {};
     $scope.pointClouds = {};
     $scope.kdtrees = {};
-    $scope.pointSize = 0.1;
+   
+    //variables
     var camera, renderer,
         projector,
         radar_data,
@@ -15,7 +23,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar, boun
         params,
         boundingBoxes,
         groundNormals = [],
-        mouse = { x: 1, y: 1 },
+        mouse = INITIAL_MOUSE,
         windowWidth = $window.innerWidth,
         windowHeight = $window.innerHeight,
         title = document.getElementById("title").textContent,
@@ -29,10 +37,9 @@ function($scope, $window, editor, util, key, video, videoProjection, radar, boun
             params: "/q50_4_3_14_params.json",
             boundingBoxes: "/runs/" + title + "/bbs-cam2.json"
         },
-        frameCount = 0,
-        offset = [0, 5, -14],//[0,1,-2],
-        car,
-        carOffset = 0;
+        frameCount = INITIAL_FRAME,
+        offset = INITIAL_OFFSET,
+        car;
 
     $scope.setCameraOffset = function(){
         offset[0] = - car.position.x + camera.position.x;
@@ -61,7 +68,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar, boun
                     if(err) throw err; // or handle err
                     var loader = util.loadDataFromZip;
                     var points = JSON.parse(loader(data, "map.json"));
-                    $scope.pointClouds.points = $scope.generatePointCloud("points", points, 0.1);
+                    $scope.pointClouds.points = $scope.generatePointCloud("points", points, LIDAR_POINT_SIZE);
                     $scope.scene.add($scope.pointClouds.points);
                     callback(null, 'map_load');
                 });
@@ -82,8 +89,8 @@ function($scope, $window, editor, util, key, video, videoProjection, radar, boun
                     $scope.pointClouds.lanes = {};
                     for (var lane in data){
                         var color = util.generateRGB(lane);
-                        var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], $scope.pointSize, color);
-                        $scope.scene.add(laneCloud);
+                        var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], LANE_POINT_SIZE, color);
+                        $scope.scene.add(laneCloud);	
                         $scope.pointClouds.lanes[lane] = laneCloud;
                         var positions = laneCloud.geometry.attributes.position.array;
                         $scope.kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3);
@@ -233,17 +240,6 @@ function($scope, $window, editor, util, key, video, videoProjection, radar, boun
         renderer.setSize(windowWidth, windowHeight);
     };
 
-    $scope.carRight= function(){
-        carOffset-=0.3;
-
-        $scope.updateCamera(frameCount);
-    };
-
-    $scope.carLeft = function(){
-        carOffset+=0.3;
-        $scope.updateCamera(frameCount);
-    };
-
     $scope.carForward = function(){
         var numForward = 3;
         if (frameCount + numForward < $scope.gps.length)
@@ -261,7 +257,7 @@ function($scope, $window, editor, util, key, video, videoProjection, radar, boun
 
     $scope.getCarPosition = function(frameCount){
         var pos = $scope.gps[frameCount];
-        var x = pos[1][3] + carOffset;
+        var x = pos[1][3];
         var y = pos[2][3] - 1.1;
         var z = pos[0][3];
         return {x: x, y:y, z:z};

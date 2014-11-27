@@ -1,11 +1,12 @@
 myApp.
 factory('editor', function(util, key, history, $http) {
     var $scope,
-    selectedPoint = null,
-    selectedPositions = {}, // index => position array
-    selectedPositionsDir = -1;
-    action = { laneNum: 0, type: "" },
-    DRAG_RANGE = 19;
+        selectedPoint = null,
+        selectedPositions = {}, // index => position array
+        selectedPositionsDir = -1;
+        selectedLane = -1,
+        action = { laneNum: 0, type: "" },
+        DRAG_RANGE = 19;
 
     function initLane(positions, laneNum) {
         history.push("original", positions, laneNum);
@@ -27,8 +28,8 @@ factory('editor', function(util, key, history, $http) {
         document.addEventListener('mousedown', onDocumentMouseDown, false);
         document.addEventListener('mouseup', onDocumentMouseUp, false);
         document.addEventListener('keydown', onDocumentKeyDown, false);
+        document.addEventListener('dblclick', onDocumentDblClick, false);
         handleSlider();
-
     }
 
     function done(){
@@ -57,7 +58,7 @@ factory('editor', function(util, key, history, $http) {
             case key.keyMap.del:
             case key.keyMap.D:
             case key.keyMap.d:
-                splitLane();
+                deleteSegment();
                 break;
             case key.keyMap.J:
             case key.keyMap.j:
@@ -198,6 +199,16 @@ factory('editor', function(util, key, history, $http) {
         document.removeEventListener('mousemove', dragPoint);
     }
 
+    function onDocumentDblClick() {
+        if (selectedPoint === null) return;
+        selectedLane = action.laneNum;
+        var colors = selectedPoint.object.geometry.attributes.color;
+        for (var i = 0; i < colors.array.length; i++) {
+            colors.array[i] = 1;
+        }
+        colors.needsUpdate = true;
+    }
+
     var dragPointDists = {};
     var dragPointMaxDist;
     function dragPoint() {
@@ -242,16 +253,23 @@ factory('editor', function(util, key, history, $http) {
 
     function deselectPoints(laneNum) {
         var color = util.generateRGB(laneNum);
-        if (selectedPoint !== null)
-            util.paintPoint(selectedPoint.object.geometry.attributes.color, selectedPoint.index, color.r, color.g, color.b);
-        for (var index in selectedPositions) {
-            var pointKey = index.split("_");
-            if (pointKey.length > 1) {
-                //TODO points selected in two lanes
-                // util.paintPoint(geometries["lane"+pointKey[0]].attributes.color, pointKey[1], 255, 255, 255);
-                continue;
+        if (selectedLane >= 0) {
+            var pointColors = selectedPoint.object.geometry.attributes.color;
+            colorLane(laneNum, pointColors.array);
+            pointColors.needsUpdate = true;
+            selectedLane = -1;
+        } else {
+            if (selectedPoint !== null)
+                util.paintPoint(selectedPoint.object.geometry.attributes.color, selectedPoint.index, color.r, color.g, color.b);
+            for (var index in selectedPositions) {
+                var pointKey = index.split("_");
+                if (pointKey.length > 1) {
+                    //TODO points selected in two lanes
+                    // util.paintPoint(geometries["lane"+pointKey[0]].attributes.color, pointKey[1], 255, 255, 255);
+                    continue;
+                }
+                util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, index, color.r, color.g, color.b);
             }
-            util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, index, color.r, color.g, color.b);
         }
 
         selectedPoint = null;
@@ -275,7 +293,7 @@ factory('editor', function(util, key, history, $http) {
 
     function newLane(laneNum, arrayBuffer) {
         var color = util.generateRGB(laneNum);
-        var laneCloud = $scope.generatePointCloud("lane"+laneNum, arrayBuffer, $scope.pointSize, color);
+        var laneCloud = $scope.generatePointCloud("lane"+laneNum, arrayBuffer, $scope.LANE_POINT_SIZE, color);
         $scope.scene.add(laneCloud);
         $scope.pointClouds.lanes[laneNum] = laneCloud;
         var newPositions = laneCloud.geometry.attributes.position;
@@ -302,19 +320,25 @@ factory('editor', function(util, key, history, $http) {
 
         delete $scope.kdtrees["lane"+laneNum];
         $scope.kdtrees["lane"+laneNum] = new THREE.TypedArrayUtils.Kdtree(positions.array, util.distance, 3);
+        console.log(positions.array, colors.array);
     }
 
     function copySegment() {
         action.type = "copy";
         var positions = selectedPoint.object.geometry.attributes.position;
-        var lenNewPositions = 3*Object.keys(selectedPositions).length;
-        if (lenNewPositions === 0) return;
-        var newPositions = new Float32Array(lenNewPositions);
-        var i = 0;
-        for (var index in selectedPositions) {
-            newPositions[i++] = positions.array[3*index];
-            newPositions[i++] = positions.array[3*index+1];
-            newPositions[i++] = positions.array[3*index+2];
+        var newPositions;
+        if (selectedLane >= 0) {
+            newPositions = new Float32Array(positions.array);
+        } else {
+            var lenNewPositions = 3*Object.keys(selectedPositions).length;
+            if (lenNewPositions === 0) return;
+            newPositions = new Float32Array(lenNewPositions);
+            var i = 0;
+            for (var index in selectedPositions) {
+                newPositions[i++] = positions.array[3*index];
+                newPositions[i++] = positions.array[3*index+1];
+                newPositions[i++] = positions.array[3*index+2];
+            }
         }
         var selectedPointRef = selectedPoint;
         deselectPoints(action.laneNum);
@@ -335,7 +359,7 @@ factory('editor', function(util, key, history, $http) {
             positions.array[index++] += dVec[2];
         }
         positions.needsUpdate = true;
-        history.push("new", positions, laneNum);
+        history.push("new", positions.array, laneNum);
         selectedPoint = null;
     }
 
@@ -368,9 +392,19 @@ factory('editor', function(util, key, history, $http) {
         history.push("join", positions.array, lanes[0]);
     }
 
-    function splitLane() {
-        action.type = "split";
+    function deleteSegment() {
         var positions = selectedPoint.object.geometry.attributes.position;
+        if (selectedLane >= 0) {
+            // delete entire lane
+            history.push("delete", positions.array, selectedLane);
+            deleteLane(selectedLane);
+            action.type = "delete";
+            selectedLane = -1;
+            selectedPoint = null;
+            selectedPositions = {};
+            return;
+        }
+        action.type = "split";
         var colors = selectedPoint.object.geometry.attributes.color;
         var boundaryIndex = Object.keys(selectedPositions)[0];
         var oldPositions = new Float32Array(positions.array.length);
@@ -393,7 +427,7 @@ factory('editor', function(util, key, history, $http) {
         var laneNum = newLaneNum();
         var subNewPositions = newPositions.subarray(0,lenNewPositions);
         newLane(laneNum, subNewPositions);
-        history.push("new", subNewPositions, laneNum);
+        history.push("new_split", subNewPositions, laneNum);
         // truncate old lane
         var positionsArray = new Float32Array(oldPositions.subarray(0,lenOldPositions));
         updateLane(action.laneNum, positions, colors, positionsArray);
@@ -458,7 +492,7 @@ factory('editor', function(util, key, history, $http) {
     function undo() {
         action.type = "";
         history.undo(function(action, arrayBuffer, laneNum) {
-            if (action == "new" || action == "fork") {
+            if (action == "new" || action == "new_split" || action == "fork") {
                 deleteLane(laneNum);
                 return;
             } else if (action == "delete") {
@@ -477,9 +511,9 @@ factory('editor', function(util, key, history, $http) {
 
     function redo() {
         history.redo(function(laneNum, action, arrayBuffer) {
-            if (action == "new" || action == "fork") {
+            if (action == "new" || action == "new_split" || action == "fork") {
                 newLane(laneNum, arrayBuffer);
-                if (action == "new") redo();
+                if (action == "new_split") redo();
                 //TODO if next is delete:
                 return;
             } else if (action == "delete") {

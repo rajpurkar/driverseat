@@ -280,8 +280,8 @@ factory('history', function(cache) {
         push: function(action, lanePositions, laneNum) {
             var entry = {
                 laneNum: parseInt(laneNum, 10),
-        action: action,
-        filename: Date.now().toString()
+                action: action,
+                filename: Date.now().toString()
             };
             undoHistory.push(entry);
             for (var i = 0; i < redoHistory.length; i++) {

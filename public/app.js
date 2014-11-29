@@ -2,25 +2,27 @@ var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 
 myApp.
 controller('AppCtrl', function($scope, $window, editor, loading, util, key, video, videoProjection, radar, boundingBoxes, cfpLoadingBar) {
-    //constants
+    // constants
     var INITIAL_OFFSET = [0, 5, -14],
-        INITIAL_MOUSE = { x: 1, y: 1 },
-        INITIAL_FRAME = 0;
-    
-    $scope.scene = null;
-    $scope.raycaster = null;
-    $scope.geometries = {};
-    $scope.pointClouds = {};
-    $scope.kdtrees = {};
-    $scope.lanesData = {};
-    $scope.videoData;
-    $scope.radarData;
-    $scope.boundingBoxData;
-    $scope.datafiles;
-    $scope.LANE_POINT_SIZE = 0.08;
+        INITIAL_MOUSE  = { x: 1, y: 1 },
+        INITIAL_FRAME  = 0;
+
+    // scope variables
+    $scope.scene            = null;
+    $scope.raycaster        = null;
+    $scope.geometries       = {};
+    $scope.pointClouds      = {};
+    $scope.kdtrees          = {};
+    $scope.lanesData        = {};
+    $scope.videoData        = null;
+    $scope.radarData        = null;
+    $scope.boundingBoxData  = null;
+    $scope.datafiles        = null;
+    $scope.LANE_POINT_SIZE  = 0.08;
     $scope.LIDAR_POINT_SIZE = 0.12;
-    $scope.params;
-    //variables
+    $scope.params           = null;
+
+    // local variables
     var camera, renderer,
         projector,
         controls,
@@ -76,14 +78,14 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
         window.addEventListener('resize', $scope.onWindowResize, false);
         document.getElementById("undo").addEventListener("click", editor.undo, false);
         document.getElementById("redo").addEventListener("click", editor.redo, false);
-        document.getElementById("done").addEventListener("click", editor.done, false);
+        document.getElementById("save").addEventListener("click", editor.save, false);
     };
 
     $scope.execOnLoaded = function(){
         video.init($scope.videoData);
         editor.init($scope);
         radar.init($scope.radarData, $scope.params, $scope.scene);
-        videoProjection.init($scope.params);        
+        videoProjection.init($scope.params);
         if($scope.boundingBoxData) boundingBoxes.init($scope.boundingBoxData);
         for(var lane in $scope.lanesData){
             editor.initLane($scope.lanesData[lane], lane);

@@ -32,18 +32,39 @@ factory('editor', function(util, key, history, $http) {
         handleSlider();
     }
 
-    function done(){
-        var trackname = document.getElementById("title").textContent; //todo: change the way this is done 
-        var d= {};
-        for(var laneNum in $scope.pointClouds.lanes){
-            d[laneNum] = $scope.geometries["lane"+laneNum].attributes.position.array;
+    var saving = false;
+    function save() {
+        if (saving) return;
+        saving = true;
+
+        var data = {};
+        data.trackName = document.getElementById("title").textContent; //todo: change the way this is done
+        var lanes = {};
+        for (var laneNum in $scope.pointClouds.lanes) {
+            var typedArray = $scope.geometries["lane"+laneNum].attributes.position.array;
+            lanes[laneNum] = Array.prototype.slice.call(typedArray);
         }
-        $http({
-            method: 'POST',
-            url: '/save',
-            data: {lanes: "placeholder", track: trackname}
-        }).success(function () {
-            $scope.debugText = 'Saved!';
+        var zip = new JSZip();
+        zip.file("lanes.json", JSON.stringify(lanes));
+        data.laneData = zip.generate({ compression: "DEFLATE", type: "blob" });
+
+        $http.post("/save", data, {
+            // browser turns undefined into "multipart/form-data" with correct boundary
+            headers: { "Content-Type": undefined },
+            // create FormData from the data object
+            transformRequest: function(data) {
+                var fd = new FormData();
+                for (var key in data) {
+                    fd.append(key, data[key]);
+                }
+                return fd;
+            }
+        }).success(function(data, status, headers, config) {
+            $scope.debugText = "Saved!";
+            saving = false;
+        }).error(function(data, status, headers, config) {
+            $scope.debugText = "Unable to save file";
+            saving = false;
         });
     }
 
@@ -533,6 +554,6 @@ factory('editor', function(util, key, history, $http) {
         init: init,
         undo: undo,
         redo: redo,
-        done: done
+        save: save
     };
 });

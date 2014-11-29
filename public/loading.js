@@ -1,20 +1,21 @@
 myApp.
-factory('loading', function(util) {
+factory('loading', function($http, util) {
 
     function init(scope) {
         $scope = scope;
         $scope.title = document.getElementById("title").textContent;
         var title = $scope.title;
+        var datafilesPath = "/runs/" + title + "/";
         $scope.datafiles = {
-            points: "/runs/" + title + "/map.json.zip",
-            gps: "/runs/" + title + "/gps.json.zip",
-            lanes: "/runs/" + title + "/lanes_done.json.zip",
-            planes: "/runs/" + title + "/planes.json.zip",
-            video: "/runs/" + title + "/cam_2.zip",
-            radar: "/runs/" + title + "/radar.json.zip",
+            points: datafilesPath + "map.json.zip",
+            gps: datafilesPath + "gps.json.zip",
+            lanes: datafilesPath + "lanes/",
+            planes: datafilesPath + "planes.json.zip",
+            video: datafilesPath + "cam_2.zip",
+            radar: datafilesPath + "radar.json.zip",
             params: "/q50_4_3_14_params.json",
-            boundingBoxes: "/runs/" + title + "/bbs-cam2.json"
-        };   
+            boundingBoxes: datafilesPath + "bbs-cam2.json"
+        };
         $scope.debugText = "Loading...";
     }
 
@@ -39,22 +40,29 @@ factory('loading', function(util) {
                 });
             },
             lanes: function(callback){
-                JSZipUtils.getBinaryContent($scope.datafiles.lanes, function(err, gzipped_data) {
-                    if(err) throw err; // or handle err
-                    var loader = util.loadDataFromZip;
-                    var data = JSON.parse(loader(gzipped_data, "lanes_done.json"));
-                    $scope.pointClouds.lanes = {};
-                    for (var lane in data){
-                        var color = util.generateRGB(lane);
-                        var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], $scope.LANE_POINT_SIZE, color);
-                        $scope.scene.add(laneCloud);    
-                        $scope.pointClouds.lanes[lane] = laneCloud;
-                        var positions = laneCloud.geometry.attributes.position.array;
-                        $scope.kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3);
-                        $scope.lanesData[lane] = positions;
-                    }
-                    callback(null, 3);
-                });
+                $http.get("/latestEdit?trackname="+encodeURI($scope.title)).
+                    success(function(filename) {
+                        var path = $scope.datafiles.lanes + filename;
+                        JSZipUtils.getBinaryContent(path, function(err, gzipped_data) {
+                            if (err) throw err; // or handle err
+                            var loader = util.loadDataFromZip;
+                            var data = JSON.parse(loader(gzipped_data, "lanes.json"));
+                            $scope.pointClouds.lanes = {};
+                            for (var lane in data){
+                                var color = util.generateRGB(lane);
+                                var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], $scope.LANE_POINT_SIZE, color);
+                                $scope.scene.add(laneCloud);
+                                $scope.pointClouds.lanes[lane] = laneCloud;
+                                var positions = laneCloud.geometry.attributes.position.array;
+                                $scope.kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3);
+                                $scope.lanesData[lane] = positions;
+                            }
+                            callback(null, 3);
+                        });
+                    }).
+                    error(function() {
+                        callback(null, 3);
+                    });
             },
             planes: function(callback){
                 JSZipUtils.getBinaryContent($scope.datafiles.planes, function(err, gzipped_data) {

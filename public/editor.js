@@ -396,6 +396,7 @@ factory('editor', function(util, key, history, $http) {
         }
         var selectedPointRef = selectedPoint;
         deselectPoints(action.laneNum);
+        selectedPointBoxes[0].visible = true;
         selectedPoint = selectedPointRef;
         var laneNum = newLaneNum();
         newLane(laneNum, newPositions);
@@ -415,6 +416,7 @@ factory('editor', function(util, key, history, $http) {
         positions.needsUpdate = true;
         history.push("new", positions.array, laneNum);
         selectedPoint = null;
+        selectedPointBoxes[0].visible = false;
     }
 
     function joinLanes() {

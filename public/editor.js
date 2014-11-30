@@ -2,6 +2,7 @@ myApp.
 factory('editor', function(util, key, history, $http) {
     var $scope,
         selectedPoint = null,
+        selectedPointBoxes = [null, null],
         selectedPositions = {}, // index => position array
         selectedPositionsDir = -1;
         selectedLane = -1,
@@ -24,6 +25,17 @@ factory('editor', function(util, key, history, $http) {
         input.addEventListener('input', changeDragRange);	
     }
 
+    function createSelectedPointBoxes() {
+        var geometry = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+        var material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        selectedPointBoxes[0] = new THREE.Mesh(geometry, material);
+        selectedPointBoxes[1] = new THREE.Mesh(geometry, material);
+        selectedPointBoxes[0].visible = false;
+        selectedPointBoxes[1].visible = false;
+        $scope.scene.add(selectedPointBoxes[0]);
+        $scope.scene.add(selectedPointBoxes[1]);
+    }
+
     function init(scope) {
         $scope = scope;
         document.addEventListener('mousedown', onDocumentMouseDown, false);
@@ -34,6 +46,7 @@ factory('editor', function(util, key, history, $http) {
         document.getElementById("redo").addEventListener("click", redo, false);
         document.getElementById("save").addEventListener("click", save, false);
         handleSlider();
+        createSelectedPointBoxes();
     }
 
     function save() {
@@ -156,7 +169,7 @@ factory('editor', function(util, key, history, $http) {
         if (intersects.length === 0) return;
         // if (lane >= pointClouds.lanes.length) return;
 
-        var i, nearestPoints, index;
+        var i, nearestPoints, index, selectedPos;
         var pointPos = intersects[0].object.geometry.attributes.position.array;
 
         if (key.isDown("shift")) {
@@ -173,7 +186,10 @@ factory('editor', function(util, key, history, $http) {
                 selectedPositions = {};
                 selectedPositions[action.laneNum+"_"+startPoint.index] = startPos;
                 selectedPositions[action.laneNum2+"_"+endPoint.index] = endPos;
-                util.paintPoint(geometries["lane"+lane].attributes.color, endPoint.index, 255, 255, 255);
+                util.paintPoint($scope.geometries["lane"+lane].attributes.color, endPoint.index, 255, 255, 255);
+                selectedPos = util.getPos(pointPos, selectedPoint.index);
+                selectedPointBoxes[1].position.set(selectedPos[0], selectedPos[1], selectedPos[2]);
+                selectedPointBoxes[1].visible = true;
                 return;
             }
             // select range
@@ -194,12 +210,18 @@ factory('editor', function(util, key, history, $http) {
                 selectedPositions[index] = util.getPos(pointPos, index);
                 util.paintPoint($scope.geometries["lane"+lane].attributes.color, index, 255, 255, 255);
             }
+            selectedPos = util.getPos(pointPos, selectedPoint.index);
+            selectedPointBoxes[1].position.set(selectedPos[0], selectedPos[1], selectedPos[2]);
+            selectedPointBoxes[1].visible = true;
             return;
         }
         deselectPoints(action.laneNum);
         // select point for dragging
         action = { laneNum: lane, type: "" };
         selectedPoint = intersects[0];
+        selectedPos = util.getPos(pointPos, selectedPoint.index);
+        selectedPointBoxes[0].position.set(selectedPos[0], selectedPos[1], selectedPos[2]);
+        selectedPointBoxes[0].visible = true;
         util.paintPoint($scope.geometries["lane"+lane].attributes.color, selectedPoint.index, 255, 255, 255);
         nearestPoints = $scope.kdtrees["lane"+lane].nearest(util.getPos(pointPos, selectedPoint.index), 300, DRAG_RANGE);
         selectedPositions = {};
@@ -242,8 +264,9 @@ factory('editor', function(util, key, history, $http) {
     var dragPointDists = {};
     var dragPointMaxDist;
     function dragPoint() {
-        //TODO factor
         $scope.updateMouse();
+        //TODO: move selectedPointBox with selectedPoint
+        selectedPointBoxes[0].visible = false;
         var intersects = $scope.raycaster.intersectObject(selectedPlane.object);
         if (intersects.length > 0) {
             // var index = selectedPoint.index;
@@ -294,9 +317,9 @@ factory('editor', function(util, key, history, $http) {
             for (var index in selectedPositions) {
                 var pointKey = index.split("_");
                 if (pointKey.length > 1) {
-                    //TODO points selected in two lanes
-                    // util.paintPoint(geometries["lane"+pointKey[0]].attributes.color, pointKey[1], 255, 255, 255);
-                    continue;
+                    laneNum = parseInt(pointKey[0], 10);
+                    index = parseInt(pointKey[1], 10);
+                    color = util.generateRGB(laneNum);
                 }
                 util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, index, color.r, color.g, color.b);
             }
@@ -304,6 +327,8 @@ factory('editor', function(util, key, history, $http) {
 
         selectedPoint = null;
         selectedPositions = {};
+        selectedPointBoxes[0].visible = false;
+        selectedPointBoxes[1].visible = false;
     }
 
     function newLaneNum() {
@@ -394,6 +419,8 @@ factory('editor', function(util, key, history, $http) {
 
     function joinLanes() {
         action.type = "join";
+        selectedPointBoxes[0].visible = false;
+        selectedPointBoxes[1].visible = false;
         var positionArrs = [],
             lanes = [],
             endPositions = [];
@@ -423,6 +450,8 @@ factory('editor', function(util, key, history, $http) {
 
     function deleteSegment() {
         var positions = selectedPoint.object.geometry.attributes.position;
+        selectedPointBoxes[0].visible = false;
+        selectedPointBoxes[1].visible = false;
         if (selectedLane >= 0) {
             // delete entire lane
             history.push("delete", positions.array, selectedLane);
@@ -485,6 +514,9 @@ factory('editor', function(util, key, history, $http) {
         if (nearestPoints.length === 0) return;
         var index = nearestPoints[0][0].pos;
         util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, index, 255, 255, 255);
+        var selectedPos = util.getPos(newPositions, index);
+        selectedPointBoxes[0].position.set(selectedPos[0], selectedPos[1], selectedPos[2]);
+        selectedPointBoxes[0].visible = true;
         selectedPoint = {
             object: $scope.pointClouds.lanes[laneNum],
             index: index
@@ -508,6 +540,9 @@ factory('editor', function(util, key, history, $http) {
         if (nearestPoints.length === 0) return;
         var index = nearestPoints[0][0].pos;
         util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, index, 255, 255, 255);
+        var selectedPos = util.getPos($scope.geometries["lane"+laneNum].attributes.position.array, index);
+        selectedPointBoxes[0].position.set(selectedPos[0], selectedPos[1], selectedPos[2]);
+        selectedPointBoxes[0].visible = true;
         selectedPoint = {
             object: $scope.pointClouds.lanes[laneNum],
             index: index

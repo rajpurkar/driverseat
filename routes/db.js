@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var fs = require('fs');
 var moment = require('moment');
-var multiparty = require('multiparty');
+var Busboy = require('busboy');
 
 module.exports = {
     initdb: function(){
@@ -23,36 +23,26 @@ module.exports = {
         }
     },
     saveEdit: function(req, res, next) {
-        /*TODO : fix function */
-        var form = new multiparty.Form();
-        var trackName, laneData;
-
-        form.on("error", function() {
-            res.status(500).end();
-        });
-        form.on("close", function() {
-            var tempPath = laneData.path,
-                path = "./public/runs/" + trackName + "/lanes/",
+        var busboy = new Busboy({ headers: req.headers });
+        busboy.on("file", function(fieldname, stream) {
+            var path = "./public/runs/" + fieldname + "/lanes/",
                 username = req.session.user.username,
                 filename = moment().unix() + "_" + username + ".json.zip";
-
-            //TODO remove this line when all runs have the 'lanes' folder
-            // fs.mkdirSync(path);
-
-            fs.renameSync(tempPath, path + filename);
-            res.status(200).end();
-            next();
-        });
-        form.on("field", function(name, val) {
-            switch (name) {
-                case "trackName": trackName = val; break;
+            if (!fs.existsSync(path)) {
+                res.status(500).end();
+                stream.resume();
+                return;
             }
+            // stream.on("data", function(data) {
+            //     // console.log(data.length);
+            // });
+            stream.pipe(fs.createWriteStream(path + filename));
         });
-        form.on("file", function(name, val) {
-            if (name != "laneData") return;
-            laneData = val;
+        busboy.on("finish", function() {
+            res.status(200).end();
+            // next();
         });
-        form.parse(req);
+        req.pipe(busboy);
     },
     getLatestEdit: function(req, res, next) {
         var trackName = decodeURI(req.query.trackname),
@@ -65,11 +55,12 @@ module.exports = {
         }
 
         files.sort(function(f1, f2) {
-            var ts1 = f1.split("_")[0],
-                ts2 = f2.split("_")[0];
+            var ts1 = parseInt(f1.split("_")[0], 10),
+                ts2 = parseInt(f2.split("_")[0], 10);
+            if (isNaN(ts2-ts1))
+                return isNan(ts1) ? 1 : -1; // invalid filenames get pushed to back
             return ts2 - ts1;
         });
-        console.log(files);
         res.send(files[0]);
     }
 };

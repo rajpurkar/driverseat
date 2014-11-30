@@ -78,6 +78,7 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
     };
 
     $scope.execOnLoaded = function(){
+        $scope.debugText = "Rendering...";
         video.init($scope.videoData);
         editor.init($scope);
         radar.init($scope.radarData, $scope.params, $scope.scene);
@@ -237,10 +238,10 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
         if (dataType === "[object Float32Array]" || dataType === "[object ArrayBuffer]") {
             positions = new Float32Array(data);
             colors    = new Float32Array(positions.length);
-            for (i = 0; 3*i < colors.length; i++) {
-                colors[3*i+0] = color.r;
-                colors[3*i+1] = color.g;
-                colors[3*i+2] = color.b;
+            for (i = 0; i < colors.length; i += 3) {
+                colors[i]   = color.r;
+                colors[i+1] = color.g;
+                colors[i+2] = color.b;
             }
         } else {
             positions = new Float32Array(3*data.length);
@@ -253,7 +254,7 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
             }
 
             if (data[0].length >= 4) {
-                $scope.fillColor(colors, data, 0.6, 0.6,0.6);
+                $scope.fillColor(colors, data, 0.6, 0.6, 0.6);
             } else if (typeof color === "undefined") {
                 $scope.fillColor(colors, data, 1, 1, 1);
             } else {

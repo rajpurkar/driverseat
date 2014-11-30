@@ -20,7 +20,7 @@ factory('loading', function($http, util) {
         $scope.debugText = "Loading...";
     }
 
-    function loaders(cb){
+    function loaders(cb) {
         async.parallel({
             pointCloud: function(callback){
                 JSZipUtils.getBinaryContent($scope.datafiles.points, function(err, data) {
@@ -50,8 +50,7 @@ factory('loading', function($http, util) {
                             var loader = util.loadDataFromZip;
                             var data = JSON.parse(loader(gzipped_data, "lanes.json"));
                             $scope.pointClouds.lanes = {};
-                            for (var lane in data){
-                                console.log(lane, data[lane].length);
+                            for (var lane in data) {
                                 var color = util.generateRGB(lane);
                                 var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], $scope.LANE_POINT_SIZE, color);
                                 $scope.scene.add(laneCloud);
@@ -126,7 +125,7 @@ factory('loading', function($http, util) {
             }
         },
         function(err, results) {
-                cb();
+            cb();
         });
     }
 

@@ -38,9 +38,10 @@ factory('editor', function(util, key, history, $http) {
 
     function save() {
         document.getElementById("save").removeEventListener("click", save);
+        $scope.debugText = "Saving...";
 
-        var data = {};
-        data.trackName = document.getElementById("title").textContent; //todo: change the way this is done
+        var trackName = document.getElementById("title").textContent; //todo: change the way this is done
+
         var lanes = {};
         for (var laneNum in $scope.pointClouds.lanes) {
             var positions = $scope.geometries["lane"+laneNum].attributes.position.array;
@@ -50,9 +51,10 @@ factory('editor', function(util, key, history, $http) {
             }
             lanes[laneNum] = posVectors;
         }
+        var data = {};
         var zip = new JSZip();
         zip.file("lanes.json", JSON.stringify(lanes));
-        data.laneData = zip.generate({ compression: "DEFLATE", type: "blob" });
+        data[trackName] = zip.generate({ compression: "DEFLATE", type: "blob" });
 
         $http.post("/save", data, {
             // browser turns undefined into "multipart/form-data" with correct boundary
@@ -66,6 +68,7 @@ factory('editor', function(util, key, history, $http) {
                 return fd;
             }
         }).success(function(data, status, headers, config) {
+            console.log(data, status);
             $scope.debugText = "Saved!";
             document.getElementById("save").addEventListener("click", save, false);
         }).error(function(data, status, headers, config) {
@@ -347,7 +350,6 @@ factory('editor', function(util, key, history, $http) {
 
         delete $scope.kdtrees["lane"+laneNum];
         $scope.kdtrees["lane"+laneNum] = new THREE.TypedArrayUtils.Kdtree(positions.array, util.distance, 3);
-        console.log(positions.array, colors.array);
     }
 
     function copySegment() {

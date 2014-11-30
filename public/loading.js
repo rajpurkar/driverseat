@@ -10,6 +10,7 @@ factory('loading', function($http, util) {
             points: datafilesPath + "map.json.zip",
             gps: datafilesPath + "gps.json.zip",
             lanes: datafilesPath + "lanes/",
+            // lanes: datafilesPath + "lanes_done.json.zip",
             planes: datafilesPath + "planes.json.zip",
             video: datafilesPath + "cam_2.zip",
             radar: datafilesPath + "radar.json.zip",
@@ -43,19 +44,20 @@ factory('loading', function($http, util) {
                 $http.get("/latestEdit?trackname="+encodeURI($scope.title)).
                     success(function(filename) {
                         var path = $scope.datafiles.lanes + filename;
+                        // var path = $scope.datafiles.lanes;
                         JSZipUtils.getBinaryContent(path, function(err, gzipped_data) {
                             if (err) throw err; // or handle err
                             var loader = util.loadDataFromZip;
                             var data = JSON.parse(loader(gzipped_data, "lanes.json"));
                             $scope.pointClouds.lanes = {};
                             for (var lane in data){
+                                console.log(lane, data[lane].length);
                                 var color = util.generateRGB(lane);
                                 var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], $scope.LANE_POINT_SIZE, color);
                                 $scope.scene.add(laneCloud);
                                 $scope.pointClouds.lanes[lane] = laneCloud;
                                 var positions = laneCloud.geometry.attributes.position.array;
                                 $scope.kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3);
-                                $scope.lanesData[lane] = positions;
                             }
                             callback(null, 3);
                         });
@@ -123,7 +125,7 @@ factory('loading', function($http, util) {
                 });
             }
         },
-            function(err, results) {
+        function(err, results) {
                 cb();
         });
     }

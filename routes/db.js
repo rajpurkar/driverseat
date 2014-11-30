@@ -37,7 +37,7 @@ module.exports = {
                 filename = moment().unix() + "_" + username + ".json.zip";
 
             //TODO remove this line when all runs have the 'lanes' folder
-            fs.mkdirSync(path);
+            // fs.mkdirSync(path);
 
             fs.renameSync(tempPath, path + filename);
             res.status(200).end();

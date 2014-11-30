@@ -13,7 +13,6 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
     $scope.geometries       = {};
     $scope.pointClouds      = {};
     $scope.kdtrees          = {};
-    $scope.lanesData        = {};
     $scope.videoData        = null;
     $scope.radarData        = null;
     $scope.boundingBoxData  = null;
@@ -76,9 +75,6 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
         controls.addEventListener('change', $scope.setCameraOffset);
         document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
         window.addEventListener('resize', $scope.onWindowResize, false);
-        document.getElementById("undo").addEventListener("click", editor.undo, false);
-        document.getElementById("redo").addEventListener("click", editor.redo, false);
-        document.getElementById("save").addEventListener("click", editor.save, false);
     };
 
     $scope.execOnLoaded = function(){
@@ -87,8 +83,8 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
         radar.init($scope.radarData, $scope.params, $scope.scene);
         videoProjection.init($scope.params);
         if($scope.boundingBoxData) boundingBoxes.init($scope.boundingBoxData);
-        for(var lane in $scope.lanesData){
-            editor.initLane($scope.lanesData[lane], lane);
+        for (var lane in $scope.pointClouds.lanes) {
+            editor.initLane(lane);
         }
 
         key.watchToggle("space");

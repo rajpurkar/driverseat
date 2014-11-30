@@ -8,7 +8,8 @@ factory('editor', function(util, key, history, $http) {
         action = { laneNum: 0, type: "" },
         DRAG_RANGE = 19;
 
-    function initLane(positions, laneNum) {
+    function initLane(laneNum) {
+        var positions = $scope.geometries["lane"+laneNum].attributes.position.array;
         history.push("original", positions, laneNum);
     }
 
@@ -29,20 +30,25 @@ factory('editor', function(util, key, history, $http) {
         document.addEventListener('mouseup', onDocumentMouseUp, false);
         document.addEventListener('keydown', onDocumentKeyDown, false);
         document.addEventListener('dblclick', onDocumentDblClick, false);
+        document.getElementById("undo").addEventListener("click", undo, false);
+        document.getElementById("redo").addEventListener("click", redo, false);
+        document.getElementById("save").addEventListener("click", save, false);
         handleSlider();
     }
 
-    var saving = false;
     function save() {
-        if (saving) return;
-        saving = true;
+        document.getElementById("save").removeEventListener("click", save);
 
         var data = {};
         data.trackName = document.getElementById("title").textContent; //todo: change the way this is done
         var lanes = {};
         for (var laneNum in $scope.pointClouds.lanes) {
-            var typedArray = $scope.geometries["lane"+laneNum].attributes.position.array;
-            lanes[laneNum] = Array.prototype.slice.call(typedArray);
+            var positions = $scope.geometries["lane"+laneNum].attributes.position.array;
+            var posVectors = [];
+            for (var i = 0; i < positions.length; i+=3) {
+                posVectors.push([positions[i+2], positions[i], positions[i+1]]);
+            }
+            lanes[laneNum] = posVectors;
         }
         var zip = new JSZip();
         zip.file("lanes.json", JSON.stringify(lanes));
@@ -61,10 +67,10 @@ factory('editor', function(util, key, history, $http) {
             }
         }).success(function(data, status, headers, config) {
             $scope.debugText = "Saved!";
-            saving = false;
+            document.getElementById("save").addEventListener("click", save, false);
         }).error(function(data, status, headers, config) {
             $scope.debugText = "Unable to save file";
-            saving = false;
+            document.getElementById("save").addEventListener("click", save, false);
         });
     }
 

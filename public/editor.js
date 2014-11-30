@@ -503,6 +503,12 @@ factory('editor', function(util, key, history, $http) {
         var colors = selectedPoint.object.geometry.attributes.color;
 
         var startPos = util.getPos(positions.array, selectedPoint.index);
+        var nearestPoints = $scope.kdtrees["lane"+laneNum].nearest(startPos, 3, util.INTERPOLATE_STEP+0.05);
+        if (nearestPoints.length > 2) {
+            $scope.debugText = "Please select an endpoint.";
+            action.type = "";
+            return;
+        }
         var fillPositions = util.interpolate(startPos, endPos);
         var lenNewPositions = positions.array.length + fillPositions.length;
         var newPositions = new Float32Array(lenNewPositions);
@@ -512,7 +518,7 @@ factory('editor', function(util, key, history, $http) {
         history.push("append", positions.array, laneNum);
 
         // select last point for next append
-        var nearestPoints = $scope.kdtrees["lane"+laneNum].nearest(endPos, 1, util.INTERPOLATE_STEP);
+        nearestPoints = $scope.kdtrees["lane"+laneNum].nearest(endPos, 1, util.INTERPOLATE_STEP);
         if (nearestPoints.length === 0) return;
         var index = nearestPoints[0][0].pos;
         util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, index, 255, 255, 255);

@@ -20,7 +20,7 @@ service('util', function($http) {
         a[1] *= scalar;
         a[2] *= scalar;
     }
-    var INTERPOLATE_STEP = 0.5;
+    var INTERPOLATE_STEP = 0.6;
 
     /**
      * Algorithm to calculate a single RGB channel (0-1.0) from HSL hue (0-1.0)

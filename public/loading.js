@@ -64,21 +64,14 @@ factory('loading', function($http, util) {
                 });
             },
             video: function(callback) {
-                /*
-                var player_onload = function(player) {
-                    video.init(player);
-                    callback(null, 'video_init');
-                }
-                var canvas = document.getElementById('projectionCanvas');
-                jsmpeg_video = new jsmpeg($scope.trackInfo.files.video, {onload:player_onload, forceCanvas2D: true});
-                */
-                JSZipUtils.getBinaryContent($scope.trackInfo.files.video, function(err, data) {
-                    if(err) {
-                        throw err; // or handle err
-                    }
-                    $scope.videoData = data;
-                    callback(null, 'video_init');
-                });
+                var cb_fn = function() { 
+                    callback(null, "video_init");
+                };
+                $scope.video = new
+                    VideoNACL($scope.trackInfo.files.video,
+                            "video_nacl",
+                            "videoPlayerWrap",
+                            cb_fn);
             },
             radar: function(callback){
                 JSZipUtils.getBinaryContent($scope.trackInfo.files.radar, function(err, gzipped_data) {

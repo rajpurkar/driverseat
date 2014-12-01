@@ -1,0 +1,4 @@
+# Updated by fix_deps.py
+pnacl/Release/base64.o: base64.cpp base64.h
+base64.cpp:
+base64.h:

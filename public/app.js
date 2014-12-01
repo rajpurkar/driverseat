@@ -1,7 +1,7 @@
 var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 
 myApp.
-controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading, util, key, video, videoProjection, radar, boundingBoxes, cfpLoadingBar) {
+controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading, util, key, videoProjection, radar, boundingBoxes, cfpLoadingBar) {
     // constants
     var INITIAL_OFFSET = [0, 5, -14],
         INITIAL_MOUSE  = { x: 1, y: 1 },
@@ -14,7 +14,8 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
     $scope.geometries       = {};
     $scope.pointClouds      = {};
     $scope.kdtrees          = {};
-    $scope.videoData        = null;
+    $scope.video            = null;
+    //$scope.videoData        = null;
     $scope.radarData        = null;
     $scope.boundingBoxData  = null;
     $scope.datafiles        = null;
@@ -80,10 +81,10 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
 
     $scope.execOnLoaded = function(){
         $scope.debugText = "Rendering...";
-        video.init($scope.videoData);
+        //video.init($scope.videoData);
         editor.init($scope);
         radar.init($scope.radarData, $scope.params, $scope.scene);
-        videoProjection.init($scope.params);
+        $scope.videoProjectionParams = videoProjection.init($scope.params, 1);
         if($scope.boundingBoxData) boundingBoxes.init($scope.boundingBoxData);
         for (var lane in $scope.pointClouds.lanes) {
             editor.initLane(lane);
@@ -198,10 +199,10 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
             if (frameCount + 1 < $scope.gps.length)
                 frameCount += 1;
         }
-        var img_disp = video.displayImage("projectionCanvas", frameCount);
+        var img_disp = $scope.video.displayImage("projectionCanvas", frameCount);
         if (img_disp) {
             for (var idx in $scope.pointClouds.lanes) {
-                videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount]);
+                videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount], $scope.videoProjectionParams);
             }
         } else {
             var canv = document.getElementById("projectionCanvas");
@@ -215,7 +216,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
             ctx.fillText("Buffering", canv.width/2, canv.height/2);
         }
 
-        //videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.points, $scope.gps[frameCount]);
+        //videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.points, $scope.gps[frameCount], $scope.videoProjectionParams);
         radar.displayReturns(frameCount, $scope.gps[frameCount]);
         boundingBoxes.drawBoundingBoxes("projectionCanvas", frameCount);
         fpsMeter.tick();

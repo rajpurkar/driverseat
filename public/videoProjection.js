@@ -1,14 +1,6 @@
 myApp.
 service('videoProjection', function(util) {
 
-    var T_THREE_to_imu_0 = new THREE.Matrix4();
-    var T_from_l_to_i = new THREE.Matrix4();
-    var T_from_i_to_l = new THREE.Matrix4();
-    var T_from_l_to_c = new THREE.Matrix4();
-    var params;
-    var cam_idx = 1;
-    var KK;
-
     function CameraIntrinsics(c) { 
         return new THREE.Matrix4(
             c.fx, 0, c.cu, 0,
@@ -38,23 +30,42 @@ service('videoProjection', function(util) {
     }
 
 	return {
-		init: function(calibration_params) {
-            T_imu_0_to_THREE = new THREE.Matrix4(
+		init: function(calibration_params, camera_idx) {
+            var params = calibration_params;
+            var cam_idx = camera_idx;
+            var cam = params.cam[cam_idx];
+
+            var T_imu_0_to_THREE = new THREE.Matrix4(
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 1, 0, 0, 0,
                 0, 0, 0, 1);
 
-            T_THREE_to_imu_0 = new THREE.Matrix4();
+            var T_THREE_to_imu_0 = new THREE.Matrix4();
             T_THREE_to_imu_0.getInverse(T_imu_0_to_THREE);
-            params = calibration_params;
-            var cam = params.cam[cam_idx];
-            KK = CameraIntrinsics(cam);
-            T_from_l_to_i = util.Matrix4FromJSON4x4(params.lidar.T_from_l_to_i);
+            var T_from_l_to_i = util.Matrix4FromJSON4x4(params.lidar.T_from_l_to_i);
+            var T_from_i_to_l = new THREE.Matrix4();
             T_from_i_to_l.getInverse(T_from_l_to_i);
-            T_from_l_to_c = create_T_from_l_to_c(cam);
+
+            var KK = CameraIntrinsics(cam);
+            var T_from_l_to_c = create_T_from_l_to_c(cam);
+            var T_Extrinsics = util.Matrix4FromJSON4x4(cam.E);
+
+            return { 
+                T_imu_0_to_THREE : T_imu_0_to_THREE,
+                T_THREE_to_imu_0 : T_THREE_to_imu_0,
+                T_from_l_to_i    : T_from_l_to_i,
+                T_from_i_to_l    : T_from_i_to_l,
+                T_from_l_to_c    : T_from_l_to_c,
+                T_Extrinsics     : T_Extrinsics,
+                params           : params,
+                cam_idx          : cam_idx,
+                cam              : cam,
+                KK               : KK,
+            }
 		},
-        projectPoints: function(canvasId, cloud, imu_loc_t) {
+        projectPoints: function(canvasId, cloud, imu_loc_t, params) {
+            var p = params;
             var data = cloud.geometry.attributes.position.array;
             var color_data = cloud.geometry.attributes.color.array;
            
@@ -64,11 +75,12 @@ service('videoProjection', function(util) {
             
             var T = new THREE.Matrix4(); 
             // read this backwards
-            T.multiply(KK); // camera intrinsics
-            T.multiply(T_from_l_to_c); // lidar_t -> camera_t
-            T.multiply(T_from_i_to_l); // imu_t -> lidar_t
+            T.multiply(p.KK); // camera intrinsics
+            T.multiply(p.T_Extrinsics); // camera extrinsics
+            T.multiply(p.T_from_l_to_c); // lidar_t -> camera_t
+            T.multiply(p.T_from_i_to_l); // imu_t -> lidar_t
             T.multiply(inv_imu_transforms_t); // imu_0 -> imu_t
-            T.multiply(T_THREE_to_imu_0); // from THREE_JS frame to imu_0
+            T.multiply(p.T_THREE_to_imu_0); // from THREE_JS frame to imu_0
             var M = T.elements;
             var c = document.getElementById(canvasId);
             var ctx = c.getContext("2d");
@@ -95,7 +107,6 @@ service('videoProjection', function(util) {
                     ctx.fillRect(px, py, 2, 2);
                 }
             }
-            
         },
 	};
 });

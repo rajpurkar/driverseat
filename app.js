@@ -45,7 +45,7 @@ app.get("/edit", auth.requiredAuthentication, function(req, res) {
                 gps:           datafilesPath + "gps.json.zip",
                 lanes:         datafilesPath + "lanes/" + lanesFile,
                 planes:        datafilesPath + "planes.json.zip",
-                video:         datafilesPath + "cam_2.zip",
+                video:         datafilesPath + "cam_2.mpg",
                 radar:         datafilesPath + "radar.json.zip",
                 boundingBoxes: datafilesPath + "bbs-cam2.json",
                 params:        "/q50_4_3_14_params.json"

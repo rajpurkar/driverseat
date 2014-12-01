@@ -103,6 +103,7 @@ service('util', function($http) {
         loadDataFromZip: function(zip_data_buffer, fname_in_zip) 
         {
             var loader = new JSZip(zip_data_buffer);
+            console.log(fname_in_zip);
             return loader.file(fname_in_zip).asBinary();
         },
 

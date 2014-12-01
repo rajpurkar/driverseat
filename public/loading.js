@@ -30,7 +30,13 @@ factory('loading', function($http, util) {
                 JSZipUtils.getBinaryContent($scope.trackInfo.files.lanes, function(err, gzipped_data) {
                     if (err) throw err; // or handle err
                     var loader = util.loadDataFromZip;
-                    var data = JSON.parse(loader(gzipped_data, "lanes.json"));
+                    var data;
+                    //TODO: fix lanes_done.json.zip to contain only lanes.json
+                    try {
+                        data = JSON.parse(loader(gzipped_data, "lanes.json"));
+                    } catch (e) {
+                        data = JSON.parse(loader(gzipped_data, "lanes_done.json"));
+                    }
                     $scope.pointClouds.lanes = {};
                     for (var lane in data) {
                         var color = util.generateRGB(lane);

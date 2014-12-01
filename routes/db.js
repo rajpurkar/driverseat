@@ -58,7 +58,7 @@ module.exports = {
             var ts1 = parseInt(f1.split("_")[0], 10),
                 ts2 = parseInt(f2.split("_")[0], 10);
             if (isNaN(ts2-ts1))
-                return isNan(ts1) ? 1 : -1; // invalid filenames get pushed to back
+                return isNaN(ts1) ? 1 : -1; // invalid filenames get pushed to back
             return ts2 - ts1;
         });
         return files[0];

@@ -74,7 +74,7 @@ function VideoNACL(cam_file, id, parent_id, downloadCb) {
     embed_obj.setAttribute('id', id);
     embed_obj.setAttribute('width', 0);
     embed_obj.setAttribute('height', 0);
-    embed_obj.setAttribute('src', "pnacl/release/av_pnacl.nmf");
+    embed_obj.setAttribute('src', "pnacl/Release/av_pnacl.nmf");
     embed_obj.setAttribute('type', "application/x-pnacl");
     embed_div.appendChild(embed_obj);
 

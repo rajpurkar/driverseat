@@ -1,13 +1,14 @@
 var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 
 myApp.
-controller('AppCtrl', function($scope, $window, editor, loading, util, key, video, videoProjection, radar, boundingBoxes, cfpLoadingBar) {
+controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading, util, key, video, videoProjection, radar, boundingBoxes, cfpLoadingBar) {
     // constants
     var INITIAL_OFFSET = [0, 5, -14],
         INITIAL_MOUSE  = { x: 1, y: 1 },
         INITIAL_FRAME  = 0;
 
     // scope variables
+    $scope.trackInfo        = JSON.parse($attrs.ngTrackinfo);
     $scope.scene            = null;
     $scope.raycaster        = null;
     $scope.geometries       = {};

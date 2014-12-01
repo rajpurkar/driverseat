@@ -53,7 +53,7 @@ factory('editor', function(util, key, history, $http) {
         document.getElementById("save").removeEventListener("click", save);
         $scope.debugText = "Saving...";
 
-        var trackName = document.getElementById("title").textContent; //todo: change the way this is done
+        var trackName = $scope.trackInfo.track;
 
         var lanes = {};
         for (var laneNum in $scope.pointClouds.lanes) {

@@ -44,8 +44,8 @@ module.exports = {
         });
         req.pipe(busboy);
     },
-    getLatestEdit: function(req, res, next) {
-        var trackName = decodeURI(req.query.trackname),
+    getLatestEdit: function(route) {
+        var trackName = route,
             path = "./public/runs/" + trackName + "/lanes";
 
         var files = fs.readdirSync(path);
@@ -61,6 +61,6 @@ module.exports = {
                 return isNan(ts1) ? 1 : -1; // invalid filenames get pushed to back
             return ts2 - ts1;
         });
-        res.send(files[0]);
+        return files[0];
     }
 };

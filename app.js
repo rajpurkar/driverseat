@@ -27,12 +27,31 @@ app.use(express.static(path.join(__dirname, "public"), {maxAge: "1d"}));
 app.use(util.initializeLocals);
 db.initdb();
 
-app.get("/edit", auth.requiredAuthentication, function(req, res){
+app.get("/edit", auth.requiredAuthentication, function(req, res) {
     var track = req.query.route;
+    if (!track) res.redirect('/browse');
+
     var numCams = req.query.cameras;
-    if(!track) res.redirect('/browse');
-    if(!numCams) numCams = 1;
-    res.render("index", {track: track, numCameras: numCams});
+    if (!numCams) numCams = 1;
+
+    var lanesFile = db.getLatestEdit(track);
+    var datafilesPath = "/runs/" + track + "/";
+    res.render("index", {
+        numCameras: numCams,
+        trackInfo: {
+            track: track,
+            files: {
+                points:        datafilesPath + "map.json.zip",
+                gps:           datafilesPath + "gps.json.zip",
+                lanes:         datafilesPath + "lanes/" + lanesFile,
+                planes:        datafilesPath + "planes.json.zip",
+                video:         datafilesPath + "cam_2.zip",
+                radar:         datafilesPath + "radar.json.zip",
+                boundingBoxes: datafilesPath + "bbs-cam2.json",
+                params:        "/q50_4_3_14_params.json"
+            }
+        }
+    });
 });
 
 app.get("/", function(req, res){
@@ -45,8 +64,6 @@ app.get("/browse", auth.requiredAuthentication, function(req, res) {
 });
 
 app.post("/save", auth.requiredAuthentication, db.saveEdit);
-
-app.get("/latestEdit", auth.requiredAuthentication, db.getLatestEdit);
 
 //Authentication routes
 

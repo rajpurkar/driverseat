@@ -103,7 +103,6 @@ service('util', function($http) {
         loadDataFromZip: function(zip_data_buffer, fname_in_zip) 
         {
             var loader = new JSZip(zip_data_buffer);
-            console.log(fname_in_zip);
             return loader.file(fname_in_zip).asBinary();
         },
 
@@ -282,9 +281,10 @@ factory('history', function(cache) {
             var entry = {
                 laneNum: parseInt(laneNum, 10),
                 action: action,
-                filename: Date.now().toString()
+                filename: performance.now().toString()
             };
             undoHistory.push(entry);
+            console.log(entry);
             for (var i = 0; i < redoHistory.length; i++) {
                 cache.remove(redoHistory[i].filename);
             }

@@ -177,7 +177,7 @@ factory('editor', function(util, key, history, $http) {
         deselectPoints(action.laneNum);
         // select point for dragging
         action = { laneNum: lane, type: "" };
-        selectedPoint[0] = intersects[0];
+        selectedPoint = [intersects[0], null];
         var positions = selectedPoint[0].object.geometry.attributes.position.array;
         selectedPos = util.getPos(positions, selectedPoint[0].index);
         selectedPointBox[0].position.set(selectedPos[0], selectedPos[1], selectedPos[2]);
@@ -528,7 +528,7 @@ factory('editor', function(util, key, history, $http) {
             $scope.log("Please select point first");
             return;
         }
-        if (Object.keys(selectedPositions).length > 1) {
+        if (selectedPoint[1] !== null) {
             $scope.log("Please select a single point");
             return;
         }
@@ -570,7 +570,7 @@ factory('editor', function(util, key, history, $http) {
             $scope.log("Please select point first");
             return;
         }
-        if (Object.keys(selectedPositions).length > 1) {
+        if (selectedPoint[1] !== null) {
             $scope.log("Please select a single point");
             return;
         }

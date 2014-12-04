@@ -51,7 +51,7 @@ factory('editor', function(util, key, history, $http) {
 
     function save() {
         document.getElementById("save").removeEventListener("click", save);
-        $scope.debugText = "Saving...";
+        $scope.log("Saving...");
 
         var trackName = $scope.trackInfo.track;
 
@@ -81,11 +81,10 @@ factory('editor', function(util, key, history, $http) {
                 return fd;
             }
         }).success(function(data, status, headers, config) {
-            console.log(data, status);
-            $scope.debugText = "Saved!";
+            $scope.log("Saved!");
             document.getElementById("save").addEventListener("click", save, false);
         }).error(function(data, status, headers, config) {
-            $scope.debugText = "Unable to save file";
+            $scope.log("Unable to save file");
             document.getElementById("save").addEventListener("click", save, false);
         });
     }
@@ -505,7 +504,7 @@ factory('editor', function(util, key, history, $http) {
         var startPos = util.getPos(positions.array, selectedPoint.index);
         var nearestPoints = $scope.kdtrees["lane"+laneNum].nearest(startPos, 3, util.INTERPOLATE_STEP+0.05);
         if (nearestPoints.length > 2) {
-            $scope.debugText = "Please select an endpoint.";
+            $scope.log("Please select an endpoint");
             action.type = "";
             return;
         }
@@ -563,41 +562,49 @@ factory('editor', function(util, key, history, $http) {
 
     function undo() {
         action.type = "";
-        history.undo(function(action, arrayBuffer, laneNum) {
-            if (action == "new" || action == "new_split" || action == "fork") {
-                deleteLane(laneNum);
-                return;
-            } else if (action == "delete") {
-                newLane(laneNum, arrayBuffer);
-                return;
-            }
-            var positions = $scope.geometries["lane"+laneNum].attributes.position;
-            var colors = $scope.geometries["lane"+laneNum].attributes.color;
-            var positionsArray = new Float32Array(arrayBuffer);
-            updateLane(laneNum, positions, colors, positionsArray);
-            if (action == "split" || action == "join") {
-                undo();
-            }
-        });
+        try {
+            history.undo(function(action, arrayBuffer, laneNum) {
+                if (action == "new" || action == "new_split" || action == "fork") {
+                    deleteLane(laneNum);
+                    return;
+                } else if (action == "delete") {
+                    newLane(laneNum, arrayBuffer);
+                    return;
+                }
+                var positions = $scope.geometries["lane"+laneNum].attributes.position;
+                var colors = $scope.geometries["lane"+laneNum].attributes.color;
+                var positionsArray = new Float32Array(arrayBuffer);
+                updateLane(laneNum, positions, colors, positionsArray);
+                if (action == "split" || action == "join") {
+                    undo();
+                }
+            });
+        } catch (e) {
+            $scope.log(e.message);
+        }
     }
 
     function redo() {
-        history.redo(function(laneNum, action, arrayBuffer) {
-            if (action == "new" || action == "new_split" || action == "fork") {
-                newLane(laneNum, arrayBuffer);
-                if (action == "new_split") redo();
-                //TODO if next is delete:
-                return;
-            } else if (action == "delete") {
-                deleteLane(laneNum);
-                redo();
-                return;
-            }
-            var positions = $scope.geometries["lane"+laneNum].attributes.position;
-            var colors = $scope.geometries["lane"+laneNum].attributes.color;
-            var positionsArray = new Float32Array(arrayBuffer);
-            updateLane(laneNum, positions, colors, positionsArray);
-        });
+        try {
+            history.redo(function(laneNum, action, arrayBuffer) {
+                if (action == "new" || action == "new_split" || action == "fork") {
+                    newLane(laneNum, arrayBuffer);
+                    if (action == "new_split") redo();
+                    //TODO if next is delete:
+                    return;
+                } else if (action == "delete") {
+                    deleteLane(laneNum);
+                    redo();
+                    return;
+                }
+                var positions = $scope.geometries["lane"+laneNum].attributes.position;
+                var colors = $scope.geometries["lane"+laneNum].attributes.color;
+                var positionsArray = new Float32Array(arrayBuffer);
+                updateLane(laneNum, positions, colors, positionsArray);
+            });
+        } catch (e) {
+            $scope.log(e.message);
+        }
     }
 
     return {

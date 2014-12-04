@@ -284,7 +284,6 @@ factory('history', function(cache) {
                 filename: performance.now().toString()
             };
             undoHistory.push(entry);
-            console.log(entry);
             for (var i = 0; i < redoHistory.length; i++) {
                 cache.remove(redoHistory[i].filename);
             }
@@ -299,10 +298,9 @@ factory('history', function(cache) {
             }
         },
         undo: function(callback) {
-            if (undoHistory[undoHistory.length-1].action == "original") {
-                console.log("Nothing left to undo");
-                return;
-            }
+            if (undoHistory[undoHistory.length-1].action == "original")
+                throw Error("Nothing left to undo");
+
             var entry = undoHistory.pop();
             redoHistory.push(entry);
             var filename = "";
@@ -321,10 +319,9 @@ factory('history', function(cache) {
             });
         },
         redo: function(callback) {
-            if (redoHistory.length === 0) {
-                console.log("Nothing left to redo");
-                return;
-            }
+            if (redoHistory.length === 0)
+                throw Error("Nothing left to redo");
+
             var entry = redoHistory.pop();
             undoHistory.push(entry);
             cache.read(entry.filename, function(arrayBuffer) {

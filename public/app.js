@@ -36,6 +36,11 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         offset = INITIAL_OFFSET,
         car;
 
+    $scope.log = function(message) {
+        $scope.logText = message;
+        $scope.$apply();
+    };
+
     $scope.setCameraOffset = function(){
         offset[0] = - car.position.x + camera.position.x;
         offset[1] = - car.position.y + camera.position.y;
@@ -54,12 +59,11 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         renderer.setSize(windowWidth, windowHeight);
         //renderer.setClearColor( scene.fog.color );
         controls = new THREE.OrbitControls(camera);
-        $scope.debugText = "Loading...";
+        $scope.log("Loading...");
         cfpLoadingBar.start();
         loading.init($scope);
         loading.loaders($scope.execOnLoaded);
     };
-
 
     $scope.addLighting = function(){
         pointLight = new THREE.PointLight( 0xffffff );
@@ -80,7 +84,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
     };
 
     $scope.execOnLoaded = function(){
-        $scope.debugText = "Rendering...";
+        $scope.log("Rendering...");
         //video.init($scope.videoData);
         editor.init($scope);
         radar.init($scope.radarData, $scope.params, $scope.scene);
@@ -96,7 +100,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         $scope.updateCamera(0);
         $scope.animate();
         cfpLoadingBar.complete();
-        $scope.debugText = "";
+        $scope.log("");
     };
 
     $scope.rotateCamera = function(event) {

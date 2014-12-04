@@ -13,6 +13,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
     $scope.raycaster        = null;
     $scope.geometries       = {};
     $scope.pointClouds      = {};
+    $scope.meshes           = {};
     $scope.kdtrees          = {};
     $scope.video            = null;
     //$scope.videoData        = null;
@@ -37,8 +38,10 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         car;
 
     $scope.log = function(message) {
-        $scope.logText = message;
-        $scope.$apply();
+        //TODO fix conflict with apply calls already in progress
+        $scope.$apply(function() {
+            $scope.logText = message;
+        });
     };
 
     $scope.setCameraOffset = function(){
@@ -59,7 +62,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         renderer.setSize(windowWidth, windowHeight);
         //renderer.setClearColor( scene.fog.color );
         controls = new THREE.OrbitControls(camera);
-        $scope.log("Loading...");
+        $scope.logText = "Loading...";
         cfpLoadingBar.start();
         loading.init($scope);
         loading.loaders($scope.execOnLoaded);
@@ -333,7 +336,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
     };
 
     $scope.addPlanes = function(data) {
-        planes = [];
+        $scope.meshes.groundPlanes = [];
         var groundGeometry = new THREE.Geometry();
         for (var i = 0; i < data.length; i++) {
             var normal = data[i];
@@ -352,20 +355,17 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
             var planeGeometry = new THREE.PlaneGeometry(50, 50),
                 planeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true });
             plane = new THREE.Mesh(planeGeometry, planeMaterial);
-            // groundGeometry.vertices.push()
             plane.position.set(x, y, z);
             plane.lookAt(end);
             plane.visible = false;
             $scope.scene.add(plane);
-            planes.push(plane);
-            // var ray = new THREE.Ray(origin, direction);
-            // groundNormals.push(ray);
-            var material = new THREE.LineBasicMaterial({ color: 0x00ff00 }),
-                geometry = new THREE.Geometry();
-            geometry.vertices.push(origin);
-            geometry.vertices.push(end);
-            var line = new THREE.Line(geometry, material);
-            $scope.scene.add(line);
+            $scope.meshes.groundPlanes.push(plane);
+            // var material = new THREE.LineBasicMaterial({ color: 0x00ff00 }),
+            //     geometry = new THREE.Geometry();
+            // geometry.vertices.push(origin);
+            // geometry.vertices.push(end);
+            // var line = new THREE.Line(geometry, material);
+            // $scope.scene.add(line);
         }
     };
 

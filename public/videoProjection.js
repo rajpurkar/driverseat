@@ -35,7 +35,7 @@ service('videoProjection', function(util) {
         var canvasId = msg.canvasId;
         var c = document.getElementById(canvasId);
         var ctx = c.getContext("2d");
-        var pix = msg.pix
+        var pix = msg.pix;
         for (var idx in pix) {
             var px = pix[idx][0]; 
             var py = pix[idx][1]; 

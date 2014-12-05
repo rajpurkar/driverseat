@@ -17,13 +17,18 @@ onmessage = function(oEvent) {
 
     if (msg.cmd == "project_state") { 
         var M = new Float32Array(msg.M);
+        var all_pix = [ ]; 
         for (var idx in state) {
             var pos = state[idx].positions;
             var col = state[idx].colors; 
             var pix = projectPoints(pos, col, M);
-            postMessage({ pix: pix, 
-                canvasId: msg.canvasId});
+            for (var p in pix) { 
+                all_pix.push(pix[p]);
+            }
+            //all_pix.concat(pix);
+            //postMessage({ pix: pix, canvasId: msg.canvasId});
         }
+        postMessage({ pix: all_pix, canvasId: msg.canvasId});
     }
 
     if (msg.cmd == "update_state") { 
@@ -43,8 +48,8 @@ onmessage = function(oEvent) {
 function projectPoints(data, color_data, M) { 
     var scaling = 4;
     var c  = {  }
-    c.width = 1280;
-    c.height = 960;
+    c.width = 1280 / scaling;
+    c.height = 960 / scaling;
 
     var valid_pix = [ ] ;
     for (var idx = 0; idx < data.length/3; idx+=3) {

@@ -1,6 +1,8 @@
 myApp.
 service('videoProjection', function(util) {
 
+    var last_pix; // this needs to be refactored 
+
     function CameraIntrinsics(c) { 
         return new THREE.Matrix4(
             c.fx, 0, c.cu, 0,
@@ -36,6 +38,8 @@ service('videoProjection', function(util) {
         var c = document.getElementById(canvasId);
         var ctx = c.getContext("2d");
         var pix = msg.pix;
+        last_pix = pix; 
+        return;
         for (var idx in pix) {
             var px = pix[idx][0]; 
             var py = pix[idx][1]; 
@@ -183,6 +187,19 @@ service('videoProjection', function(util) {
                 M : M.buffer,
                 canvasId: canvasId
             }); 
+
+            var c = document.getElementById(canvasId);
+            var ctx = c.getContext("2d");
+            for (var idx in last_pix) {
+                var px = last_pix[idx][0]; 
+                var py = last_pix[idx][1]; 
+                var r = last_pix[idx][2]; 
+                var g = last_pix[idx][3]; 
+                var b = last_pix[idx][4]; 
+                var a = 255; 
+                ctx.fillStyle = "rgba("+r+","+g+","+b+","+(a/255)+")";
+                ctx.fillRect(px, py, 2, 2);
+            }
         },
 
         projectCloud: function(canvasId, cloud, imu_loc_t, params) {

@@ -9,7 +9,13 @@ function VideoNACL(cam_file, id, parent_id, downloadCb) {
 
     nacl.displayImage = function(canvasId, framenum) { 
         if (images[framenum]) {
-            var j = new Image();
+            var j = images[framenum];
+            var c = document.getElementById(canvasId);
+            var ctx = c.getContext("2d");
+            c.width = j.width;
+            c.height = j.height;
+            ctx.drawImage(j, 0, 0, c.width, c.height);
+            /*
             j.onload = function() { 
                 var c = document.getElementById(canvasId);
                 var ctx = c.getContext("2d");
@@ -18,6 +24,7 @@ function VideoNACL(cam_file, id, parent_id, downloadCb) {
                 ctx.drawImage(j, 0, 0, c.width, c.height);
             }
             j.src = images[framenum];
+            */
             return true;
         }
         else {
@@ -60,9 +67,10 @@ function VideoNACL(cam_file, id, parent_id, downloadCb) {
     nacl.handleMessage = function(message_event) {
         var data = message_event.data;
         if (data.Type == "CompressedJPEG") {
-            images[data.FrameCount] = data.Data;
+            images[data.FrameCount] = new Image();
+            images[data.FrameCount].src = data.Data;
+            //images[data.FrameCount] = data.Data;
             //console.log(data.FrameCount);
-
         }
     }
     

@@ -29,8 +29,112 @@ service('videoProjection', function(util) {
         return T; 
     }
 
+    function processWorkerMessage(oEvent) {
+        var msg = oEvent.data;
+
+        var canvasId = msg.canvasId;
+        var c = document.getElementById(canvasId);
+        var ctx = c.getContext("2d");
+        var pix = msg.pix
+        for (var idx in pix) {
+            var px = pix[idx][0]; 
+            var py = pix[idx][1]; 
+            var r = pix[idx][2]; 
+            var g = pix[idx][3]; 
+            var b = pix[idx][4]; 
+            var a = 255; 
+            ctx.fillStyle = "rgba("+r+","+g+","+b+","+(a/255)+")";
+            ctx.fillRect(px, py, 2, 2);
+        }
+    }
+
+    function computeProjectionMatrix(imu_loc_t, params) { 
+        var p = params;
+        var imu_transforms_t = util.Matrix4FromJSON4x4(imu_loc_t);
+        var inv_imu_transforms_t = new THREE.Matrix4();
+        inv_imu_transforms_t.getInverse(imu_transforms_t);
+
+        var T = new THREE.Matrix4(); 
+        // read this backwards
+        T.multiply(p.KK); // camera intrinsics
+        T.multiply(p.T_Extrinsics); // camera extrinsics
+        T.multiply(p.T_from_l_to_c); // lidar_t -> camera_t
+        T.multiply(p.T_from_i_to_l); // imu_t -> lidar_t
+        T.multiply(inv_imu_transforms_t); // imu_0 -> imu_t
+        T.multiply(p.T_THREE_to_imu_0); // from THREE_JS frame to imu_0
+        var M = T.elements;
+
+        return M;
+
+    }
+
+    function projectPoints (canvasId, data, color_data, imu_loc_t, params) {
+        var p = params;
+        var M = computeProjectionMatrix(imu_loc_t, params);
+        var c = document.getElementById(canvasId);
+        var ctx = c.getContext("2d");
+
+        p.worker.postMessage( {
+            data: data.buffer, 
+            color_data: color_data.buffer,
+            M : M.buffer,
+            canvasId: canvasId
+        }); 
+   }
+
+    function synchronizeState(tracking_clouds, target_state, worker) { 
+        for (var idx in tracking_clouds) {
+            var updateState = false; 
+            if (tracking_clouds[idx] == undefined && 
+                    target_state[idx] == undefined) {
+                continue;
+            } else if (tracking_clouds[idx] != undefined && 
+                    target_state[idx] == undefined) { 
+                updateState = true;
+            } else if (tracking_clouds[idx].geometry.uuid 
+                    != target_state[idx].uuid || 
+                    tracking_clouds[idx].geometry.attributes.position.needsUpdate) {
+                updateState = true;
+            }
+
+            if (updateState) {
+                console.log("updating state");
+                var uuid = tracking_clouds[idx].geometry.uuid;
+                var attr = tracking_clouds[idx].geometry.attributes;
+                var positions = new Float32Array(attr.position.array);
+                var colors = new Float32Array(attr.color.array);
+                target_state[idx] = {
+                    uuid: uuid,
+                    positions: positions,
+                    colors: colors
+                }
+                // also update worker state
+                if (worker) {
+                    worker.postMessage({
+                        cmd: "update_state",
+                        idx: idx,
+                        state: target_state[idx]
+                    });
+                }
+            }
+        }
+
+        for (var idx in target_state) { 
+            if (tracking_clouds[idx] == undefined) { 
+                delete target_state[idx]; 
+                // also update worker state
+                if (worker) { 
+                    worker.postMessage( {
+                        cmd: "delete_state", 
+                        idx: idx
+                    });
+                }
+            }
+        }
+    }
+
 	return {
-		init: function(calibration_params, camera_idx) {
+		init: function(calibration_params, camera_idx, clouds) {
             var params = calibration_params;
             var cam_idx = camera_idx;
             var cam = params.cam[cam_idx];
@@ -50,6 +154,9 @@ service('videoProjection', function(util) {
             var KK = CameraIntrinsics(cam);
             var T_from_l_to_c = create_T_from_l_to_c(cam);
             var T_Extrinsics = util.Matrix4FromJSON4x4(cam.E);
+            
+            var worker = new Worker("projectionWorker.js");
+            worker.onmessage = processWorkerMessage;
 
             return { 
                 T_imu_0_to_THREE : T_imu_0_to_THREE,
@@ -62,51 +169,28 @@ service('videoProjection', function(util) {
                 cam_idx          : cam_idx,
                 cam              : cam,
                 KK               : KK,
+                worker           : worker,
+                scene_state      : { },
+                tracking_clouds  : clouds
             }
 		},
-        projectPoints: function(canvasId, cloud, imu_loc_t, params) {
+        projectScene: function(canvasId, imu_loc_t, params) {
+            var p = params;
+            synchronizeState(p.tracking_clouds, p.scene_state, p.worker);
+            var M = computeProjectionMatrix(imu_loc_t, params);
+            p.worker.postMessage( {
+                cmd: "project_state",
+                M : M.buffer,
+                canvasId: canvasId
+            }); 
+        },
+
+        projectCloud: function(canvasId, cloud, imu_loc_t, params) {
             var p = params;
             var data = cloud.geometry.attributes.position.array;
             var color_data = cloud.geometry.attributes.color.array;
-           
-            var imu_transforms_t = util.Matrix4FromJSON4x4(imu_loc_t);
-            var inv_imu_transforms_t = new THREE.Matrix4();
-            inv_imu_transforms_t.getInverse(imu_transforms_t);
-            
-            var T = new THREE.Matrix4(); 
-            // read this backwards
-            T.multiply(p.KK); // camera intrinsics
-            T.multiply(p.T_Extrinsics); // camera extrinsics
-            T.multiply(p.T_from_l_to_c); // lidar_t -> camera_t
-            T.multiply(p.T_from_i_to_l); // imu_t -> lidar_t
-            T.multiply(inv_imu_transforms_t); // imu_0 -> imu_t
-            T.multiply(p.T_THREE_to_imu_0); // from THREE_JS frame to imu_0
-            var M = T.elements;
-            var c = document.getElementById(canvasId);
-            var ctx = c.getContext("2d");
-
-            var scaling = 4;
-            for (var idx = 0; idx < data.length/3; idx+=3) {
-                var x = data[3*idx+0];
-                var y = data[3*idx+1];
-                var z = data[3*idx+2];
-
-                var u = M[0]*x + M[4]*y + M[8]*z + M[12];
-                var v = M[1]*x + M[5]*y + M[9]*z + M[13];
-                var s = M[2]*x + M[6]*y + M[10]*z + M[14];
-
-                var px = u/(s*scaling);
-                var py = v/(s*scaling);
-
-                if (px > 0 && py > 0 && px < c.width && py < c.height && s > 0 && s < 100) {
-                    var r = parseInt(color_data[3*idx+0]*255);
-                    var g = parseInt(color_data[3*idx+1]*255);
-                    var b = parseInt(color_data[3*idx+2]*255);
-                    var a = 255;
-                    ctx.fillStyle = "rgba("+r+","+g+","+b+","+(a/255)+")";
-                    ctx.fillRect(px, py, 2, 2);
-                }
-            }
+            projectPoints(canvasId, data, color_data, imu_loc_t, params);
         },
+
 	};
 });

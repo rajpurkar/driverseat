@@ -20,6 +20,10 @@ service('util', function($http) {
         a[1] *= scalar;
         a[2] *= scalar;
     }
+    function maxDirectionComponent(a, b) {
+        var dists = [Math.abs(a[0]-b[0]), Math.abs(a[1]-b[1]), Math.abs(a[2]-b[2])];
+        return dists.indexOf(Math.max.apply(Math, dists));
+    }
     var INTERPOLATE_STEP = 0.6;
 
     /**
@@ -52,6 +56,7 @@ service('util', function($http) {
         sum: sum,
         normalize: normalize,
         scale: scale,
+        maxDirectionComponent: maxDirectionComponent,
         INTERPOLATE_STEP: INTERPOLATE_STEP,
         interpolate: function(startPos, endPos) {
             var fillPositions = [];
@@ -123,9 +128,10 @@ service('util', function($http) {
                     );
         },
         paintPoint: function(pointColors, index, r, g, b) {
-            pointColors.array[3*index] = r;
-            pointColors.array[3*index+1] = g;
-            pointColors.array[3*index+2] = b;
+            index *= 3;
+            pointColors.array[index]   = r;
+            pointColors.array[index+1] = g;
+            pointColors.array[index+2] = b;
             pointColors.needsUpdate = true;
         }
     };

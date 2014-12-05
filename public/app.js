@@ -91,11 +91,11 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         //video.init($scope.videoData);
         editor.init($scope);
         radar.init($scope.radarData, $scope.params, $scope.scene);
-        $scope.videoProjectionParams = videoProjection.init($scope.params, 1);
         if($scope.boundingBoxData) boundingBoxes.init($scope.boundingBoxData);
         for (var lane in $scope.pointClouds.lanes) {
             editor.initLane(lane);
         }
+        $scope.videoProjectionParams = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
 
         key.watchToggle("space");
         $scope.addEventListeners();
@@ -208,9 +208,12 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         }
         var img_disp = $scope.video.displayImage("projectionCanvas", frameCount);
         if (img_disp) {
+            /*
             for (var idx in $scope.pointClouds.lanes) {
-                videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount], $scope.videoProjectionParams);
+                videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount], $scope.videoProjectionParams);
             }
+            */
+            videoProjection.projectScene("projectionCanvas", $scope.gps[frameCount], $scope.videoProjectionParams);
         } else {
             var canv = document.getElementById("projectionCanvas");
             var ctx = canv.getContext("2d");
@@ -223,7 +226,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
             ctx.fillText("Buffering", canv.width/2, canv.height/2);
         }
 
-        //videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.points, $scope.gps[frameCount], $scope.videoProjectionParams);
+        //videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.points, $scope.gps[frameCount], $scope.videoProjectionParams);
         radar.displayReturns(frameCount, $scope.gps[frameCount]);
         boundingBoxes.drawBoundingBoxes("projectionCanvas", frameCount);
         fpsMeter.tick();

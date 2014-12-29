@@ -135,6 +135,9 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
             case key.keyMap.up:
                 $scope.carForward();
                 break;
+            case key.keyMap["0"]:
+                $scope.goToStartFrame();
+                break;
             default:
                 preventDefault = false;
         }

@@ -7,22 +7,15 @@ factory('editor', function(util, key, history, $http) {
         selectedPositionsDir = -1;
         selectedLane = -1,
         action = { laneNum: 0, type: "" },
-        DRAG_RANGE = 19;
+        dragRange = 15;
 
     function initLane(laneNum) {
         var positions = $scope.geometries["lane"+laneNum].attributes.position;
         history.push("original", positions.array, laneNum);
     }
 
-    function changeDragRange(){
-        DRAG_RANGE = document.getElementById('drrange').value;
-    }
-
-    function handleSlider(){
-        //todo: modularize
-        changeDragRange();
-        var input = document.querySelector('#drrange');
-        input.addEventListener('input', changeDragRange);	
+    function changeDragRange(event){
+        dragRange = event.target.value;
     }
 
     function createSelectedPointBoxes() {
@@ -45,7 +38,7 @@ factory('editor', function(util, key, history, $http) {
         document.getElementById("undo").addEventListener("click", undo, false);
         document.getElementById("redo").addEventListener("click", redo, false);
         document.getElementById("save").addEventListener("click", save, false);
-        handleSlider();
+        document.querySelector('#drrange').addEventListener('input', changeDragRange);
         createSelectedPointBoxes();
     }
 
@@ -269,7 +262,7 @@ factory('editor', function(util, key, history, $http) {
 
     function dragPointInit() {
         var positions = selectedPoint[0].object.geometry.attributes.position.array;
-        var nearestPoints = $scope.kdtrees["lane"+action.laneNum].nearest(util.getPos(positions, selectedPoint[0].index), 300, DRAG_RANGE);
+        var nearestPoints = $scope.kdtrees["lane"+action.laneNum].nearest(util.getPos(positions, selectedPoint[0].index), 300, dragRange);
         selectedPositions = {};
         for (var i = 0; i < nearestPoints.length; i++) {
             var index = nearestPoints[i][0].pos;

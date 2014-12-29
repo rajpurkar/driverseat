@@ -1,27 +1,15 @@
 myApp.
-factory('loading', function(util) {
+factory('loading', function($http, util) {
 
     function init(scope) {
         $scope = scope;
-        $scope.title = document.getElementById("title").textContent;
-        var title = $scope.title;
-        $scope.datafiles = {
-            points: "/runs/" + title + "/map.json.zip",
-            gps: "/runs/" + title + "/gps.json.zip",
-            lanes: "/runs/" + title + "/lanes_done.json.zip",
-            planes: "/runs/" + title + "/planes.json.zip",
-            video: "/runs/" + title + "/cam_2.zip",
-            radar: "/runs/" + title + "/radar.json.zip",
-            params: "/q50_4_3_14_params.json",
-            boundingBoxes: "/runs/" + title + "/bbs-cam2.json"
-        };   
         $scope.debugText = "Loading...";
     }
 
-    function loaders(cb){
+    function loaders(cb) {
         async.parallel({
             pointCloud: function(callback){
-                JSZipUtils.getBinaryContent($scope.datafiles.points, function(err, data) {
+                JSZipUtils.getBinaryContent($scope.trackInfo.files.points, function(err, data) {
                     if(err) throw err; // or handle err
                     var loader = util.loadDataFromZip;
                     var points = JSON.parse(loader(data, "map.json"));
@@ -31,7 +19,7 @@ factory('loading', function(util) {
                 });
             },
             gps: function(callback){
-                JSZipUtils.getBinaryContent($scope.datafiles.gps, function(err, data) {
+                JSZipUtils.getBinaryContent($scope.trackInfo.files.gps, function(err, data) {
                     if(err) throw err; // or handle err
                     var loader = util.loadDataFromZip;
                     $scope.gps = JSON.parse(loader(data, "gps.json"));
@@ -39,25 +27,30 @@ factory('loading', function(util) {
                 });
             },
             lanes: function(callback){
-                JSZipUtils.getBinaryContent($scope.datafiles.lanes, function(err, gzipped_data) {
-                    if(err) throw err; // or handle err
+                JSZipUtils.getBinaryContent($scope.trackInfo.files.lanes, function(err, gzipped_data) {
+                    if (err) throw err; // or handle err
                     var loader = util.loadDataFromZip;
-                    var data = JSON.parse(loader(gzipped_data, "lanes_done.json"));
+                    var data;
+                    //TODO: fix lanes_done.json.zip to contain only lanes.json
+                    try {
+                        data = JSON.parse(loader(gzipped_data, "lanes.json"));
+                    } catch (e) {
+                        data = JSON.parse(loader(gzipped_data, "lanes_done.json"));
+                    }
                     $scope.pointClouds.lanes = {};
-                    for (var lane in data){
+                    for (var lane in data) {
                         var color = util.generateRGB(lane);
                         var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], $scope.LANE_POINT_SIZE, color);
-                        $scope.scene.add(laneCloud);    
+                        $scope.scene.add(laneCloud);
                         $scope.pointClouds.lanes[lane] = laneCloud;
                         var positions = laneCloud.geometry.attributes.position.array;
                         $scope.kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3);
-                        $scope.lanesData[lane] = positions;
                     }
                     callback(null, 3);
                 });
             },
             planes: function(callback){
-                JSZipUtils.getBinaryContent($scope.datafiles.planes, function(err, gzipped_data) {
+                JSZipUtils.getBinaryContent($scope.trackInfo.files.planes, function(err, gzipped_data) {
                     if(err) throw err; // or handle err
                     var loader = util.loadDataFromZip;
                     var data = JSON.parse(loader(gzipped_data, "planes.json"));
@@ -71,24 +64,17 @@ factory('loading', function(util) {
                 });
             },
             video: function(callback) {
-                /*
-                var player_onload = function(player) {
-                    video.init(player);
-                    callback(null, 'video_init');
-                }
-                var canvas = document.getElementById('projectionCanvas');
-                jsmpeg_video = new jsmpeg($scope.datafiles.video, {onload:player_onload, forceCanvas2D: true});
-                */
-                JSZipUtils.getBinaryContent($scope.datafiles.video, function(err, data) {
-                    if(err) {
-                        throw err; // or handle err
-                    }
-                    $scope.videoData = data;
-                    callback(null, 'video_init');
-                });
+                var cb_fn = function() { 
+                    callback(null, "video_init");
+                };
+                $scope.video = new
+                    VideoNACL($scope.trackInfo.files.video,
+                            "video_nacl",
+                            "videoPlayerWrap",
+                            cb_fn);
             },
             radar: function(callback){
-                JSZipUtils.getBinaryContent($scope.datafiles.radar, function(err, gzipped_data) {
+                JSZipUtils.getBinaryContent($scope.trackInfo.files.radar, function(err, gzipped_data) {
                     if(err) throw err; // or handle err
                     var loader = util.loadDataFromZip;
                     var data = JSON.parse(loader(gzipped_data, "radar.json"));
@@ -98,25 +84,25 @@ factory('loading', function(util) {
             },
             boundingBoxes: function(callback) {
                 util.loadJSON(
-                    $scope.datafiles.boundingBoxes,
+                    $scope.trackInfo.files.boundingBoxes,
                     function(data) {
                         $scope.boundingBoxData = data;
                         callback(null, "bounding_boxes_init");
                     },
                     function(data) {
-                        console.log("Cannot open bounding boxes file: " + $scope.datafiles.boundingBoxes);
+                        console.log("Cannot open bounding boxes file: " + $scope.trackInfo.files.boundingBoxes);
                         callback(null, "bounding_boxes_init");
                     });
             },
             params: function(callback) {
-                util.loadJSON($scope.datafiles.params, function(data) {
+                util.loadJSON($scope.trackInfo.files.params, function(data) {
                     $scope.params = data;
                     callback(null, "params");
                 });
             }
         },
-            function(err, results) {
-                cb();
+        function(err, results) {
+            cb();
         });
     }
 

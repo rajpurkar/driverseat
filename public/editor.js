@@ -1,14 +1,17 @@
 myApp.
 factory('editor', function(util, key, history, $http) {
     var $scope,
-    selectedPoint = null,
-    selectedPositions = {}, // index => position array
-    selectedPositionsDir = -1;
-    action = { laneNum: 0, type: "" },
-    DRAG_RANGE = 19;
+        selectedPoint = [null, null],
+        selectedPointBox = [null, null],
+        selectedPositions = {}, // index => position array
+        selectedPositionsDir = -1;
+        selectedLane = -1,
+        action = { laneNum: 0, type: "" },
+        DRAG_RANGE = 19;
 
-    function initLane(positions, laneNum) {
-        history.push("original", positions, laneNum);
+    function initLane(laneNum) {
+        var positions = $scope.geometries["lane"+laneNum].attributes.position;
+        history.push("original", positions.array, laneNum);
     }
 
     function changeDragRange(){
@@ -22,27 +25,67 @@ factory('editor', function(util, key, history, $http) {
         input.addEventListener('input', changeDragRange);	
     }
 
+    function createSelectedPointBoxes() {
+        var geometry = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+        var material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        selectedPointBox[0] = new THREE.Mesh(geometry, material);
+        selectedPointBox[1] = new THREE.Mesh(geometry, material);
+        selectedPointBox[0].visible = false;
+        selectedPointBox[1].visible = false;
+        $scope.scene.add(selectedPointBox[0]);
+        $scope.scene.add(selectedPointBox[1]);
+    }
+
     function init(scope) {
         $scope = scope;
         document.addEventListener('mousedown', onDocumentMouseDown, false);
         document.addEventListener('mouseup', onDocumentMouseUp, false);
         document.addEventListener('keydown', onDocumentKeyDown, false);
+        document.addEventListener('dblclick', onDocumentDblClick, false);
+        document.getElementById("undo").addEventListener("click", undo, false);
+        document.getElementById("redo").addEventListener("click", redo, false);
+        document.getElementById("save").addEventListener("click", save, false);
         handleSlider();
-
+        createSelectedPointBoxes();
     }
 
-    function done(){
-        var trackname = document.getElementById("title").textContent; //todo: change the way this is done 
-        var d= {};
-        for(var laneNum in $scope.pointClouds.lanes){
-            d[laneNum] = $scope.geometries["lane"+laneNum].attributes.position.array;
+    function save() {
+        document.getElementById("save").removeEventListener("click", save);
+        $scope.log("Saving...");
+
+        var trackName = $scope.trackInfo.track;
+
+        var lanes = {};
+        for (var laneNum in $scope.pointClouds.lanes) {
+            var positions = $scope.geometries["lane"+laneNum].attributes.position.array;
+            var posVectors = [];
+            for (var i = 0; i < positions.length; i+=3) {
+                posVectors.push([positions[i+2], positions[i], positions[i+1]]);
+            }
+            lanes[laneNum] = posVectors;
         }
-        $http({
-            method: 'POST',
-            url: '/save',
-            data: {lanes: "placeholder", track: trackname}
-        }).success(function () {
-            $scope.debugText = 'Saved!';
+        var data = {};
+        var zip = new JSZip();
+        zip.file("lanes.json", JSON.stringify(lanes));
+        data[trackName] = zip.generate({ compression: "DEFLATE", type: "blob" });
+
+        $http.post("/save", data, {
+            // browser turns undefined into "multipart/form-data" with correct boundary
+            headers: { "Content-Type": undefined },
+            // create FormData from the data object
+            transformRequest: function(data) {
+                var fd = new FormData();
+                for (var key in data) {
+                    fd.append(key, data[key]);
+                }
+                return fd;
+            }
+        }).success(function(data, status, headers, config) {
+            $scope.log("Saved!");
+            document.getElementById("save").addEventListener("click", save, false);
+        }).error(function(data, status, headers, config) {
+            $scope.log("Unable to save file");
+            document.getElementById("save").addEventListener("click", save, false);
         });
     }
 
@@ -57,7 +100,7 @@ factory('editor', function(util, key, history, $http) {
             case key.keyMap.del:
             case key.keyMap.D:
             case key.keyMap.d:
-                splitLane();
+                deleteSegment();
                 break;
             case key.keyMap.J:
             case key.keyMap.j:
@@ -69,11 +112,11 @@ factory('editor', function(util, key, history, $http) {
                 break;
             case key.keyMap.A:
             case key.keyMap.a:
-                action.type = "append";
+                initAppendForkLane("append");
                 break;
             case key.keyMap.F:
             case key.keyMap.f:
-                action.type = "fork";
+                initAppendForkLane("fork");
                 break;
             case key.keyMap.Z:
             case key.keyMap.z:
@@ -98,12 +141,12 @@ factory('editor', function(util, key, history, $http) {
         if (key.isDown("ctrl")) return;
         // event.stopPropagation();
 
-        var intersects, lane;
+        var intersects, laneNum;
         $scope.updateMouse();
 
         if (action.type == "fork" || action.type == "append" || action.type == "copy") {
-            for (i = 0; i < planes.length; i++) {
-                intersects = $scope.raycaster.intersectObject(planes[i]);
+            for (i = 0; i < $scope.meshes.groundPlanes.length; i++) {
+                intersects = $scope.raycaster.intersectObject($scope.meshes.groundPlanes[i]);
                 if (intersects.length > 0) break;
             }
             if (intersects.length === 0) return;
@@ -118,70 +161,45 @@ factory('editor', function(util, key, history, $http) {
             return;
         }
 
-        for (lane in $scope.pointClouds.lanes) {
-            intersects = $scope.raycaster.intersectObject($scope.pointClouds.lanes[lane]);
+        for (laneNum in $scope.pointClouds.lanes) {
+            intersects = $scope.raycaster.intersectObject($scope.pointClouds.lanes[laneNum]);
             if (intersects.length > 0) break;
         }
         if (intersects.length === 0) return;
-        // if (lane >= pointClouds.lanes.length) return;
-
-        var i, nearestPoints, index;
-        var pointPos = intersects[0].object.geometry.attributes.position.array;
 
         if (key.isDown("shift")) {
-            var startPoint, startPos, endPoint, endPos;
-            if (action.laneNum != lane) {
-                // join lane
-                action.laneNum2 = lane;
-                startPoint = selectedPoint;
-                var startPosArray = selectedPoint.object.geometry.attributes.position.array;
-                startPos = util.getPos(startPosArray, startPoint.index);
-                selectedPoint = intersects[0];
-                endPoint = selectedPoint;
-                endPos = util.getPos(pointPos, endPoint.index);
-                selectedPositions = {};
-                selectedPositions[action.laneNum+"_"+startPoint.index] = startPos;
-                selectedPositions[action.laneNum2+"_"+endPoint.index] = endPos;
-                util.paintPoint(geometries["lane"+lane].attributes.color, endPoint.index, 255, 255, 255);
-                return;
-            }
-            // select range
-            startPoint = selectedPoint;
-            startPos = util.getPos(pointPos, startPoint.index);
-            selectedPoint = intersects[0];
-            endPoint = selectedPoint;
-            endPos = util.getPos(pointPos, endPoint.index);
-            //TODO change util.difference to use regular arrays
-            var endPointDists = Array.prototype.slice.call(util.difference(startPos, endPos)).map(function(i) { return Math.abs(i); });
-            selectedPositionsDir = endPointDists.indexOf(Math.max.apply(Math, endPointDists));
-            var midPoint = util.midpoint(startPos, endPos);
-            var range = util.distance(startPos, endPos) / 2 + 0.01;
-            nearestPoints = $scope.kdtrees["lane"+lane].nearest(midPoint, 100, range);
-            selectedPositions = {};
-            for (i = 0; i < nearestPoints.length; i++) {
-                index = nearestPoints[i][0].pos;
-                selectedPositions[index] = util.getPos(pointPos, index);
-                util.paintPoint($scope.geometries["lane"+lane].attributes.color, index, 255, 255, 255);
-            }
+            selectRange(intersects[0], laneNum);
             return;
         }
         deselectPoints(action.laneNum);
         // select point for dragging
-        action = { laneNum: lane, type: "" };
-        selectedPoint = intersects[0];
-        util.paintPoint($scope.geometries["lane"+lane].attributes.color, selectedPoint.index, 255, 255, 255);
-        nearestPoints = $scope.kdtrees["lane"+lane].nearest(util.getPos(pointPos, selectedPoint.index), 300, DRAG_RANGE);
+        action = { laneNum: laneNum, type: "" };
+        selectedPoint = [intersects[0], null];
+        var positions = selectedPoint[0].object.geometry.attributes.position.array;
+        var selectedPos = util.getPos(positions, selectedPoint[0].index);
+        selectedPointBox[0].position.set(selectedPos[0], selectedPos[1], selectedPos[2]);
+        selectedPointBox[0].visible = true;
+        util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, selectedPoint[0].index, 255, 255, 255);
         selectedPositions = {};
-        for (i = 0; i < nearestPoints.length; i++) {
-            index = nearestPoints[i][0].pos;
-            selectedPositions[index] = new Float32Array(util.getPos(pointPos, index));
+        selectedPositions[selectedPoint[0].index] = selectedPos;
+
+        var nearestPoints = $scope.kdtrees["lane"+laneNum].nearest(selectedPos, 2).filter(function(kdPoint) {
+            // filter out same point
+            return kdPoint[1] > 0;
+        });
+        if (nearestPoints.length < 1) {
+            selectedPositionsDir = -1;
+        } else {
+            var neighborPos = util.getPos(positions, nearestPoints[0][0].pos);
+            selectedPositionsDir = util.maxDirectionComponent(selectedPos, neighborPos);
         }
+
         //TODO: find nearest plane instead of raycasting
-        for (i = 0; i < planes.length; i++) {
-            intersects = $scope.raycaster.intersectObject(planes[i]);
+        for (var i = 0; i < $scope.meshes.groundPlanes.length; i++) {
+            intersects = $scope.raycaster.intersectObject($scope.meshes.groundPlanes[i]);
             if (intersects.length > 0) {
                 selectedPlane = intersects[0];
-                document.addEventListener('mousemove', dragPoint);
+                document.addEventListener('mousemove', dragPointInit);
                 return;
             }
         }
@@ -189,24 +207,85 @@ factory('editor', function(util, key, history, $http) {
 
     function onDocumentMouseUp() {
         if (action.type == "drag") {
-            history.push(action.type, selectedPoint.object.geometry.attributes.position.array, action.laneNum);
+            history.push(action.type, selectedPoint[0].object.geometry.attributes.position.array, action.laneNum);
             deselectPoints(action.laneNum);
             dragPointDists = {};
         }
         if (action.type != "append")
             action.type = "";
+        document.removeEventListener('mousemove', dragPointInit);
         document.removeEventListener('mousemove', dragPoint);
+    }
+
+    function onDocumentDblClick() {
+        if (selectedPoint[0] === null) return;
+        selectedLane = action.laneNum;
+        var colors = selectedPoint[0].object.geometry.attributes.color;
+        for (var i = 0; i < colors.array.length; i++) {
+            colors.array[i] = 1;
+        }
+        colors.needsUpdate = true;
+    }
+
+    function selectRange(intersectedPoint, laneNum) {
+        var selectedPointRef = selectedPoint[0];
+        deselectPoints(action.laneNum);
+        selectedPoint[0] = selectedPointRef;
+        selectedPointBox[0].visible = true;
+        selectedPoint[1] = intersectedPoint;
+        var startPositions = selectedPoint[0].object.geometry.attributes.position.array,
+            endPositions   = selectedPoint[1].object.geometry.attributes.position.array,
+            startPos = util.getPos(startPositions, selectedPoint[0].index),
+            endPos   = util.getPos(endPositions, selectedPoint[1].index);
+        if (action.laneNum != laneNum) {
+            // join lane
+            action.laneNum2 = laneNum;
+            selectedPositions = {};
+            selectedPositions[action.laneNum+"_"+selectedPoint[0].index] = startPos;
+            selectedPositions[action.laneNum2+"_"+selectedPoint[1].index] = endPos;
+            util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, selectedPoint[1].index, 255, 255, 255);
+            selectedPointBox[1].position.set(endPos[0], endPos[1], endPos[2]);
+            selectedPointBox[1].visible = true;
+            return;
+        }
+        // select range
+        //TODO change util.difference to use regular arrays
+        selectedPositionsDir = util.maxDirectionComponent(startPos, endPos);
+        var midPoint = util.midpoint(startPos, endPos);
+        var range = util.distance(startPos, endPos) / 2 + 0.01;
+        var nearestPoints = $scope.kdtrees["lane"+laneNum].nearest(midPoint, 100, range);
+        selectedPositions = {};
+        for (var i = 0; i < nearestPoints.length; i++) {
+            var index = nearestPoints[i][0].pos;
+            selectedPositions[index] = util.getPos(startPositions, index);
+            util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, index, 255, 255, 255);
+        }
+        selectedPointBox[1].position.set(endPos[0], endPos[1], endPos[2]);
+        selectedPointBox[1].visible = true;
+    }
+
+    function dragPointInit() {
+        var positions = selectedPoint[0].object.geometry.attributes.position.array;
+        var nearestPoints = $scope.kdtrees["lane"+action.laneNum].nearest(util.getPos(positions, selectedPoint[0].index), 300, DRAG_RANGE);
+        selectedPositions = {};
+        for (var i = 0; i < nearestPoints.length; i++) {
+            var index = nearestPoints[i][0].pos;
+            selectedPositions[index] = new Float32Array(util.getPos(positions, index));
+        }
+        document.removeEventListener('mousemove', dragPointInit);
+        document.addEventListener('mousemove', dragPoint);
     }
 
     var dragPointDists = {};
     var dragPointMaxDist;
     function dragPoint() {
-        //TODO factor
         $scope.updateMouse();
+        //TODO: move selectedPoint[0]Box with selectedPoint[0]
+        selectedPointBox[0].visible = false;
         var intersects = $scope.raycaster.intersectObject(selectedPlane.object);
         if (intersects.length > 0) {
-            // var index = selectedPoint.index;
-            var pointPosition = selectedPoint.object.geometry.attributes.position;
+            // var index = selectedPoint[0].index;
+            var pointPosition = selectedPoint[0].object.geometry.attributes.position;
             var newPos = new THREE.Vector3();
             // var newPos = util.difference(intersects[0].point, selectedPlane.point);
             newPos.subVectors(intersects[0].point, selectedPlane.point);
@@ -214,7 +293,7 @@ factory('editor', function(util, key, history, $http) {
             if (Object.keys(dragPointDists).length === 0) {
                 dragPointMaxDist = 0;
                 for (index in selectedPositions) {
-                    dist = util.distance(selectedPositions[selectedPoint.index], selectedPositions[index]);
+                    dist = util.distance(selectedPositions[selectedPoint[0].index], selectedPositions[index]);
                     dragPointDists[index] = dist;
                     if (dist > dragPointMaxDist) dragPointMaxDist = dist;
                 }
@@ -242,20 +321,43 @@ factory('editor', function(util, key, history, $http) {
 
     function deselectPoints(laneNum) {
         var color = util.generateRGB(laneNum);
-        if (selectedPoint !== null)
-            util.paintPoint(selectedPoint.object.geometry.attributes.color, selectedPoint.index, color.r, color.g, color.b);
-        for (var index in selectedPositions) {
-            var pointKey = index.split("_");
-            if (pointKey.length > 1) {
-                //TODO points selected in two lanes
-                // util.paintPoint(geometries["lane"+pointKey[0]].attributes.color, pointKey[1], 255, 255, 255);
-                continue;
+        if (selectedLane >= 0) {
+            var pointColors = selectedPoint[0].object.geometry.attributes.color;
+            colorLane(laneNum, pointColors.array);
+            pointColors.needsUpdate = true;
+            selectedLane = -1;
+        } else {
+            if (selectedPoint[0] !== null)
+                util.paintPoint(selectedPoint[0].object.geometry.attributes.color, selectedPoint[0].index, color.r, color.g, color.b);
+            for (var index in selectedPositions) {
+                var pointKey = index.split("_");
+                if (pointKey.length > 1) {
+                    laneNum = parseInt(pointKey[0], 10);
+                    index = parseInt(pointKey[1], 10);
+                    color = util.generateRGB(laneNum);
+                }
+                util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, index, color.r, color.g, color.b);
             }
-            util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, index, color.r, color.g, color.b);
         }
 
-        selectedPoint = null;
+        selectedPoint = [null, null];
         selectedPositions = {};
+        selectedPointBox[0].visible = false;
+        selectedPointBox[1].visible = false;
+    }
+
+    function selectPoint(laneNum, index, selectedPointNum) {
+        var positions = $scope.geometries["lane"+laneNum].attributes.position,
+            colors = $scope.geometries["lane"+laneNum].attributes.color;
+
+        util.paintPoint(colors, index, 255, 255, 255);
+        var pos = util.getPos(positions.array, index);
+        selectedPointBox[selectedPointNum].position.set(pos[0], pos[1], pos[2]);
+        selectedPointBox[selectedPointNum].visible = true;
+        selectedPoint[selectedPointNum] = {
+            object: $scope.pointClouds.lanes[laneNum],
+            index: index
+        };
     }
 
     function newLaneNum() {
@@ -275,7 +377,7 @@ factory('editor', function(util, key, history, $http) {
 
     function newLane(laneNum, arrayBuffer) {
         var color = util.generateRGB(laneNum);
-        var laneCloud = $scope.generatePointCloud("lane"+laneNum, arrayBuffer, $scope.pointSize, color);
+        var laneCloud = $scope.generatePointCloud("lane"+laneNum, arrayBuffer, $scope.LANE_POINT_SIZE, color);
         $scope.scene.add(laneCloud);
         $scope.pointClouds.lanes[laneNum] = laneCloud;
         var newPositions = laneCloud.geometry.attributes.position;
@@ -305,20 +407,34 @@ factory('editor', function(util, key, history, $http) {
     }
 
     function copySegment() {
-        action.type = "copy";
-        var positions = selectedPoint.object.geometry.attributes.position;
-        var lenNewPositions = 3*Object.keys(selectedPositions).length;
-        if (lenNewPositions === 0) return;
-        var newPositions = new Float32Array(lenNewPositions);
-        var i = 0;
-        for (var index in selectedPositions) {
-            newPositions[i++] = positions.array[3*index];
-            newPositions[i++] = positions.array[3*index+1];
-            newPositions[i++] = positions.array[3*index+2];
+        if (selectedPoint[0] === null) {
+            $scope.log("Please select points first");
+            return;
         }
-        var selectedPointRef = selectedPoint;
+        if (Object.keys(selectedPositions)[0].split("_").length > 1) {
+            $scope.log("Cannot copy points in multiple lanes");
+            return;
+        }
+        action.type = "copy";
+        var positions = selectedPoint[0].object.geometry.attributes.position;
+        var newPositions;
+        if (selectedLane >= 0) {
+            newPositions = new Float32Array(positions.array);
+        } else {
+            var lenNewPositions = 3*Object.keys(selectedPositions).length;
+            if (lenNewPositions === 0) return;
+            newPositions = new Float32Array(lenNewPositions);
+            var i = 0;
+            for (var index in selectedPositions) {
+                newPositions[i++] = positions.array[3*index];
+                newPositions[i++] = positions.array[3*index+1];
+                newPositions[i++] = positions.array[3*index+2];
+            }
+        }
+        var selectedPointRef = selectedPoint[0];
         deselectPoints(action.laneNum);
-        selectedPoint = selectedPointRef;
+        selectedPointBox[0].visible = true;
+        selectedPoint[0] = selectedPointRef;
         var laneNum = newLaneNum();
         newLane(laneNum, newPositions);
         action.laneNum = laneNum;
@@ -327,7 +443,7 @@ factory('editor', function(util, key, history, $http) {
     function pasteSegment(destPos) {
         var laneNum = action.laneNum;
         var positions = $scope.pointClouds.lanes[laneNum].geometry.attributes.position;
-        var sourcePos = util.getPos(selectedPoint.object.geometry.attributes.position.array, selectedPoint.index);
+        var sourcePos = util.getPos(selectedPoint[0].object.geometry.attributes.position.array, selectedPoint[0].index);
         var dVec = util.difference(destPos, sourcePos);
         for (var index = 0; index < positions.array.length; ) {
             positions.array[index++] += dVec[0];
@@ -335,12 +451,24 @@ factory('editor', function(util, key, history, $http) {
             positions.array[index++] += dVec[2];
         }
         positions.needsUpdate = true;
-        history.push("new", positions, laneNum);
-        selectedPoint = null;
+        history.push("new", positions.array, laneNum);
+        selectedPoint = [null, null];
+        selectedPositions = {};
+        selectedPointBox[0].visible = false;
     }
 
     function joinLanes() {
+        if (selectedPoint[0] === null || selectedPoint[1] === null) {
+            $scope.log("Please select points first");
+            return;
+        }
+        if (Object.keys(selectedPositions)[0].split("_").length == 1) {
+            $scope.log("Must select points in different lanes");
+            return;
+        }
         action.type = "join";
+        selectedPointBox[0].visible = false;
+        selectedPointBox[1].visible = false;
         var positionArrs = [],
             lanes = [],
             endPositions = [];
@@ -366,12 +494,38 @@ factory('editor', function(util, key, history, $http) {
         updateLane(lanes[0], positions, colors, newPositions);
 
         history.push("join", positions.array, lanes[0]);
+        selectedPoint = [null, null];
+        selectedPositions = {};
     }
 
-    function splitLane() {
+    function deleteSegment() {
+        if (selectedPoint[0] === null) {
+            $scope.log("Please select points first");
+            return;
+        }
+        if (Object.keys(selectedPositions)[0].split("_").length > 1) {
+            $scope.log("Cannot delete points in multiple lanes");
+            return;
+        }
+        if (selectedPositionsDir < 0) {
+            $scope.log("Please select at least two points to delete");
+            return;
+        }
+        var positions = selectedPoint[0].object.geometry.attributes.position;
+        selectedPointBox[0].visible = false;
+        selectedPointBox[1].visible = false;
+        if (selectedLane >= 0) {
+            // delete entire lane
+            history.push("delete", positions.array, selectedLane);
+            deleteLane(selectedLane);
+            action.type = "delete";
+            selectedLane = -1;
+            selectedPoint = [null, null];
+            selectedPositions = {};
+            return;
+        }
         action.type = "split";
-        var positions = selectedPoint.object.geometry.attributes.position;
-        var colors = selectedPoint.object.geometry.attributes.color;
+        var colors = selectedPoint[0].object.geometry.attributes.color;
         var boundaryIndex = Object.keys(selectedPositions)[0];
         var oldPositions = new Float32Array(positions.array.length);
         var lenOldPositions = 0;
@@ -393,22 +547,86 @@ factory('editor', function(util, key, history, $http) {
         var laneNum = newLaneNum();
         var subNewPositions = newPositions.subarray(0,lenNewPositions);
         newLane(laneNum, subNewPositions);
-        history.push("new", subNewPositions, laneNum);
+        history.push("new_split", subNewPositions, laneNum);
         // truncate old lane
         var positionsArray = new Float32Array(oldPositions.subarray(0,lenOldPositions));
         updateLane(action.laneNum, positions, colors, positionsArray);
 
         //TODO edge case where newLane is empty
         history.push("split", positions.array, action.laneNum);
+        selectedPoint = [null, null];
+        selectedPositions = {};
+    }
+
+    function findNearestEndpoint(laneNum, pointPos, range) {
+        var findNearest = $scope.kdtrees["lane"+laneNum].nearest;
+        var excludeSelf = function(kdPoint) {
+            return kdPoint[1] > 0;
+        };
+        var sortByDistance = function(kdPoint1, kdPoint2) {
+            return kdPoint1[1] - kdPoint2[1];
+        };
+        var INF_RANGE = 10000;
+        function isEndpoint(pos) {
+            // 0: selected point
+            // 1: neighbor 1
+            // 2: neighbor 2
+            var neighborsOf_0 = findNearest(pos, 3, INF_RANGE).filter(excludeSelf).sort(sortByDistance);
+            if (neighborsOf_0.length < 2) return true;
+            var neighborsOf_1 = findNearest(neighborsOf_0[0][0].obj, 3, INF_RANGE).filter(excludeSelf);
+            var index_NeighborsOf_1 = neighborsOf_1.map(function(kdPoint) {
+                return kdPoint[0].pos;
+            });
+            var index_2 = neighborsOf_0[1][0].pos;
+            var indexNeighborOf_1_2 = index_NeighborsOf_1.indexOf(index_2);
+            if (indexNeighborOf_1_2 < 0) return false;
+            var dist_0_2 = neighborsOf_0[1][1],
+                dist_1_2 = neighborsOf_1[indexNeighborOf_1_2][1];
+            if (dist_0_2 > dist_1_2) return true;
+            return false;
+        }
+        var nearestPoints = findNearest(pointPos, range, INF_RANGE).sort(sortByDistance);
+        for (var i = 0; i < nearestPoints.length; i++) {
+            var pos = nearestPoints[i][0].obj;
+            if (isEndpoint(pos)) return nearestPoints[i][0].pos;
+        }
+        return -1;
+    }
+
+    function initAppendForkLane(mode) {
+        if (selectedPoint[0] === null) {
+            $scope.log("Please select point first");
+            return;
+        }
+        if (selectedPoint[1] !== null) {
+            $scope.log("Please select a single point");
+            return;
+        }
+        if (mode != "fork" && mode != "append") return;
+        action.type = mode;
+        if (mode == "fork") return;
+
+        var laneNum = action.laneNum;
+        var positions = selectedPoint[0].object.geometry.attributes.position;
+        var colors = selectedPoint[0].object.geometry.attributes.color;
+
+        var selectedPos = util.getPos(positions.array, selectedPoint[0].index);
+        var startPoint = findNearestEndpoint(laneNum, selectedPos, 5);
+        if (startPoint < 0) {
+            $scope.log("Please select an endpoint");
+            action.type = "";
+            return;
+        }
+        deselectPoints(laneNum);
+        selectPoint(laneNum, startPoint, 0);
     }
 
     function appendLane(endPos) {
-        if (selectedPoint === null) return;
         var laneNum = action.laneNum;
-        var positions = selectedPoint.object.geometry.attributes.position;
-        var colors = selectedPoint.object.geometry.attributes.color;
+        var positions = selectedPoint[0].object.geometry.attributes.position;
+        var colors = selectedPoint[0].object.geometry.attributes.color;
 
-        var startPos = util.getPos(positions.array, selectedPoint.index);
+        var startPos = util.getPos(positions.array, selectedPoint[0].index);
         var fillPositions = util.interpolate(startPos, endPos);
         var lenNewPositions = positions.array.length + fillPositions.length;
         var newPositions = new Float32Array(lenNewPositions);
@@ -420,18 +638,12 @@ factory('editor', function(util, key, history, $http) {
         // select last point for next append
         var nearestPoints = $scope.kdtrees["lane"+laneNum].nearest(endPos, 1, util.INTERPOLATE_STEP);
         if (nearestPoints.length === 0) return;
-        var index = nearestPoints[0][0].pos;
-        util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, index, 255, 255, 255);
-        selectedPoint = {
-            object: $scope.pointClouds.lanes[laneNum],
-            index: index
-        };
+        selectPoint(laneNum, nearestPoints[0][0].pos, 0);
     }
 
     function forkLane(endPos) {
-        if (selectedPoint === null) return;
-        var pointPos = selectedPoint.object.geometry.attributes.position.array;
-        var startPos = new Float32Array(util.getPos(pointPos, selectedPoint.index));
+        var positions = selectedPoint[0].object.geometry.attributes.position;
+        var startPos = util.getPos(positions.array, selectedPoint[0].index);
         var fillPositions = util.interpolate(startPos, endPos);
 
         var newPositions = new Float32Array(fillPositions);
@@ -439,16 +651,11 @@ factory('editor', function(util, key, history, $http) {
         newLane(laneNum, newPositions);
         history.push("fork", newPositions, laneNum);
 
-        deselectPoints(action.laneNum);
         // select end point for next append
+        deselectPoints(action.laneNum);
         var nearestPoints = $scope.kdtrees["lane"+laneNum].nearest(endPos, 1, util.INTERPOLATE_STEP);
         if (nearestPoints.length === 0) return;
-        var index = nearestPoints[0][0].pos;
-        util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, index, 255, 255, 255);
-        selectedPoint = {
-            object: $scope.pointClouds.lanes[laneNum],
-            index: index
-        };
+        selectPoint(laneNum, nearestPoints[0][0].pos, 0);
         action = {
             laneNum: laneNum,
             type: "append"
@@ -457,41 +664,49 @@ factory('editor', function(util, key, history, $http) {
 
     function undo() {
         action.type = "";
-        history.undo(function(action, arrayBuffer, laneNum) {
-            if (action == "new" || action == "fork") {
-                deleteLane(laneNum);
-                return;
-            } else if (action == "delete") {
-                newLane(laneNum, arrayBuffer);
-                return;
-            }
-            var positions = $scope.geometries["lane"+laneNum].attributes.position;
-            var colors = $scope.geometries["lane"+laneNum].attributes.color;
-            var positionsArray = new Float32Array(arrayBuffer);
-            updateLane(laneNum, positions, colors, positionsArray);
-            if (action == "split" || action == "join") {
-                undo();
-            }
-        });
+        try {
+            history.undo(function(action, arrayBuffer, laneNum) {
+                if (action == "new" || action == "new_split" || action == "fork") {
+                    deleteLane(laneNum);
+                    return;
+                } else if (action == "delete") {
+                    newLane(laneNum, arrayBuffer);
+                    return;
+                }
+                var positions = $scope.geometries["lane"+laneNum].attributes.position;
+                var colors = $scope.geometries["lane"+laneNum].attributes.color;
+                var positionsArray = new Float32Array(arrayBuffer);
+                updateLane(laneNum, positions, colors, positionsArray);
+                if (action == "split" || action == "join") {
+                    undo();
+                }
+            });
+        } catch (e) {
+            $scope.log(e.message);
+        }
     }
 
     function redo() {
-        history.redo(function(laneNum, action, arrayBuffer) {
-            if (action == "new" || action == "fork") {
-                newLane(laneNum, arrayBuffer);
-                if (action == "new") redo();
-                //TODO if next is delete:
-                return;
-            } else if (action == "delete") {
-                deleteLane(laneNum);
-                redo();
-                return;
-            }
-            var positions = $scope.geometries["lane"+laneNum].attributes.position;
-            var colors = $scope.geometries["lane"+laneNum].attributes.color;
-            var positionsArray = new Float32Array(arrayBuffer);
-            updateLane(laneNum, positions, colors, positionsArray);
-        });
+        try {
+            history.redo(function(laneNum, action, arrayBuffer) {
+                if (action == "new" || action == "new_split" || action == "fork") {
+                    newLane(laneNum, arrayBuffer);
+                    if (action == "new_split") redo();
+                    //TODO if next is delete:
+                    return;
+                } else if (action == "delete") {
+                    deleteLane(laneNum);
+                    redo();
+                    return;
+                }
+                var positions = $scope.geometries["lane"+laneNum].attributes.position;
+                var colors = $scope.geometries["lane"+laneNum].attributes.color;
+                var positionsArray = new Float32Array(arrayBuffer);
+                updateLane(laneNum, positions, colors, positionsArray);
+            });
+        } catch (e) {
+            $scope.log(e.message);
+        }
     }
 
     return {
@@ -499,6 +714,6 @@ factory('editor', function(util, key, history, $http) {
         init: init,
         undo: undo,
         redo: redo,
-        done: done
+        save: save
     };
 });

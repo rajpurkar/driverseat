@@ -1,26 +1,30 @@
 var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 
 myApp.
-controller('AppCtrl', function($scope, $window, editor, loading, util, key, video, videoProjection, radar, boundingBoxes, cfpLoadingBar) {
-    //constants
+controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading, util, key, videoProjection, radar, boundingBoxes, cfpLoadingBar) {
+    // constants
     var INITIAL_OFFSET = [0, 5, -14],
-        INITIAL_MOUSE = { x: 1, y: 1 },
-        INITIAL_FRAME = 0;
-    
-    $scope.scene = null;
-    $scope.raycaster = null;
-    $scope.geometries = {};
-    $scope.pointClouds = {};
-    $scope.kdtrees = {};
-    $scope.lanesData = {};
-    $scope.videoData;
-    $scope.radarData;
-    $scope.boundingBoxData;
-    $scope.datafiles;
-    $scope.LANE_POINT_SIZE = 0.08;
+        INITIAL_MOUSE  = { x: 1, y: 1 },
+        INITIAL_FRAME  = 0;
+
+    // scope variables
+    $scope.trackInfo        = JSON.parse($attrs.ngTrackinfo);
+    $scope.scene            = null;
+    $scope.raycaster        = null;
+    $scope.geometries       = {};
+    $scope.pointClouds      = {};
+    $scope.meshes           = {};
+    $scope.kdtrees          = {};
+    $scope.video            = null;
+    //$scope.videoData        = null;
+    $scope.radarData        = null;
+    $scope.boundingBoxData  = null;
+    $scope.datafiles        = null;
+    $scope.LANE_POINT_SIZE  = 0.08;
     $scope.LIDAR_POINT_SIZE = 0.12;
-    $scope.params;
-    //variables
+    $scope.params           = null;
+
+    // local variables
     var camera, renderer,
         projector,
         controls,
@@ -32,6 +36,13 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
         frameCount = INITIAL_FRAME,
         offset = INITIAL_OFFSET,
         car;
+
+    $scope.log = function(message) {
+        //TODO fix conflict with apply calls already in progress
+        $scope.$apply(function() {
+            $scope.logText = message;
+        });
+    };
 
     $scope.setCameraOffset = function(){
         offset[0] = - car.position.x + camera.position.x;
@@ -51,12 +62,11 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
         renderer.setSize(windowWidth, windowHeight);
         //renderer.setClearColor( scene.fog.color );
         controls = new THREE.OrbitControls(camera);
-        $scope.debugText = "Loading...";
+        $scope.logText = "Loading...";
         cfpLoadingBar.start();
         loading.init($scope);
         loading.loaders($scope.execOnLoaded);
     };
-
 
     $scope.addLighting = function(){
         pointLight = new THREE.PointLight( 0xffffff );
@@ -74,20 +84,18 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
         controls.addEventListener('change', $scope.setCameraOffset);
         document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
         window.addEventListener('resize', $scope.onWindowResize, false);
-        document.getElementById("undo").addEventListener("click", editor.undo, false);
-        document.getElementById("redo").addEventListener("click", editor.redo, false);
-        document.getElementById("done").addEventListener("click", editor.done, false);
     };
 
     $scope.execOnLoaded = function(){
-        video.init($scope.videoData);
+        $scope.log("Rendering...");
+        //video.init($scope.videoData);
         editor.init($scope);
         radar.init($scope.radarData, $scope.params, $scope.scene);
-        videoProjection.init($scope.params);        
         if($scope.boundingBoxData) boundingBoxes.init($scope.boundingBoxData);
-        for(var lane in $scope.lanesData){
-            editor.initLane($scope.lanesData[lane], lane);
+        for (var lane in $scope.pointClouds.lanes) {
+            editor.initLane(lane);
         }
+        $scope.videoProjectionParams = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
 
         key.watchToggle("space");
         $scope.addEventListeners();
@@ -95,7 +103,7 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
         $scope.updateCamera(0);
         $scope.animate();
         cfpLoadingBar.complete();
-        $scope.debugText = "";
+        $scope.log("");
     };
 
     $scope.rotateCamera = function(event) {
@@ -198,11 +206,14 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
             if (frameCount + 1 < $scope.gps.length)
                 frameCount += 1;
         }
-        var img_disp = video.displayImage("projectionCanvas", frameCount);
+        var img_disp = $scope.video.displayImage("projectionCanvas", frameCount);
         if (img_disp) {
+            /*
             for (var idx in $scope.pointClouds.lanes) {
-                videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount]);
+                videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount], $scope.videoProjectionParams);
             }
+            */
+            videoProjection.projectScene("projectionCanvas", $scope.gps[frameCount], $scope.videoProjectionParams);
         } else {
             var canv = document.getElementById("projectionCanvas");
             var ctx = canv.getContext("2d");
@@ -215,7 +226,7 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
             ctx.fillText("Buffering", canv.width/2, canv.height/2);
         }
 
-        //videoProjection.projectPoints("projectionCanvas", $scope.pointClouds.points, $scope.gps[frameCount]);
+        //videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.points, $scope.gps[frameCount], $scope.videoProjectionParams);
         radar.displayReturns(frameCount, $scope.gps[frameCount]);
         boundingBoxes.drawBoundingBoxes("projectionCanvas", frameCount);
         fpsMeter.tick();
@@ -239,10 +250,10 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
         if (dataType === "[object Float32Array]" || dataType === "[object ArrayBuffer]") {
             positions = new Float32Array(data);
             colors    = new Float32Array(positions.length);
-            for (i = 0; 3*i < colors.length; i++) {
-                colors[3*i+0] = color.r;
-                colors[3*i+1] = color.g;
-                colors[3*i+2] = color.b;
+            for (i = 0; i < colors.length; i += 3) {
+                colors[i]   = color.r;
+                colors[i+1] = color.g;
+                colors[i+2] = color.b;
             }
         } else {
             positions = new Float32Array(3*data.length);
@@ -255,7 +266,7 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
             }
 
             if (data[0].length >= 4) {
-                $scope.fillColor(colors, data, 0.6, 0.6,0.6);
+                $scope.fillColor(colors, data, 0.6, 0.6, 0.6);
             } else if (typeof color === "undefined") {
                 $scope.fillColor(colors, data, 1, 1, 1);
             } else {
@@ -328,7 +339,7 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
     };
 
     $scope.addPlanes = function(data) {
-        planes = [];
+        $scope.meshes.groundPlanes = [];
         var groundGeometry = new THREE.Geometry();
         for (var i = 0; i < data.length; i++) {
             var normal = data[i];
@@ -347,20 +358,17 @@ controller('AppCtrl', function($scope, $window, editor, loading, util, key, vide
             var planeGeometry = new THREE.PlaneGeometry(50, 50),
                 planeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true });
             plane = new THREE.Mesh(planeGeometry, planeMaterial);
-            // groundGeometry.vertices.push()
             plane.position.set(x, y, z);
             plane.lookAt(end);
             plane.visible = false;
             $scope.scene.add(plane);
-            planes.push(plane);
-            // var ray = new THREE.Ray(origin, direction);
-            // groundNormals.push(ray);
-            var material = new THREE.LineBasicMaterial({ color: 0x00ff00 }),
-                geometry = new THREE.Geometry();
-            geometry.vertices.push(origin);
-            geometry.vertices.push(end);
-            var line = new THREE.Line(geometry, material);
-            $scope.scene.add(line);
+            $scope.meshes.groundPlanes.push(plane);
+            // var material = new THREE.LineBasicMaterial({ color: 0x00ff00 }),
+            //     geometry = new THREE.Geometry();
+            // geometry.vertices.push(origin);
+            // geometry.vertices.push(end);
+            // var line = new THREE.Line(geometry, material);
+            // $scope.scene.add(line);
         }
     };
 

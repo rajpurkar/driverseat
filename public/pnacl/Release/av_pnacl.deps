@@ -1,0 +1,66 @@
+# Updated by fix_deps.py
+pnacl/Release/av_pnacl.o: av_pnacl.cc \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/instance.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_instance.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_macros.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_stdint.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_resource.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/ppb_console.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_bool.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_var.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/instance_handle.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/view.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/resource.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/pass_ref.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/rect.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_rect.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_point.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_size.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/point.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/size.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/logging.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/module.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_module.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/ppb.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/ppb_core.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_completion_callback.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_time.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/core.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/var.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/var_dictionary.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/var_array.h \
+  /Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/var_array_buffer.h \
+  video_decoder.h base64.h
+av_pnacl.cc:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/instance.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_instance.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_macros.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_stdint.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_resource.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/ppb_console.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_bool.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_var.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/instance_handle.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/view.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/resource.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/pass_ref.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/rect.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_rect.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_point.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_size.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/point.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/size.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/logging.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/module.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_module.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/ppb.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/ppb_core.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_completion_callback.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/c/pp_time.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/core.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/var.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/var_dictionary.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/var_array.h:
+/Users/sameep/nacl_sdk/pepper_37/include/ppapi/cpp/var_array_buffer.h:
+video_decoder.h:
+base64.h:

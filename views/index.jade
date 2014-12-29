@@ -7,12 +7,12 @@ html
 		link(rel='stylesheet', href='/vendor/loading-bar.css')
 		title=title
 	body(ng-app='roadglApp')
-		div(ng-controller='AppCtrl')
+		div(ng-controller='AppCtrl', ng-trackinfo='#{JSON.stringify(trackInfo)}')
 			canvas#road
 				canvas
 			#overlay
 				#title.tab
-					h4=track
+					h4 {{trackInfo.track}}
 				#instructions.tab
 					h3 Instructions
 					p Ctrl + Mouse to look around
@@ -29,7 +29,7 @@ html
 					button#redo.actionBtn(type="button")
 						|Redo
 				#doneDiv.tab
-					button#done.actionBtn(type="button")
+					button#save.actionBtn(type="button")
 						|Save
 				#doneDiv.tab
 					a(href="/")
@@ -40,8 +40,8 @@ html
 				#slideDiv.tab
 					h3 Drag range
 					input#drrange(type="range", min="1", max="60", value="15", step="5")
-				#debug.tab
-					p#debugText {{debugText}}
+				#log.tab
+					p#logText {{logText}}
 			#videoPlayerWrap
 				#videoPlayer
 					canvas#projectionCanvas
@@ -58,7 +58,7 @@ html
 		script(src='/vendor/jquery.js')
 		script(src='/vendor/bootstrap.min.js')
 		script(src='/javascripts/angular.min.js')
-		script(src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.0/angular-animate.min.js")
+		script(src='/javascripts/angular-animate.min.js')
 		script(src='/vendor/loading-bar.js')
 		script(src='/javascripts/three.min.js')
 		script(src='/javascripts/OrbitControls.js')
@@ -75,7 +75,7 @@ html
 		script(src='/editor.js')
 		script(src='/loading.js')
 		script(src='/util.js')
-		script(src='/video.js')
+		script(src='/video_nacl.js')
 		script(src='/videoProjection.js')
 		script(src='/radar.js')
 		script(src='/boundingBoxes.js')

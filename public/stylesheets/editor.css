@@ -65,7 +65,7 @@ button:focus {
 	color: #fff;
 }
 
-#debug{
+#log{
 	color: #fff;
 	width: 100%;
 	font-size: 30px;
@@ -86,11 +86,11 @@ button:focus {
 	padding: 10px 10px;
 }
 
-#done{
+#save{
 	background: rgba(50,150,50,0.8);
 }
 
-#done:hover{
+#save:hover{
 	background: rgba(50,150,50,0.9);
 }
 

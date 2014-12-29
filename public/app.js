@@ -147,18 +147,22 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         renderer.setSize(windowWidth, windowHeight);
     };
 
+    $scope.changeFrame = function(amt){
+        var endViewThreshold = 5;
+        if (frameCount + amt < $scope.gps.length - endViewThreshold && frameCount + amt >= 0){
+            frameCount += amt;
+        }
+    }
+
     $scope.carForward = function(){
         var numForward = 3;
-        if (frameCount + numForward < $scope.gps.length)
-            frameCount += numForward;
+        $scope.changeFrame(numForward);    
         $scope.updateCamera(frameCount);
     };
 
     $scope.carBack = function(){
         var numDecline = 3;
-        if(frameCount>=numDecline){
-            frameCount-=numDecline;
-        }
+        $scope.changeFrame(-numDecline);
         $scope.updateCamera(frameCount);
     };
 
@@ -171,17 +175,15 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
     };
 
     $scope.updateCamera = function(frameCount) {
-        if (frameCount + 1 < $scope.gps.length) {
-            var lastCarPosition = new THREE.Vector3(0, 0, 0);
-            var pos = $scope.getCarPosition(frameCount);
-            angular.extend(car.position, pos);
-            car.lookAt($scope.getCarPosition(frameCount + 1));
-            camera.position.set(car.position.x + offset[0], car.position.y + offset[1], car.position.z + offset[2]);
-            var target = car.position;
-            camera.lookAt(target);
-            controls.target.copy(target);
-            controls.update();
-        }
+        var lastCarPosition = new THREE.Vector3(0, 0, 0);
+        var pos = $scope.getCarPosition(frameCount);
+        angular.extend(car.position, pos);
+        car.lookAt($scope.getCarPosition(frameCount + 1));
+        camera.position.set(car.position.x + offset[0], car.position.y + offset[1], car.position.z + offset[2]);
+        var target = car.position;
+        camera.lookAt(target);
+        controls.target.copy(target);
+        controls.update();
     };
 
     $scope.updateMouse = function() {
@@ -202,9 +204,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         camera.updateMatrixWorld(true);
         $scope.updateCamera(frameCount);
         if (key.isToggledOn("space")) {
-            $scope.updateCamera(frameCount);
-            if (frameCount + 1 < $scope.gps.length)
-                frameCount += 1;
+            $scope.changeFrame(1);
         }
         var img_disp = $scope.video.displayImage("projectionCanvas", frameCount);
         if (img_disp) {

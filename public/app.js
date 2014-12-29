@@ -5,7 +5,8 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
     // constants
     var INITIAL_OFFSET = [0, 5, -14],
         INITIAL_MOUSE  = { x: 1, y: 1 },
-        INITIAL_FRAME  = 0;
+        INITIAL_FRAME  = 0,
+        INITIAL_SPEED  = 1;
 
     // scope variables
     $scope.trackInfo        = JSON.parse($attrs.ngTrackinfo);
@@ -31,6 +32,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         fpsMeter,
         groundNormals = [],
         mouse = INITIAL_MOUSE,
+        speed = INITIAL_SPEED,
         windowWidth = $window.innerWidth,
         windowHeight = $window.innerHeight,
         frameCount = INITIAL_FRAME,
@@ -43,6 +45,10 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
             $scope.logText = message;
         });
     };
+
+    $scope.changeSpeed = function(event){
+        speed = Math.floor(event.target.value);
+    }
 
     $scope.setCameraOffset = function(){
         offset[0] = - car.position.x + camera.position.x;
@@ -84,6 +90,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         controls.addEventListener('change', $scope.setCameraOffset);
         document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
         window.addEventListener('resize', $scope.onWindowResize, false);
+        document.querySelector('#playspeedrange').addEventListener('input', $scope.changeSpeed);   
     };
 
     $scope.execOnLoaded = function(){
@@ -208,7 +215,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         camera.updateMatrixWorld(true);
         $scope.updateCamera(frameCount);
         if (key.isToggledOn("space")) {
-            $scope.changeFrame(1);
+            $scope.changeFrame(speed);
         }
         var img_disp = $scope.video.displayImage("projectionCanvas", frameCount);
         if (img_disp) {

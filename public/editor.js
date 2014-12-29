@@ -128,6 +128,9 @@ factory('editor', function(util, key, history, $http) {
                 if (!event.ctrlKey) break;
                 redo();
                 break;
+            case key.keyMap["0"]:
+                $scope.goToStartFrame();
+                break;
             default:
                 preventDefault = false;
         }

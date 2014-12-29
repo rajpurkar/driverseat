@@ -154,6 +154,10 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         }
     }
 
+    $scope.goToStartFrame = function(){
+        frameCount = 0;
+    }
+
     $scope.carForward = function(){
         var numForward = 3;
         $scope.changeFrame(numForward);    

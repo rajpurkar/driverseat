@@ -102,7 +102,7 @@ service('videoProjection', function(util) {
             }
 
             if (updateState) {
-                console.log("updating state");
+                //console.log("updating state");
                 var uuid = tracking_clouds[idx].geometry.uuid;
                 var attr = tracking_clouds[idx].geometry.attributes;
                 var positions = new Float32Array(attr.position.array);

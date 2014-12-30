@@ -22,13 +22,13 @@ html
 									li	Ctrl+mouse to look
 									li	Play/Pause with Spacebar
 									li	Move car with arrows
-					#options.tab(ng-show="editOptions")
-						h3 Click a point and then:
-						p 'f' to fork
-						p 'a' to append
-						p Esc to exit!
+					#videoPlayer
+						canvas#projectionCanvas
 				#left-bottom
 					#fps.tab
+				#center-top
+					#log.tab
+						p#logText {{logText}}
 				#center-bottom
 					#actions.tab
 						button#undo.actionBtn(type="button")
@@ -43,22 +43,19 @@ html
 						input#drrange(type="range", min="1", max="60", value="15", step="5")
 						h4 Play speed
 						input#playspeedrange(type="range", min="1", max="5", value="1", step="1")
-					#log.tab
-						p#logText {{logText}}
-
+					
+					#options.tab(ng-show="editOptions")
+						div.tab
+							div
+								button#fork.actionBtn(type="button")
+									|Fork
+							div
+								button#append.actionBtn(type="button")
+									|Append
+							div
+								button#done.actionBtn(type="button")
+									|Done
 				#videoPlayerWrap
-					#videoPlayer
-						canvas#projectionCanvas
-					nav.hidden
-						.text-center
-							ul.pagination#cameraOpts
-								li.active
-									a(href='#') 1
-								- for (var i = 2; i < numCameras+1; ++i) {
-									li
-										a(href='#')
-											= i
-								- }
 		script(src='/vendor/jquery.js')
 		script(src='/vendor/bootstrap.min.js')
 		script(src='/javascripts/angular.min.js')

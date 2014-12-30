@@ -41,9 +41,8 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
 
     $scope.log = function(message) {
         //TODO fix conflict with apply calls already in progress
-        $scope.$apply(function() {
-            $scope.logText = message;
-        });
+        $scope.logText = message;
+        $scope.$apply();
     };
 
     $scope.changeSpeed = function(event){

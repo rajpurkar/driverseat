@@ -10,53 +10,55 @@ html
 		div(ng-controller='AppCtrl', ng-trackinfo='#{JSON.stringify(trackInfo)}')
 			canvas#road
 				canvas
-			#overlay
-				#title.tab
-					h4 {{trackInfo.track}}
-				#instructions.tab
-					h3 Instructions
-					p Ctrl + Mouse to look around
-					p Space to Play/Pause
-					p Arrow Keys to move car
-				#tips.tab(ng-show="editOptions")
-					h3 Click a point and then:
-					p 'f' to fork
-					p 'a' to append
-					p Esc to exit!
-				#actions.tab
-					button#undo.actionBtn(type="button")
-						|Undo
-					button#redo.actionBtn(type="button")
-						|Redo
-				#doneDiv.tab
-					button#save.actionBtn(type="button")
-						|Save
-				#doneDiv.tab
-					a(href="/")
-						button#quit.actionBtn(type="button")
-							|Quit
-			#rightOverlay
-				#fps.tab
-				#slideDiv.tab
-					h3 Drag range
-					input#drrange(type="range", min="1", max="60", value="15", step="5")
-					h3 Play speed
-					input#playspeedrange(type="range", min="1", max="5", value="1", step="1")
-				#log.tab
-					p#logText {{logText}}
-			#videoPlayerWrap
-				#videoPlayer
-					canvas#projectionCanvas
-				nav.hidden
-					.text-center
-						ul.pagination#cameraOpts
-							li.active
-								a(href='#') 1
-							- for (var i = 2; i < numCameras+1; ++i) {
-								li
-									a(href='#')
-										= i
-							- }
+			#wrap
+				#left-top
+					#title.tab
+						h4 {{trackInfo.track}}
+					.tab
+						button.infoBtn(data-toggle='collapse', ng-model="collapsed", ng-click="collapsed=!collapsed")
+							| Learn shortcuts
+							div(ng-show='collapsed')
+								ul
+									li	Ctrl+mouse to look
+									li	Play/Pause with Spacebar
+									li	Move car with arrows
+					#options.tab(ng-show="editOptions")
+						h3 Click a point and then:
+						p 'f' to fork
+						p 'a' to append
+						p Esc to exit!
+				#left-bottom
+					#fps.tab
+				#center-bottom
+					#actions.tab
+						button#undo.actionBtn(type="button")
+							|Undo
+						button#redo.actionBtn(type="button")
+							|Redo
+						button#save.actionBtn(type="button")
+							|Save
+				#right-side
+					#slideDiv.tab
+						h4 Drag range
+						input#drrange(type="range", min="1", max="60", value="15", step="5")
+						h4 Play speed
+						input#playspeedrange(type="range", min="1", max="5", value="1", step="1")
+					#log.tab
+						p#logText {{logText}}
+
+				#videoPlayerWrap
+					#videoPlayer
+						canvas#projectionCanvas
+					nav.hidden
+						.text-center
+							ul.pagination#cameraOpts
+								li.active
+									a(href='#') 1
+								- for (var i = 2; i < numCameras+1; ++i) {
+									li
+										a(href='#')
+											= i
+								- }
 		script(src='/vendor/jquery.js')
 		script(src='/vendor/bootstrap.min.js')
 		script(src='/javascripts/angular.min.js')

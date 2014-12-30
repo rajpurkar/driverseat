@@ -18,13 +18,28 @@ factory('editor', function(util, key, history, $http) {
         dragRange = event.target.value;
     }
 
+    function setPointBoxVisibility(box1, box2){
+        if(box1 !== null){
+            selectedPointBox[0].visible = box1;
+        }
+        if(box2 !== null){
+            selectedPointBox[1].visible = box2;
+        }
+        
+        if(selectedPointBox[0].visible === true && selectedPointBox[1].visible === false){
+            $scope.editOptions = true;
+        }else{
+            $scope.editOptions = false;
+        }
+        $scope.$apply();
+    }
+
     function createSelectedPointBoxes() {
         var geometry = new THREE.SphereGeometry(0.2, 20, 20);
         var material = new THREE.MeshNormalMaterial()
         selectedPointBox[0] = new THREE.Mesh(geometry, material);
         selectedPointBox[1] = new THREE.Mesh(geometry, material);
-        selectedPointBox[0].visible = false;
-        selectedPointBox[1].visible = false;
+        setPointBoxVisibility(false, false);
         $scope.scene.add(selectedPointBox[0]);
         $scope.scene.add(selectedPointBox[1]);
     }
@@ -171,7 +186,7 @@ factory('editor', function(util, key, history, $http) {
         var positions = selectedPoint[0].object.geometry.attributes.position.array;
         var selectedPos = util.getPos(positions, selectedPoint[0].index);
         selectedPointBox[0].position.set(selectedPos[0], selectedPos[1], selectedPos[2]);
-        selectedPointBox[0].visible = true;
+        setPointBoxVisibility(true, null);
         util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, selectedPoint[0].index, 255, 255, 255);
         selectedPositions = {};
         selectedPositions[selectedPoint[0].index] = selectedPos;
@@ -224,7 +239,7 @@ factory('editor', function(util, key, history, $http) {
         var selectedPointRef = selectedPoint[0];
         deselectPoints(action.laneNum);
         selectedPoint[0] = selectedPointRef;
-        selectedPointBox[0].visible = true;
+        setPointBoxVisibility(true, null);
         selectedPoint[1] = intersectedPoint;
         var startPositions = selectedPoint[0].object.geometry.attributes.position.array,
             endPositions   = selectedPoint[1].object.geometry.attributes.position.array,
@@ -238,7 +253,7 @@ factory('editor', function(util, key, history, $http) {
             selectedPositions[action.laneNum2+"_"+selectedPoint[1].index] = endPos;
             util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, selectedPoint[1].index, 255, 255, 255);
             selectedPointBox[1].position.set(endPos[0], endPos[1], endPos[2]);
-            selectedPointBox[1].visible = true;
+            setPointBoxVisibility(null, true);
             return;
         }
         // select range
@@ -254,7 +269,7 @@ factory('editor', function(util, key, history, $http) {
             util.paintPoint($scope.geometries["lane"+laneNum].attributes.color, index, 255, 255, 255);
         }
         selectedPointBox[1].position.set(endPos[0], endPos[1], endPos[2]);
-        selectedPointBox[1].visible = true;
+        setPointBoxVisibility(null, true);
     }
 
     function dragPointInit() {
@@ -274,7 +289,7 @@ factory('editor', function(util, key, history, $http) {
     function dragPoint() {
         $scope.updateMouse();
         //TODO: move selectedPoint[0]Box with selectedPoint[0]
-        selectedPointBox[0].visible = false;
+        setPointBoxVisibility(false, null);
         var intersects = $scope.raycaster.intersectObject(selectedPlane.object);
         if (intersects.length > 0) {
             // var index = selectedPoint[0].index;
@@ -335,19 +350,18 @@ factory('editor', function(util, key, history, $http) {
 
         selectedPoint = [null, null];
         selectedPositions = {};
-        selectedPointBox[0].visible = false;
-        selectedPointBox[1].visible = false;
+        setPointBoxVisibility(false, false);
     }
 
-    function selectPoint(laneNum, index, selectedPointNum) {
+    function selectPoint(laneNum, index) {
         var positions = $scope.geometries["lane"+laneNum].attributes.position,
             colors = $scope.geometries["lane"+laneNum].attributes.color;
 
         util.paintPoint(colors, index, 255, 255, 255);
         var pos = util.getPos(positions.array, index);
-        selectedPointBox[selectedPointNum].position.set(pos[0], pos[1], pos[2]);
-        selectedPointBox[selectedPointNum].visible = true;
-        selectedPoint[selectedPointNum] = {
+        selectedPointBox[0].position.set(pos[0], pos[1], pos[2]);
+        setPointBoxVisibility(true, null);
+        selectedPoint[0] = {
             object: $scope.pointClouds.lanes[laneNum],
             index: index
         };
@@ -426,7 +440,7 @@ factory('editor', function(util, key, history, $http) {
         }
         var selectedPointRef = selectedPoint[0];
         deselectPoints(action.laneNum);
-        selectedPointBox[0].visible = true;
+        setPointBoxVisibility(true, null);
         selectedPoint[0] = selectedPointRef;
         var laneNum = newLaneNum();
         newLane(laneNum, newPositions);
@@ -447,7 +461,7 @@ factory('editor', function(util, key, history, $http) {
         history.push("new", positions.array, laneNum);
         selectedPoint = [null, null];
         selectedPositions = {};
-        selectedPointBox[0].visible = false;
+        setPointBoxVisibility(false, null);
     }
 
     function joinLanes() {
@@ -460,8 +474,7 @@ factory('editor', function(util, key, history, $http) {
             return;
         }
         action.type = "join";
-        selectedPointBox[0].visible = false;
-        selectedPointBox[1].visible = false;
+        setPointBoxVisibility(false, false);
         var positionArrs = [],
             lanes = [],
             endPositions = [];
@@ -505,8 +518,7 @@ factory('editor', function(util, key, history, $http) {
             return;
         }
         var positions = selectedPoint[0].object.geometry.attributes.position;
-        selectedPointBox[0].visible = false;
-        selectedPointBox[1].visible = false;
+        setPointBoxVisibility(false, false);
         if (selectedLane >= 0) {
             // delete entire lane
             history.push("delete", positions.array, selectedLane);
@@ -611,7 +623,7 @@ factory('editor', function(util, key, history, $http) {
             return;
         }
         deselectPoints(laneNum);
-        selectPoint(laneNum, startPoint, 0);
+        selectPoint(laneNum, startPoint);
     }
 
     function appendLane(endPos) {
@@ -631,7 +643,7 @@ factory('editor', function(util, key, history, $http) {
         // select last point for next append
         var nearestPoints = $scope.kdtrees["lane"+laneNum].nearest(endPos, 1, util.INTERPOLATE_STEP);
         if (nearestPoints.length === 0) return;
-        selectPoint(laneNum, nearestPoints[0][0].pos, 0);
+        selectPoint(laneNum, nearestPoints[0][0].pos);
     }
 
     function forkLane(endPos) {
@@ -648,7 +660,7 @@ factory('editor', function(util, key, history, $http) {
         deselectPoints(action.laneNum);
         var nearestPoints = $scope.kdtrees["lane"+laneNum].nearest(endPos, 1, util.INTERPOLATE_STEP);
         if (nearestPoints.length === 0) return;
-        selectPoint(laneNum, nearestPoints[0][0].pos, 0);
+        selectPoint(laneNum, nearestPoints[0][0].pos);
         action = {
             laneNum: laneNum,
             type: "append"

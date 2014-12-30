@@ -19,8 +19,8 @@ factory('editor', function(util, key, history, $http) {
     }
 
     function createSelectedPointBoxes() {
-        var geometry = new THREE.BoxGeometry(0.15, 0.15, 0.15);
-        var material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        var geometry = new THREE.SphereGeometry(0.2, 20, 20);
+        var material = new THREE.MeshNormalMaterial()
         selectedPointBox[0] = new THREE.Mesh(geometry, material);
         selectedPointBox[1] = new THREE.Mesh(geometry, material);
         selectedPointBox[0].visible = false;

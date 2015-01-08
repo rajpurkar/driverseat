@@ -47,12 +47,18 @@ factory('editor', function(util, key, history, $http) {
     function init(scope) {
         $scope = scope;
         //todo make these more angularish!
-        document.getElementById("undo").addEventListener("mousedown", undo, false);
-        document.getElementById("redo").addEventListener("mousedown", redo, false);
-        document.getElementById("save").addEventListener("mousedown", save, false);
+        var buttons = document.getElementsByClassName("actionBtn");
+        for(var i=0;i<buttons.length;i++){
+            buttons[i].addEventListener('mouseup', stopBubble, false);
+            buttons[i].addEventListener('mousedown', stopBubble, false);
+        }
+
+        document.getElementById("undo").addEventListener("click", undo, false);
+        document.getElementById("redo").addEventListener("click", redo, false);
+        document.getElementById("save").addEventListener("click", save, false);
         document.getElementById("fork").addEventListener("click", handleFork, false);
         document.getElementById("append").addEventListener("click", handleAppend, false);
-        document.getElementById("done").addEventListener("mousedown", handleDone, false);
+        document.getElementById("done").addEventListener("click", handleDone, false);
         document.addEventListener('mousedown', onDocumentMouseDown, false);
         document.addEventListener('mouseup', onDocumentMouseUp, false);
         document.addEventListener('keydown', onDocumentKeyDown, false);
@@ -70,19 +76,15 @@ factory('editor', function(util, key, history, $http) {
 
     function handleAppend(event){
         initAppendForkLane("append");
-        stopBubble(event);
-        
         return false;
     }
 
     function handleFork(event){
         initAppendForkLane("fork");
-        //stopBubble(event);
         return false;
     }
 
     function handleDone(event){
-        stopBubble(event);
         deselectPoints(action.laneNum);
         action = { laneNum: 0, type: "" };
         return false;

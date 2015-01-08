@@ -38,6 +38,12 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         frameCount = INITIAL_FRAME,
         offset = INITIAL_OFFSET,
         car;
+   
+    $scope.scrubFrameCount = function(event){
+        var percent = event.target.value;
+        var endViewThreshold = 5;
+        frameCount = Math.floor(percent*($scope.gps.length));
+    }
 
     $scope.log = function(message) {
         //TODO fix conflict with apply calls already in progress
@@ -90,6 +96,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
         window.addEventListener('resize', $scope.onWindowResize, false);
         document.querySelector('#playspeedrange').addEventListener('input', $scope.changeSpeed);   
+        document.querySelector('#scrubber').addEventListener('input', $scope.scrubFrameCount);   
     };
 
     $scope.execOnLoaded = function(){
@@ -156,10 +163,16 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         renderer.setSize(windowWidth, windowHeight);
     };
 
+    function updateScrubberValue(){
+        var framePercent = Math.round((frameCount*1.0/$scope.gps.length)*100)/100;
+        document.querySelector('#scrubber').value = framePercent;
+    }
+
     $scope.changeFrame = function(amt){
         var endViewThreshold = 5;
         if (frameCount + amt < $scope.gps.length - endViewThreshold && frameCount + amt >= 0){
             frameCount += amt;
+            updateScrubberValue();
         }
     }
 

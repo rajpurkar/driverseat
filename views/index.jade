@@ -22,6 +22,10 @@ html
 									li	Ctrl+mouse to look
 									li	Play/Pause with Spacebar
 									li	Move car with arrows
+									li  'f' to fork
+									li  'a' to append
+									li  'j' to join
+									li  'esc' to be done with fork/append
 					#videoPlayer
 						canvas#projectionCanvas
 				#left-bottom
@@ -37,6 +41,8 @@ html
 							|Redo
 						button#save.actionBtn(type="button")
 							|Save
+					#scrubberDiv.tab
+						input#scrubber(type="range", min="0", max="1", value="0", step="0.01")
 				#right-side
 					#slideDiv.tab
 						h4 Drag range

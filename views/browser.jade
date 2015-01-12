@@ -12,14 +12,21 @@ block content
 					h4 Choose the track you would like to label
 					.panel-group(role='tablist')
 						.panel.panel-default
-							- each vals, key in dir
-								a.collapsed(data-toggle='collapse', href='#' + key, aria-expanded='false', aria-controls=key)
-									.panel-heading(role='tab', id="heading" + key)
+							- each tracks, run in runs
+								a.collapsed(data-toggle='collapse', href='#' + run, aria-expanded='false', aria-controls=run)
+									.panel-heading(role='tab', id="heading" + run)
 										h4.panel-title.level1
-											= key
-								.panel-collapse.collapse(id=key, role='tabpanel', aria-labelledby="heading" + key, aria-expanded='false', style='height: 0px;')
+											= run
+								.panel-collapse.collapse(id=run, role='tabpanel', aria-labelledby="heading" + run, aria-expanded='false', style='height: 0px;')
 									ul.list-group
-										- each val in vals
-												a(href="/edit?route=" + key + "%2F" + val)
-													li.list-group-item.level2
-														=val
+										- each edits, track in tracks
+											a.collapsed(data-toggle='collapse', href='#' + track, aria-expanded='false', aria-controls=track)
+												.panel-heading(role='tab', id="subheading" + track)
+													h4.panel-title.level2
+														=track
+											.panel-collapse.collapse(id=track, role='tabpanel', aria-labelledby="subheading" + track, aria-expanded='false', style='height: 0px;')
+												ul.list-group
+													-each edit in edits
+														a(href="/edit?route=" + run + "%2F" + track + "&filename=" + filenames[edit])
+															li.list-group-item.level2
+																=edit

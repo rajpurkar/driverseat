@@ -22,12 +22,13 @@ module.exports = {
             console.log(err);
         }
     },
-    saveEdit: function(req, res, next) {
+    saveEdit: function(req, res) {
         var busboy = new Busboy({ headers: req.headers });
+        var path, username;
         busboy.on("file", function(fieldname, stream) {
-            var path = "./public/runs/" + fieldname + "/lanes/",
-                username = req.session.user.username,
-                filename = moment().unix() + "_" + username + ".json.zip";
+            path = "./public/runs/" + fieldname + "/lanes/";
+            username = req.session.user.username;
+            var filename = moment().unix() + "_" + username + ".json.zip";
             if (!fs.existsSync(path)) {
                 res.status(500).end();
                 stream.resume();
@@ -40,11 +41,35 @@ module.exports = {
         });
         busboy.on("finish", function() {
             res.status(200).end();
-            // next();
+            var autosaveFiles = fs.readdirSync(path).filter(function(file) {
+                var tokens = file.split("_");
+                return tokens.length > 2 && tokens[1] == username && tokens[2].match("autosave");
+            });
+            for (var i = 0; i < autosaveFiles.length; i++) {
+                fs.unlinkSync(path + autosaveFiles[i]);
+            }
         });
         req.pipe(busboy);
     },
-    getLatestEdit: function(route) {
+    autosaveEdit: function(req, res) {
+        var busboy = new Busboy({ headers: req.headers });
+        busboy.on("file", function(fieldname, stream) {
+            var path = "./public/runs/" + fieldname + "/lanes/",
+                username = req.session.user.username,
+                filename = moment().unix() + "_" + username + "_autosave.json.zip";
+            if (!fs.existsSync(path)) {
+                res.status(500).end();
+                stream.resume();
+                return;
+            }
+            stream.pipe(fs.createWriteStream(path + filename));
+        });
+        busboy.on("finish", function() {
+            res.status(200).end();
+        });
+        req.pipe(busboy);
+    },
+    getEdits: function(route) {
         var trackName = route,
             path = "./public/runs/" + trackName + "/lanes";
 
@@ -61,6 +86,40 @@ module.exports = {
                 return isNaN(ts1) ? 1 : -1; // invalid filenames get pushed to back
             return ts2 - ts1;
         });
-        return files[0];
+
+        return files;
+    },
+    prettyPrint: function(runs) {
+        filenames = {};
+        for (var run in runs) {
+            for (var track in runs[run]) {
+                var edits = runs[run][track];
+                edits.sort(function(f1, f2) {
+                    var ts1 = parseInt(f1.split("_")[0], 10),
+                        ts2 = parseInt(f2.split("_")[0], 10);
+                    if (isNaN(ts2-ts1))
+                        return isNaN(ts1) ? 1 : -1; // invalid filenames get pushed to back
+                    return ts2 - ts1;
+                });
+                for (var i = 0; i < edits.length; i++) {
+                    var oldname = edits[i];
+                    edits[i] = edits[i].replace(".json.zip", "");
+                    var tokens = edits[i].split("_");
+                    time = parseInt(tokens[0], 10);
+                    if (isNaN(time)) {
+                        filenames[edits[i]] = oldname;
+                        continue;
+                    }
+                    tokens[0] = moment.unix(time).format("MM/DD/YY h:mm:ss A");
+                    edits[i] = tokens.join("_");
+                    filenames[edits[i]] = oldname;
+                }
+                console.log(edits);
+            }
+        }
+        return {
+            runs: runs,
+            filenames: filenames
+        };
     }
 };

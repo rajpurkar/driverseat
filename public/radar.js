@@ -1,4 +1,4 @@
-myApp.
+ myApp.
 service('radar', function(util) {
 
     var boxes = [ ];
@@ -22,6 +22,7 @@ service('radar', function(util) {
         obj.position.x = x;
         obj.position.y = y;
         obj.position.z = z;
+        obj.lookAt($scope.getCarCurPosition());
         obj.updateMatrix();
     }
 
@@ -33,7 +34,7 @@ service('radar', function(util) {
 
             for (var idx = 0; idx < MAX_NUMBER_RADAR_OBJECTS; idx++) {
                 var geometry = new THREE.BoxGeometry(2,1,3);
-                var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+                var material = new THREE.MeshBasicMaterial( {color: 0xdddddd} );
                 var cube = new THREE.Mesh( geometry, material );
                 boxes.push(cube);
                 scene.add(cube);

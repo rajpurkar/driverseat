@@ -7,7 +7,8 @@ factory('editor', function(util, key, history, $http) {
         selectedPositionsDir = -1;
         selectedLane = -1,
         action = { laneNum: 0, type: "" },
-        dragRange = 15;
+        dragRange = 15,
+        autosaveInterval = 30000;
 
     function initLane(laneNum) {
         var positions = $scope.geometries["lane"+laneNum].attributes.position;
@@ -66,7 +67,7 @@ factory('editor', function(util, key, history, $http) {
         document.querySelector('#drrange').addEventListener('input', changeDragRange);
         createSelectedPointBoxes();
 
-        setInterval(function() { save(true); }, 10000);
+        setInterval(function() { save(true); }, autosaveInterval);
     }
 
     function stopBubble(event){

@@ -28,13 +28,14 @@ app.use(util.initializeLocals);
 db.initdb();
 
 app.get("/edit", auth.requiredAuthentication, function(req, res) {
-    var track = req.query.route;
+    var track = req.query.route,
+        lanesFile = req.query.filename;
     if (!track) res.redirect('/browse');
 
     var numCams = req.query.cameras;
     if (!numCams) numCams = 1;
 
-    var lanesFile = db.getLatestEdit(track);
+    // var lanesFile = db.getLatestEdit(track);
     var datafilesPath = "/runs/" + track + "/";
     res.render("index", {
         numCameras: numCams,
@@ -59,11 +60,16 @@ app.get("/", function(req, res){
 });
 
 app.get("/browse", auth.requiredAuthentication, function(req, res) {
-    var args = {dir: util.level2Search("./public/runs"), user: req.session.user.username};
+    var user = req.session.user.username,
+        runs = util.level3Search("./public/runs", user),
+        prettyPrint = db.prettyPrint(runs);
+    var args = { runs: prettyPrint.runs, filenames: prettyPrint.filenames, user: user };
     res.render("browser", args);
 });
 
 app.post("/save", auth.requiredAuthentication, db.saveEdit);
+
+app.post("/autosave", auth.requiredAuthentication, db.autosaveEdit);
 
 //Authentication routes
 

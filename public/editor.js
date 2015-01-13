@@ -7,7 +7,8 @@ factory('editor', function(util, key, history, $http) {
         selectedPositionsDir = -1;
         selectedLane = -1,
         action = { laneNum: 0, type: "" },
-        dragRange = 15;
+        dragRange = 15,
+        autosaveInterval = 30000;
 
     function initLane(laneNum) {
         var positions = $scope.geometries["lane"+laneNum].attributes.position;
@@ -76,6 +77,8 @@ factory('editor', function(util, key, history, $http) {
         document.addEventListener('dblclick', onDocumentDblClick, false);
         document.querySelector('#drrange').addEventListener('input', changeDragRange);
         createSelectedPointBoxes();
+
+        setInterval(function() { save(true); }, autosaveInterval);
     }
 
     function stopBubble(event){
@@ -112,9 +115,11 @@ factory('editor', function(util, key, history, $http) {
         return false;
     }
 
-    function save() {
+    var lastSave = "";
+    function save(autosave) {
         document.getElementById("save").removeEventListener("click", save);
-        $scope.log("Saving...");
+        autosave = typeof autosave === "boolean" ? autosave : false;
+        if (!autosave) $scope.log("Saving...");
 
         var trackName = $scope.trackInfo.track;
 
@@ -128,11 +133,21 @@ factory('editor', function(util, key, history, $http) {
             lanes[laneNum] = posVectors;
         }
         var data = {};
+        var serializedLanes = JSON.stringify(lanes);
+        if (autosave) {
+            if (serializedLanes == lastSave) {
+                document.getElementById("save").addEventListener("click", save, false);
+                return;
+            }
+            $scope.log("Autosaving...");
+        }
+        lastSave = serializedLanes;
         var zip = new JSZip();
-        zip.file("lanes.json", JSON.stringify(lanes));
+        zip.file("lanes.json", serializedLanes);
         data[trackName] = zip.generate({ compression: "DEFLATE", type: "blob" });
 
-        $http.post("/save", data, {
+        var postUrl = autosave ? "/autosave" : "/save";
+        $http.post(postUrl, data, {
             // browser turns undefined into "multipart/form-data" with correct boundary
             headers: { "Content-Type": undefined },
             // create FormData from the data object
@@ -144,7 +159,11 @@ factory('editor', function(util, key, history, $http) {
                 return fd;
             }
         }).success(function(data, status, headers, config) {
-            $scope.log("Saved!");
+            if (autosave) {
+                $scope.log("");
+            } else {
+                $scope.log("Saved!");
+            }
             document.getElementById("save").addEventListener("click", save, false);
         }).error(function(data, status, headers, config) {
             $scope.log("Unable to save file");

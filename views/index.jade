@@ -26,6 +26,7 @@ html
 									li  'a' to append
 									li  'j' to join
 									li  'esc' to be done with fork/append
+									li  Select point, then shift+click to select segment
 					#videoPlayer
 						canvas#projectionCanvas
 				#left-bottom
@@ -50,17 +51,19 @@ html
 						h4 Play speed
 						input#playspeedrange(type="range", min="1", max="5", value="1", step="1")
 					
-					#options.tab(ng-show="editOptions")
-						div.tab
-							div
-								button#fork.actionBtn(type="button")
-									|Fork
-							div
-								button#append.actionBtn(type="button")
-									|Append
-							div
-								button#done.actionBtn(type="button")
-									|Done
+					#options.tab
+						div
+							button#fork.actionBtn(type="button", ng-show="forkShow")
+								|Fork
+						div
+							button#append.actionBtn(type="button", ng-show="appendShow")
+								|Append
+						div
+							button#join.actionBtn(type="button", ng-show="joinShow")
+								|Join
+						div
+							button#delete.actionBtn(type="button", ng-show="deleteShow")
+								|Delete
 				#videoPlayerWrap
 		script(src='/vendor/jquery.js')
 		script(src='/vendor/bootstrap.min.js')

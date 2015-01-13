@@ -27,9 +27,19 @@ factory('editor', function(util, key, history, $http) {
         }
 
         if(selectedPointBox[0].visible === true && selectedPointBox[1].visible === false){
-            $scope.editOptions = true;
+            $scope.appendShow = true;
+            $scope.forkShow = true;
         }else{
-            $scope.editOptions = false;
+            $scope.appendShow = false;
+            $scope.forkShow = false;
+        }
+
+        if(selectedPointBox[0].visible === true && selectedPointBox[1].visible === true){
+            $scope.joinShow = true;
+            $scope.deleteShow = true;
+        }else{
+            $scope.joinShow = false;
+            $scope.deleteShow = false;
         }
         $scope.$apply();
     }
@@ -58,7 +68,8 @@ factory('editor', function(util, key, history, $http) {
         document.getElementById("save").addEventListener("click", save, false);
         document.getElementById("fork").addEventListener("click", handleFork, false);
         document.getElementById("append").addEventListener("click", handleAppend, false);
-        document.getElementById("done").addEventListener("click", handleDone, false);
+        document.getElementById("join").addEventListener("click", handleJoin, false);
+        document.getElementById("delete").addEventListener("click", handleDelete, false);
         document.addEventListener('mousedown', onDocumentMouseDown, false);
         document.addEventListener('mouseup', onDocumentMouseUp, false);
         document.addEventListener('keydown', onDocumentKeyDown, false);
@@ -74,12 +85,23 @@ factory('editor', function(util, key, history, $http) {
         }
     }
 
+    function handleDelete(event){
+        deleteSegment();
+    }
+
+    function handleJoin(event){
+        joinLanes();
+        return false;
+    }
+
     function handleAppend(event){
+        $scope.log("Press Esc to finish append");
         initAppendForkLane("append");
         return false;
     }
 
     function handleFork(event){
+        $scope.log("Press Esc to finish fork");
         initAppendForkLane("fork");
         return false;
     }
@@ -645,8 +667,6 @@ factory('editor', function(util, key, history, $http) {
 
         var laneNum = action.laneNum;
         var positions = selectedPoint[0].object.geometry.attributes.position;
-        var colors = selectedPoint[0].object.geometry.attributes.color;
-
         var selectedPos = util.getPos(positions.array, selectedPoint[0].index);
         var startPoint = findNearestEndpoint(laneNum, selectedPos, 5);
         if (startPoint < 0) {

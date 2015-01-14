@@ -14,6 +14,7 @@ module.exports = {
         return list;
     },
     level3Search: function(path, username) {
+        if (!fs.existsSync(path)) return {};
         var dirs = fs.readdirSync(path);
         var list = {};
         dirs.forEach(function(dir) {
@@ -24,6 +25,7 @@ module.exports = {
             subdirs.forEach(function(subdir) {
                 var subdirPath = dirPath+"/"+subdir;
                 if (!fs.statSync(subdirPath).isDirectory()) return;
+                if (!fs.existsSync(subdirPath+"/lanes")) return;
                 var files = fs.readdirSync(subdirPath+"/lanes").filter(function(file) {
                     if (fs.statSync(subdirPath+"/lanes/"+file).isDirectory()) return false;
                     var tokens = file.split("_");

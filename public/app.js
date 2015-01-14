@@ -51,9 +51,13 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         $scope.$apply();
     };
 
+    $scope.getCarCurPosition = function(){
+        return car.position;
+    };
+
     $scope.changeSpeed = function(event){
         speed = Math.floor(event.target.value);
-    }
+    };
 
     $scope.setCameraOffset = function(){
         offset[0] = - car.position.x + camera.position.x;
@@ -197,11 +201,10 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         var x = pos[1][3];
         var y = pos[2][3] - 1.1;
         var z = pos[0][3];
-        return {x: x, y:y, z:z};
+        return new THREE.Vector3(x, y, z);
     };
 
     $scope.updateCamera = function(frameCount) {
-        var lastCarPosition = new THREE.Vector3(0, 0, 0);
         var pos = $scope.getCarPosition(frameCount);
         angular.extend(car.position, pos);
         car.lookAt($scope.getCarPosition(frameCount + 1));

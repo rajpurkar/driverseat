@@ -1,0 +1,15 @@
+h1 Tags
+    - each category in categories
+        h2 Category: #{category.name}
+        h4 Description: #{category.description}
+        h4 Color: #{category.displayColor}
+        .panel-group(role='tablist')
+            .panel.panel-default
+                - each tag in category.tags
+                    .panel-heading(role='tab', id="heading")
+                        h4.panel-title.level1
+                            a(href="/edit?route=#{tag.run}%2F#{tag.track}&filename=#{tag.lanesFilename}&startFrame=#{tag.startFrame}&endFrame=#{tag.endFrame}") #{tag.run}/#{tag.track}
+                        ul.list-group
+                            div Start Frame: #{tag.startFrame}
+                            div End Frame: #{tag.endFrame}
+                            div Description: #{tag.description}

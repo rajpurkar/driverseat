@@ -64,6 +64,10 @@ factory('editor', function(util, key, history, $http) {
             buttons[i].addEventListener('mousedown', stopBubble, false);
         }
 
+        document.getElementById("categoryBtn").addEventListener("click", addCategoryShow, false);
+        document.getElementById("tagBtn").addEventListener("click", addTagShow, false);
+        document.getElementById("categoryForm").addEventListener("submit", categorySubmit, false);
+        document.getElementById("tagForm").addEventListener("submit", tagSubmit, false);
         document.getElementById("undo").addEventListener("click", undo, false);
         document.getElementById("redo").addEventListener("click", redo, false);
         document.getElementById("save").addEventListener("click", save, false);
@@ -73,12 +77,85 @@ factory('editor', function(util, key, history, $http) {
         document.getElementById("delete").addEventListener("click", handleDelete, false);
         document.addEventListener('mousedown', onDocumentMouseDown, false);
         document.addEventListener('mouseup', onDocumentMouseUp, false);
-        document.addEventListener('keydown', onDocumentKeyDown, false);
+        /* document.addEventListener('keydown', onDocumentKeyDown, false); */
         document.addEventListener('dblclick', onDocumentDblClick, false);
         document.querySelector('#drrange').addEventListener('input', changeDragRange);
         createSelectedPointBoxes();
 
-        setInterval(function() { save(true); }, autosaveInterval);
+        /* setInterval(function() { save(true); }, autosaveInterval); */
+    }
+
+    function categorySubmit(event) {
+        console.log("CATEGORY SUBMIT!");
+        $.ajax({
+            url: "/categories",
+            type: "POST",
+            data: $("#categoryForm").serialize(),
+            success: function(newCategory) {
+                // TOOD(rchengyue): Make AJAX request to server to update list of issues in issueSelector
+                alert("Saved issue!");
+                console.log("DATA: " + newCategory);
+                $(".category-input").val("");
+                $('#categorySelector').append($('<option/>', {
+                    value: newCategory._id,
+                    text : newCategory.name
+                }));
+            }
+        });
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+    }
+
+    function tagSubmit(event) {
+        console.log("TAG SUBMIT!");
+        $.ajax({
+            url: "/tags",
+            type: "POST",
+            data: $("#tagForm").serialize(),
+            success: function(data) {
+                alert("Saved tag!");
+                $(".tag-input").val("");
+            }
+        });
+        event.preventDefault();
+        return false;
+    }
+
+    function addCategoryShow(event){
+        var categoryContent = document.getElementById("categoryContent");
+        var tagContent = document.getElementById("tagContent");
+        var categoryButton = document.getElementById("categoryBtn");
+        var tagButton = document.getElementById("tagBtn");
+        if (categoryContent.classList.contains("hidden")) {
+            if (!tagContent.classList.contains("hidden")) {
+                tagContent.classList.add("hidden");
+                tagButton.classList.remove("greenBackground");
+            }
+            categoryContent.classList.remove("hidden");
+            categoryButton.classList.add("greenBackground");
+        } else {
+            categoryContent.classList.add("hidden");
+            categoryButton.classList.remove("greenBackground");
+        }
+    }
+
+    function addTagShow(event){
+        var categoryContent = document.getElementById("categoryContent");
+        var tagContent = document.getElementById("tagContent");
+        var categoryButton = document.getElementById("categoryBtn");
+        var tagButton = document.getElementById("tagBtn");
+        if (tagContent.classList.contains("hidden")) {
+            if (!categoryContent.classList.contains("hidden")) {
+                categoryContent.classList.add("hidden");
+                categoryButton.classList.remove("greenBackground");
+            }
+            tagContent.classList.remove("hidden");
+            tagButton.classList.add("greenBackground");
+        } else {
+            tagContent.classList.add("hidden");
+            tagButton.classList.remove("greenBackground");
+        }
     }
 
     function stopBubble(event){
@@ -171,6 +248,7 @@ factory('editor', function(util, key, history, $http) {
         });
     }
 
+    /*
     function onDocumentKeyDown(event) {
         var preventDefault = true;
         switch (event.keyCode) {
@@ -217,6 +295,7 @@ factory('editor', function(util, key, history, $http) {
             event.stopPropagation();
         }
     }
+    */
 
     function onDocumentMouseDown(event) {
         if (key.isDown("ctrl")) return;

@@ -2,11 +2,6 @@ var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 
 myApp.
 controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading, util, key, videoProjection, radar, boundingBoxes, cfpLoadingBar) {
-    // constants
-    var INITIAL_OFFSET = [0, 5, -14],
-        INITIAL_MOUSE  = { x: 1, y: 1 },
-        INITIAL_FRAME  = 0,
-        INITIAL_SPEED  = 1;
 
     // scope variables
     $scope.trackInfo        = JSON.parse($attrs.ngTrackinfo);
@@ -25,6 +20,16 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
     $scope.LIDAR_POINT_SIZE = 0.12;
     $scope.params           = null;
 
+    console.log("START FRAME: " + $scope.trackInfo.startFrame);
+
+    // constants
+    var INITIAL_OFFSET = [0, 5, -14],
+        INITIAL_MOUSE  = { x: 1, y: 1 },
+        INITIAL_FRAME  = (typeof $scope.trackInfo.startFrame === 'undefined') ? 0 : parseInt($scope.trackInfo.startFrame),
+        INITIAL_SPEED  = 1;
+
+    console.log("INITIAL FRAME: " + INITIAL_FRAME);
+
     // local variables
     var camera, renderer,
         projector,
@@ -38,11 +43,12 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         frameCount = INITIAL_FRAME,
         offset = INITIAL_OFFSET,
         car;
-   
+
     $scope.scrubFrameCount = function(event){
         var percent = event.target.value;
         var endViewThreshold = 5;
         frameCount = Math.floor(percent*($scope.gps.length));
+        console.log("FRAME COUNT: " + frameCount);
     }
 
     $scope.log = function(message) {
@@ -99,8 +105,8 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         controls.addEventListener('change', $scope.setCameraOffset);
         document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
         window.addEventListener('resize', $scope.onWindowResize, false);
-        document.querySelector('#playspeedrange').addEventListener('input', $scope.changeSpeed);   
-        document.querySelector('#scrubber').addEventListener('input', $scope.scrubFrameCount);   
+        document.querySelector('#playspeedrange').addEventListener('input', $scope.changeSpeed);
+        document.querySelector('#scrubber').addEventListener('input', $scope.scrubFrameCount);
     };
 
     $scope.execOnLoaded = function(){
@@ -145,9 +151,11 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
             case key.keyMap.up:
                 $scope.carForward();
                 break;
+            /*
             case key.keyMap["0"]:
                 $scope.goToStartFrame();
                 break;
+            */
             default:
                 preventDefault = false;
         }
@@ -186,7 +194,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
 
     $scope.carForward = function(){
         var numForward = 3;
-        $scope.changeFrame(numForward);    
+        $scope.changeFrame(numForward);
         $scope.updateCamera(frameCount);
     };
 
@@ -198,6 +206,8 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
 
     $scope.getCarPosition = function(frameCount){
         var pos = $scope.gps[frameCount];
+        console.log("FRAMEZ: " + frameCount);
+        console.log("FRAMEZ LEN: " + $scope.gps.length);
         var x = pos[1][3];
         var y = pos[2][3] - 1.1;
         var z = pos[0][3];
@@ -232,6 +242,8 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
     $scope.render = function() {
         camera.updateMatrixWorld(true);
         $scope.updateCamera(frameCount);
+        updateScrubberValue();
+        console.log("FRAME COUNTZ: "+ frameCount);
         if (key.isToggledOn("space")) {
             $scope.changeFrame(speed);
         }

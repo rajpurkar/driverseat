@@ -2,7 +2,7 @@ h1 Tags
     - each category in categories
         h2 Category: #{category.name}
         h4 Description: #{category.description}
-        h4 Color: #{category.displayColor}
+        div(style='color: #{category.displayColor}') Display Color
         .panel-group(role='tablist')
             .panel.panel-default
                 - each tag in category.tags

@@ -2,17 +2,20 @@ var mongoose = require('mongoose');
 var fs = require('fs');
 var moment = require('moment');
 var Busboy = require('busboy');
+var Category = require('./category');
+var Tag = require('./tag');
 
 module.exports = {
     initdb: function(){
         try {
-            var filename = "./credentials";
+            var filename = "./credentials1";
             if (fs.existsSync(filename)) {
                 var data     = fs.readFileSync(filename, 'utf-8'),
                     credList = data.replace(' ', '').trim().split(','),
                     user     = credList[0], pass = credList[1],
                     url      = 'mongodb://' + user + ':' + pass + '@ds053140.mongolab.com:53140/roadgldatabase';
                 console.log('Connected to Remote DB!');
+                console.log("URL: " + url);
                 mongoose.connect(process.env.MONGOHQ_URL || url);
             } else {
                 mongoose.connect(process.env.MONGOHQ_URL || 'mongodb://localhost/roadgl');
@@ -121,5 +124,59 @@ module.exports = {
             runs: runs,
             filenames: filenames
         };
-    }
+    },
+    saveCategory: function(req, res) {
+    	var name = req.body.name;
+    	var displayColor = req.body.displayColor;
+    	var description = req.body.description;
+
+	    var category = new Category({
+	        name: name,
+			displayColor: displayColor,
+			description: description,
+			tags: []
+	    }).save(function (err, newCategory) {
+	        if (err) throw err;
+	        res.send(200, newCategory);
+	    });
+	},
+    saveTag: function(req, res) {
+    	var startFrame = req.body.startFrame;
+    	var endFrame = req.body.endFrame;
+    	var runTrack = req.body.runTrack.split("/");
+    	var run = runTrack[0];
+    	var track = runTrack[1];
+    	var lanesFilename = req.body.lanesFilename;
+    	var description = req.body.description;
+    	var categoryId = req.body.categoryId;
+
+    	console.log("RUN TRACK: " + runTrack);
+    	console.log("RUN: " + run);
+    	console.log("TRACK: " + track);
+
+    	Category.findOne({
+    		_id: categoryId
+    	},
+    	function(err, category) {
+    		console.log("CATEGORY: " + JSON.stringify(category));
+    		var tag = new Tag({
+		        startFrame: startFrame,
+				endFrame: endFrame,
+				run: run,
+				track: track,
+				lanesFilename: lanesFilename,
+				description: description,
+				category: category
+		    }).save(function (err, newTag) {
+		        if (err) throw err;
+		        console.log("TAG: " + JSON.stringify(newTag));
+		        category.tags.push(newTag);
+		        category.save(function (err, updatedCategory) {
+		        	if (err) throw err;
+		        	console.log("UPDATED CATEGORY: " + JSON.stringify(updatedCategory));
+		        	res.send(200, newTag);
+		        });
+		    });
+    	})
+	}
 };

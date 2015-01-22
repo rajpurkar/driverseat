@@ -3,12 +3,10 @@ var hash = require('./hash').hash;
 
 function authenticate(name,pass,fn){
     if (!module.parent) console.log('authenticating %s:%s', name, pass);
-
     User.findOne({
         username: name
     },
     function (err, user) {
-        console.log("USER: " + user);
         if (user) {
             if (err) return fn(new Error('cannot find user'));
             hash(pass, user.salt, function (err, hash) {

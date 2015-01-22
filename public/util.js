@@ -105,7 +105,7 @@ service('util', function($http) {
                 }
             });
         },
-        loadDataFromZip: function(zip_data_buffer, fname_in_zip) 
+        loadDataFromZip: function(zip_data_buffer, fname_in_zip)
         {
             var loader = new JSZip(zip_data_buffer);
             return loader.file(fname_in_zip).asBinary();
@@ -230,7 +230,7 @@ factory('cache', function($q, $timeout) {
     }
 
     function remove(filename, callback) {
-        fsDefer.promise.then(function(fs) { 
+        fsDefer.promise.then(function(fs) {
             fs.root.getFile(filename, {create: false}, function(fileEntry) {
                 fileEntry.remove(function() {
                     if (callback) callback();
@@ -243,7 +243,7 @@ factory('cache', function($q, $timeout) {
         write: function(filename, data, callback) {
             //var error = new Error();
             //throw error.stack;
-            fsDefer.promise.then(function(fs) { 
+            fsDefer.promise.then(function(fs) {
                 fs.root.getFile(filename, {create: true}, function(fileEntry) {
                     fileEntry.createWriter(function(fileWriter) {
                         fileWriter.onwriteend = callback;
@@ -255,9 +255,9 @@ factory('cache', function($q, $timeout) {
                     });
                 });
             });
-        }, 
+        },
         read: function(filename, callback) {
-            fsDefer.promise.then(function(fs) { 
+            fsDefer.promise.then(function(fs) {
                 fs.root.getFile(filename, {create: false}, function(fileEntry) {
                     fileEntry.file(function(file) {
                         var reader = new FileReader();

@@ -8,7 +8,10 @@ factory('editor', function(util, key, history, $http) {
         selectedLane = -1,
         action = { laneNum: 0, type: "" },
         dragRange = 15,
-        autosaveInterval = 30000;
+        autosaveInterval = 30000,
+        typeAddBtnIdSuffix = "AddBtn",
+        typeContentIdSuffix = "Content"
+        isDisableKeyDown = false;
 
     function initLane(laneNum) {
         var positions = $scope.geometries["lane"+laneNum].attributes.position;
@@ -64,10 +67,19 @@ factory('editor', function(util, key, history, $http) {
             buttons[i].addEventListener('mousedown', stopBubble, false);
         }
 
-        document.getElementById("categoryBtn").addEventListener("click", addCategoryShow, false);
-        document.getElementById("tagBtn").addEventListener("click", addTagShow, false);
-        document.getElementById("categoryForm").addEventListener("submit", categorySubmit, false);
-        document.getElementById("tagForm").addEventListener("submit", tagSubmit, false);
+        var inputs = document.getElementsByTagName('input');
+        for (var i = 0; i < inputs.length; i++) {
+            var input = inputs[i];
+            if (input.type == 'text') {
+                input.addEventListener('focus', disableKeyDown, true);
+                input.addEventListener('blur', enableKeyDown, true);
+            }
+        }
+        document.getElementById("categoryAddBtn").addEventListener("click", handleCategoryAddBtnShow, false);
+        document.getElementById("categoryAddBtn").addEventListener("click", handleCategoryAddBtnShow, false);
+        document.getElementById("tagAddBtn").addEventListener("click", handleTagAddBtnShow, false);
+        document.getElementById("categoryForm").addEventListener("submit", handleCategorySubmit, false);
+        document.getElementById("tagForm").addEventListener("submit", handleTagSubmit, false);
         document.getElementById("undo").addEventListener("click", undo, false);
         document.getElementById("redo").addEventListener("click", redo, false);
         document.getElementById("save").addEventListener("click", save, false);
@@ -77,7 +89,7 @@ factory('editor', function(util, key, history, $http) {
         document.getElementById("delete").addEventListener("click", handleDelete, false);
         document.addEventListener('mousedown', onDocumentMouseDown, false);
         document.addEventListener('mouseup', onDocumentMouseUp, false);
-        /* document.addEventListener('keydown', onDocumentKeyDown, false); */
+        document.addEventListener('keydown', onDocumentKeyDown, false);
         document.addEventListener('dblclick', onDocumentDblClick, false);
         document.querySelector('#drrange').addEventListener('input', changeDragRange);
         createSelectedPointBoxes();
@@ -85,16 +97,51 @@ factory('editor', function(util, key, history, $http) {
         /* setInterval(function() { save(true); }, autosaveInterval); */
     }
 
-    function categorySubmit(event) {
-        console.log("CATEGORY SUBMIT!");
+    function disableKeyDown(event) {
+        console.log("BLAH DISABLE KEY DOWN!");
+        isDisableKeyDown = true;
+    }
+
+    function enableKeyDown(event) {
+        console.log("BLAH ENABLE KEY DOWN!");
+        isDisableKeyDown = false;
+    }
+
+    function isKeyDownDisabled() {
+        return isDisableKeyDown;
+    }
+
+    function handleAddBtnShow(event, typeToShow, typeToHide) {
+        var typeToShowContent = document.getElementById(typeToShow + typeContentIdSuffix);
+        var typeToShowBtn = document.getElementById(typeToShow + typeAddBtnIdSuffix);
+        var typeToHideContent = document.getElementById(typeToHide + typeContentIdSuffix);
+        var typeToHideBtn = document.getElementById(typeToHide + typeAddBtnIdSuffix);
+        if (typeToShowContent.classList.contains("hidden")) {
+            typeToHideContent.classList.add("hidden");
+            typeToHideBtn.classList.remove("greenBackground");
+            typeToShowContent.classList.remove("hidden");
+            typeToShowBtn.classList.add("greenBackground");
+        } else {
+            typeToShowContent.classList.add("hidden");
+            typeToShowBtn.classList.remove("greenBackground");
+        }
+    }
+
+    function handleCategoryAddBtnShow(event){
+        handleAddBtnShow(event, "category", "tag");
+    }
+
+    function handleTagAddBtnShow(event) {
+        handleAddBtnShow(event, "tag", "category");
+    }
+
+    function handleCategorySubmit(event) {
         $.ajax({
             url: "/categories",
             type: "POST",
             data: $("#categoryForm").serialize(),
             success: function(newCategory) {
-                // TOOD(rchengyue): Make AJAX request to server to update list of issues in issueSelector
-                alert("Saved issue!");
-                console.log("DATA: " + newCategory);
+                alert("Saved category!");
                 $(".category-input").val("");
                 $('#categorySelector').append($('<option/>', {
                     value: newCategory._id,
@@ -103,12 +150,10 @@ factory('editor', function(util, key, history, $http) {
             }
         });
         event.preventDefault();
-        event.stopPropagation();
         return false;
     }
 
-    function tagSubmit(event) {
-        console.log("TAG SUBMIT!");
+    function handleTagSubmit(event) {
         $.ajax({
             url: "/tags",
             type: "POST",
@@ -120,42 +165,6 @@ factory('editor', function(util, key, history, $http) {
         });
         event.preventDefault();
         return false;
-    }
-
-    function addCategoryShow(event){
-        var categoryContent = document.getElementById("categoryContent");
-        var tagContent = document.getElementById("tagContent");
-        var categoryButton = document.getElementById("categoryBtn");
-        var tagButton = document.getElementById("tagBtn");
-        if (categoryContent.classList.contains("hidden")) {
-            if (!tagContent.classList.contains("hidden")) {
-                tagContent.classList.add("hidden");
-                tagButton.classList.remove("greenBackground");
-            }
-            categoryContent.classList.remove("hidden");
-            categoryButton.classList.add("greenBackground");
-        } else {
-            categoryContent.classList.add("hidden");
-            categoryButton.classList.remove("greenBackground");
-        }
-    }
-
-    function addTagShow(event){
-        var categoryContent = document.getElementById("categoryContent");
-        var tagContent = document.getElementById("tagContent");
-        var categoryButton = document.getElementById("categoryBtn");
-        var tagButton = document.getElementById("tagBtn");
-        if (tagContent.classList.contains("hidden")) {
-            if (!categoryContent.classList.contains("hidden")) {
-                categoryContent.classList.add("hidden");
-                categoryButton.classList.remove("greenBackground");
-            }
-            tagContent.classList.remove("hidden");
-            tagButton.classList.add("greenBackground");
-        } else {
-            tagContent.classList.add("hidden");
-            tagButton.classList.remove("greenBackground");
-        }
     }
 
     function stopBubble(event){
@@ -248,8 +257,9 @@ factory('editor', function(util, key, history, $http) {
         });
     }
 
-    /*
     function onDocumentKeyDown(event) {
+        console.log("DISABLE KEY DOWN?: " + isDisableKeyDown);
+        if (isDisableKeyDown) return;
         var preventDefault = true;
         switch (event.keyCode) {
             case key.keyMap.esc:
@@ -295,7 +305,6 @@ factory('editor', function(util, key, history, $http) {
             event.stopPropagation();
         }
     }
-    */
 
     function onDocumentMouseDown(event) {
         if (key.isDown("ctrl")) return;
@@ -869,6 +878,7 @@ factory('editor', function(util, key, history, $http) {
         init: init,
         undo: undo,
         redo: redo,
-        save: save
+        save: save,
+        isKeyDownDisabled: isKeyDownDisabled
     };
 });

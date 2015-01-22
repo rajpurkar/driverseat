@@ -13,7 +13,6 @@ var Tag = require("./routes/tag");
 var util = require("./routes/util");
 var db = require("./routes/db");
 var app = express();
-var level3Search;
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -32,9 +31,6 @@ db.initdb();
 
 app.get("/edit", auth.requiredAuthentication, function(req, res) {
 	Category.find({}, function (err, categories) {
-		console.log("CATEGORIES!: " + categories);
-		console.log("CATEGORIES length: " + categories.length);
-		console.log("CATEGORIES 1!: " + categories[0]);
 		var startFrame = req.query.startFrame;
 		var endFrame = req.query.endFrame;
 		if (err) return console.error("Cannot fetch metadata categories for run page");
@@ -75,11 +71,9 @@ app.get("/", function(req, res){
 });
 
 app.get("/browse", auth.requiredAuthentication, function(req, res) {
-	if (!level3Search) {
-		level3Search = util.level3Search("./public/runs", user);
-	}
+	// TOOD(rchengyue): Cache level3Search and refresh periodically.
     var user = req.session.user.username,
-        runs = level3Search,
+        runs = util.level3Search("./public/runs", user),
         prettyPrint = db.prettyPrint(runs);
     var args = { runs: prettyPrint.runs, filenames: prettyPrint.filenames, user: user };
     res.render("browser", args);
@@ -93,7 +87,6 @@ app.post("/autosave", auth.requiredAuthentication, db.autosaveEdit);
 
 app.get("/tags", auth.requiredAuthentication, function(req, res) {
 	Category.find(function (err, categories) {
-		console.log("CATEGORIES: " + categories);
 		if (err) return console.error("Cannot fetch metadata tags for tags page");
 		res.render("tags", {
 			categories: categories

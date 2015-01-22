@@ -178,7 +178,7 @@ button:focus {
 	background: rgb(255,150, 50);
 }
 
-#save:hover,#categoryBtn:hover,#tagBtn:hover{
+#save:hover,#categoryAddBtn:hover,#tagAddBtn:hover{
 	background: rgb(50,150,50);
 }
 

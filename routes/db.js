@@ -8,14 +8,13 @@ var Tag = require('./tag');
 module.exports = {
     initdb: function(){
         try {
-            var filename = "./credentials1";
+            var filename = "./credentials";
             if (fs.existsSync(filename)) {
                 var data     = fs.readFileSync(filename, 'utf-8'),
                     credList = data.replace(' ', '').trim().split(','),
                     user     = credList[0], pass = credList[1],
                     url      = 'mongodb://' + user + ':' + pass + '@ds053140.mongolab.com:53140/roadgldatabase';
                 console.log('Connected to Remote DB!');
-                console.log("URL: " + url);
                 mongoose.connect(process.env.MONGOHQ_URL || url);
             } else {
                 mongoose.connect(process.env.MONGOHQ_URL || 'mongodb://localhost/roadgl');
@@ -150,15 +149,10 @@ module.exports = {
     	var description = req.body.description;
     	var categoryId = req.body.categoryId;
 
-    	console.log("RUN TRACK: " + runTrack);
-    	console.log("RUN: " + run);
-    	console.log("TRACK: " + track);
-
     	Category.findOne({
     		_id: categoryId
     	},
     	function(err, category) {
-    		console.log("CATEGORY: " + JSON.stringify(category));
     		var tag = new Tag({
 		        startFrame: startFrame,
 				endFrame: endFrame,
@@ -169,11 +163,9 @@ module.exports = {
 				category: category
 		    }).save(function (err, newTag) {
 		        if (err) throw err;
-		        console.log("TAG: " + JSON.stringify(newTag));
 		        category.tags.push(newTag);
 		        category.save(function (err, updatedCategory) {
 		        	if (err) throw err;
-		        	console.log("UPDATED CATEGORY: " + JSON.stringify(updatedCategory));
 		        	res.send(200, newTag);
 		        });
 		    });

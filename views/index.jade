@@ -65,12 +65,12 @@ html
 								|Delete
 					.tab
 						div
-							button#categoryBtn.actionBtn(type="button")
+							button#categoryAddBtn.actionBtn(type="button")
 								| Add Category
-							button#tagBtn.actionBtn(type="button")
+							button#tagAddBtn.actionBtn(type="button")
 								| Add Tag
 					#categoryContent.tab.hidden
-						form#categoryForm()
+						form#categoryForm
 							.form-group
 								label(for="name")
 									| Category Name
@@ -87,7 +87,7 @@ html
 								button#categorySubmit.btn.btn-default(type="submit")
 									| Submit
 					#tagContent.tab.hidden
-						form#tagForm()
+						form#tagForm
 							input(type="hidden", name="runTrack", value="#{trackInfo.track}")
 							input(type="hidden", name="lanesFilename", value="#{trackInfo.lanesFilename}")
 							.form-group
@@ -124,6 +124,7 @@ html
 		script(src='/javascripts/BinaryLoader.js')
 		script(src='/javascripts/async.js')
 		script(src='/javascripts/fpsmeter.js')
+		script(src='/javascripts/jscolor.js')
 		script(src='/javascripts/jszip.js')
 		script(src='/javascripts/jszip-utils.js')
 		script(src='/javascripts/numeric-1.2.6.js')
@@ -131,7 +132,6 @@ html
 		script(src='/javascripts/jsmpg.js')
 		script(src='/app.js')
 		script(src='/editor.js')
-		script(src='/jscolor.js')
 		script(src='/loading.js')
 		script(src='/util.js')
 		script(src='/video_nacl.js')

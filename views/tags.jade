@@ -3,13 +3,10 @@ h1 Tags
         h2 Category: #{category.name}
         h4 Description: #{category.description}
         div(style='color: #{category.displayColor}') Display Color
-        .panel-group(role='tablist')
-            .panel.panel-default
-                - each tag in category.tags
-                    .panel-heading(role='tab', id="heading")
-                        h4.panel-title.level1
-                            a(href="/edit?route=#{tag.run}%2F#{tag.track}&filename=#{tag.lanesFilename}&startFrame=#{tag.startFrame}&endFrame=#{tag.endFrame}") #{tag.run}/#{tag.track}
-                        ul.list-group
-                            div Start Frame: #{tag.startFrame}
-                            div End Frame: #{tag.endFrame}
-                            div Description: #{tag.description}
+        - each tag in category.tags
+            h4
+                a(href="/edit?route=#{tag.run}%2F#{tag.track}&filename=#{tag.lanesFilename}&startFrame=#{tag.startFrame}&endFrame=#{tag.endFrame}") #{tag.run}/#{tag.track}
+            ul.list-group
+                li.list-group-item Start Frame: #{tag.startFrame}
+                li.list-group-item End Frame: #{tag.endFrame}
+                li.list-group-item Description: #{tag.description}

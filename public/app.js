@@ -138,7 +138,6 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
 
     $scope.onDocumentKeyDown = function(event) {
         // TODO(rchengyue): Figure out a better way to determine whether or not to disable key down.
-        console.log("BLAH editor disable key down: " + editor.isKeyDownDisabled());
         if (editor.isKeyDownDisabled()) return;
         var preventDefault = true;
         switch (event.keyCode) {

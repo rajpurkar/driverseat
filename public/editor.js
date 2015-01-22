@@ -98,12 +98,10 @@ factory('editor', function(util, key, history, $http) {
     }
 
     function disableKeyDown(event) {
-        console.log("BLAH DISABLE KEY DOWN!");
         isDisableKeyDown = true;
     }
 
     function enableKeyDown(event) {
-        console.log("BLAH ENABLE KEY DOWN!");
         isDisableKeyDown = false;
     }
 
@@ -258,7 +256,6 @@ factory('editor', function(util, key, history, $http) {
     }
 
     function onDocumentKeyDown(event) {
-        console.log("DISABLE KEY DOWN?: " + isDisableKeyDown);
         if (isDisableKeyDown) return;
         var preventDefault = true;
         switch (event.keyCode) {

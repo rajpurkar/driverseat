@@ -116,18 +116,6 @@ button:focus {
 
 }
 
-.categoryBtn {
-    width: 100%;
-    border: none;
-    text-align:left;
-    text-decoration:none;
-    box-shadow: 0 0 3px gray;
-    font-size: 1.0em;
-    background: #000;
-    color: #fff;
-
-}
-
 #actions{
 }
 

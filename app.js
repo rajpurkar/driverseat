@@ -30,40 +30,40 @@ app.use(util.initializeLocals);
 db.initdb();
 
 app.get("/edit", auth.requiredAuthentication, function(req, res) {
-	Category.find({}, function (err, categories) {
-		var startFrame = req.query.startFrame;
-		var endFrame = req.query.endFrame;
-		if (err) return console.error("Cannot fetch metadata categories for run page");
-		var track = req.query.route,
-        lanesFile = req.query.filename;
-	    if (!track) res.redirect('/browse');
+    Category.find({}, function (err, categories) {
+        var startFrame = req.query.startFrame;
+        var endFrame = req.query.endFrame;
+        if (err) return console.error("Cannot fetch metadata categories for run page");
+        var track = req.query.route,
+            lanesFile = req.query.filename;
+        if (!track) res.redirect('/browse');
 
-	    var numCams = req.query.cameras;
-	    if (!numCams) numCams = 1;
+        var numCams = req.query.cameras;
+        if (!numCams) numCams = 1;
 
-	    // var lanesFile = db.getLatestEdit(track);
-	    var datafilesPath = "/runs/" + track + "/";
-	    res.render("index", {
-	        numCameras: numCams,
-	        categories: categories,
-	        trackInfo: {
-	            track: track,
-	            startFrame: startFrame,
-	            endFrame: endFrame,
-	            lanesFilename: lanesFile,
-	            files: {
-	                points:        datafilesPath + "map.json.zip",
-	                gps:           datafilesPath + "gps.json.zip",
-	                lanes:         datafilesPath + "lanes/" + lanesFile,
-	                planes:        datafilesPath + "planes.json.zip",
-	                video:         datafilesPath + "cam_2.mpg",
-	                radar:         datafilesPath + "radar.json.zip",
-	                boundingBoxes: datafilesPath + "bbs-cam2.json",
-	                params:        "/q50_4_3_14_params.json"
-	            }
-	        }
-	    });
-	});
+        // var lanesFile = db.getLatestEdit(track);
+        var datafilesPath = "/runs/" + track + "/";
+        res.render("index", {
+            numCameras: numCams,
+            categories: categories,
+            trackInfo: {
+                track: track,
+                startFrame: startFrame,
+                endFrame: endFrame,
+                lanesFilename: lanesFile,
+                files: {
+                    points:        datafilesPath + "map.json.zip",
+                    gps:           datafilesPath + "gps.json.zip",
+                    lanes:         datafilesPath + "lanes/" + lanesFile,
+                    planes:        datafilesPath + "planes.json.zip",
+                    video:         datafilesPath + "cam_2.mpg",
+                    radar:         datafilesPath + "radar.json.zip",
+                    boundingBoxes: datafilesPath + "bbs-cam2.json",
+                    params:        "/q50_4_3_14_params.json"
+                }
+            }
+        });
+    });
 });
 
 app.get("/", function(req, res){
@@ -71,7 +71,7 @@ app.get("/", function(req, res){
 });
 
 app.get("/browse", auth.requiredAuthentication, function(req, res) {
-	// TOOD(rchengyue): Cache level3Search and refresh periodically.
+    // TODO(rchengyue): Cache level3Search and refresh periodically.
     var user = req.session.user.username,
         runs = util.level3Search("./public/runs", user),
         prettyPrint = db.prettyPrint(runs);
@@ -86,12 +86,12 @@ app.post("/autosave", auth.requiredAuthentication, db.autosaveEdit);
 // Tag routes
 
 app.get("/tags", auth.requiredAuthentication, function(req, res) {
-	Category.find(function (err, categories) {
-		if (err) return console.error("Cannot fetch metadata tags for tags page");
-		res.render("tags", {
-			categories: categories
-		});
-	});
+    Category.find(function (err, categories) {
+        if (err) return console.error("Cannot fetch metadata tags for tags page");
+        res.render("tags", {
+            categories: categories
+        });
+    });
 });
 
 app.post("/categories", auth.requiredAuthentication, db.saveCategory);

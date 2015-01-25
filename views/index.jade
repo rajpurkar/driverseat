@@ -50,7 +50,6 @@ html
 						input#drrange(type="range", min="1", max="60", value="15", step="5")
 						h4 Play speed
 						input#playspeedrange(type="range", min="1", max="5", value="1", step="1")
-					
 					#options.tab
 						div
 							button#fork.actionBtn(type="button", ng-show="forkShow")
@@ -64,6 +63,55 @@ html
 						div
 							button#delete.actionBtn(type="button", ng-show="deleteShow")
 								|Delete
+					.tab
+						div
+							button#categoryAddBtn.actionBtn(type="button")
+								| Add Category
+							button#tagAddBtn.actionBtn(type="button")
+								| Add Tag
+					#categoryContent.tab.hidden
+						form#categoryForm
+							.form-group
+								label(for="name")
+									| Category Name
+								input.form-control.category-input(type="text", name="name", required)
+							.form-group
+								label(for="description")
+									| Description
+								input.form-control.category-input(type="text", name="description")
+							.form-group
+								label(for="diplayColor")
+									| Display Color
+								input.form-control.category-input.color(type="text", name="displayColor")
+							.form-group
+								button#categorySubmit.btn.btn-default(type="submit")
+									| Submit
+					#tagContent.tab.hidden
+						form#tagForm
+							input(type="hidden", name="runTrack", value="#{trackInfo.track}")
+							input(type="hidden", name="lanesFilename", value="#{trackInfo.lanesFilename}")
+							.form-group
+								label(for="categoryId")
+									| Category
+									select#categorySelector.form-control(name="categoryId")
+										-each category in categories
+											option(value="#{category._id}") #{category.name}
+							input#run(type="hidden", name="run", value="#{track}")
+							.form-group
+								label(for="startFrame")
+									| Start Frame
+								input.tag-input.form-control(type="text", name="startFrame")
+							.form-group
+								label(for="endFrame")
+									| End Frame
+								input.tag-input.form-control(type="text", name="endFrame")
+							.form-group
+								label(for="description")
+									| Description
+								input.tag-input.form-control(type="text", name="description")
+							.form-group
+								button#tagSubmit.btn.btn-default(type="submit")
+									| Submit
 				#videoPlayerWrap
 		script(src='/vendor/jquery.js')
 		script(src='/vendor/bootstrap.min.js')
@@ -76,6 +124,7 @@ html
 		script(src='/javascripts/BinaryLoader.js')
 		script(src='/javascripts/async.js')
 		script(src='/javascripts/fpsmeter.js')
+		script(src='/javascripts/jscolor.js')
 		script(src='/javascripts/jszip.js')
 		script(src='/javascripts/jszip-utils.js')
 		script(src='/javascripts/numeric-1.2.6.js')

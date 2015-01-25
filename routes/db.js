@@ -2,6 +2,8 @@ var mongoose = require('mongoose');
 var fs = require('fs');
 var moment = require('moment');
 var Busboy = require('busboy');
+var Category = require('./category');
+var Tag = require('./tag');
 
 module.exports = {
     initdb: function(){
@@ -121,5 +123,52 @@ module.exports = {
             runs: runs,
             filenames: filenames
         };
-    }
+    },
+    saveCategory: function(req, res) {
+    	var name = req.body.name;
+    	var displayColor = req.body.displayColor;
+    	var description = req.body.description;
+
+	    var category = new Category({
+	        name: name,
+			displayColor: displayColor,
+			description: description,
+			tags: []
+	    }).save(function (err, newCategory) {
+	        if (err) throw err;
+	        res.send(200, newCategory);
+	    });
+	},
+    saveTag: function(req, res) {
+    	var startFrame = req.body.startFrame;
+    	var endFrame = req.body.endFrame;
+    	var runTrack = req.body.runTrack.split("/");
+    	var run = runTrack[0];
+    	var track = runTrack[1];
+    	var lanesFilename = req.body.lanesFilename;
+    	var description = req.body.description;
+    	var categoryId = req.body.categoryId;
+
+    	Category.findOne({
+    		_id: categoryId
+    	},
+    	function(err, category) {
+    		var tag = new Tag({
+		        startFrame: startFrame,
+				endFrame: endFrame,
+				run: run,
+				track: track,
+				lanesFilename: lanesFilename,
+				description: description,
+				category: category
+		    }).save(function (err, newTag) {
+		        if (err) throw err;
+		        category.tags.push(newTag);
+		        category.save(function (err, updatedCategory) {
+		        	if (err) throw err;
+		        	res.send(200, newTag);
+		        });
+		    });
+    	})
+	}
 };

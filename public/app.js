@@ -2,11 +2,6 @@ var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 
 myApp.
 controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading, util, key, videoProjection, radar, boundingBoxes, cfpLoadingBar) {
-    // constants
-    var INITIAL_OFFSET = [0, 5, -14],
-        INITIAL_MOUSE  = { x: 1, y: 1 },
-        INITIAL_FRAME  = 0,
-        INITIAL_SPEED  = 1;
 
     // scope variables
     $scope.trackInfo        = JSON.parse($attrs.ngTrackinfo);
@@ -25,6 +20,12 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
     $scope.LIDAR_POINT_SIZE = 0.12;
     $scope.params           = null;
 
+    // constants
+    var INITIAL_OFFSET = [0, 5, -14],
+        INITIAL_MOUSE  = { x: 1, y: 1 },
+        INITIAL_FRAME  = typeof $scope.trackInfo.startFrame === 'undefined' ? 0 : parseInt($scope.trackInfo.startFrame),
+        INITIAL_SPEED  = 1;
+
     // local variables
     var camera, renderer,
         projector,
@@ -38,7 +39,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         frameCount = INITIAL_FRAME,
         offset = INITIAL_OFFSET,
         car;
-   
+
     $scope.scrubFrameCount = function(event){
         var percent = event.target.value;
         var endViewThreshold = 5;
@@ -99,8 +100,8 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         controls.addEventListener('change', $scope.setCameraOffset);
         document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
         window.addEventListener('resize', $scope.onWindowResize, false);
-        document.querySelector('#playspeedrange').addEventListener('input', $scope.changeSpeed);   
-        document.querySelector('#scrubber').addEventListener('input', $scope.scrubFrameCount);   
+        document.querySelector('#playspeedrange').addEventListener('input', $scope.changeSpeed);
+        document.querySelector('#scrubber').addEventListener('input', $scope.scrubFrameCount);
     };
 
     $scope.execOnLoaded = function(){
@@ -114,6 +115,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         }
         $scope.videoProjectionParams = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
 
+        // TODO(rchengyue): Find out how to only watch toggle for space if input text boxes are not in focus.
         key.watchToggle("space");
         $scope.addEventListeners();
         $scope.addLighting();
@@ -135,6 +137,8 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
     };
 
     $scope.onDocumentKeyDown = function(event) {
+        // TODO(rchengyue): Figure out a better way to determine whether or not to disable key down.
+        if (editor.isKeyDownDisabled()) return;
         var preventDefault = true;
         switch (event.keyCode) {
             case key.keyMap.space:
@@ -186,7 +190,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
 
     $scope.carForward = function(){
         var numForward = 3;
-        $scope.changeFrame(numForward);    
+        $scope.changeFrame(numForward);
         $scope.updateCamera(frameCount);
     };
 
@@ -232,7 +236,8 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
     $scope.render = function() {
         camera.updateMatrixWorld(true);
         $scope.updateCamera(frameCount);
-        if (key.isToggledOn("space")) {
+        updateScrubberValue();
+        if (key.isToggledOn("space") && !editor.isKeyDownDisabled()) {
             $scope.changeFrame(speed);
         }
         var img_disp = $scope.video.displayImage("projectionCanvas", frameCount);

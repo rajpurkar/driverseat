@@ -1,10 +1,11 @@
 var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 
 myApp.
-controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading, util, key, videoProjection, radar, boundingBoxes, cfpLoadingBar) {
+controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor, loading, util, key, videoProjection, radar, boundingBoxes, cfpLoadingBar, tags) {
 
     // scope variables
     $scope.trackInfo        = JSON.parse($attrs.ngTrackinfo);
+    // $scope.categories       = JSON.parse($attrs.ngCategories);
     $scope.scene            = null;
     $scope.raycaster        = null;
     $scope.geometries       = {};
@@ -25,6 +26,9 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         INITIAL_MOUSE  = { x: 1, y: 1 },
         INITIAL_FRAME  = typeof $scope.trackInfo.startFrame === 'undefined' ? 0 : parseInt($scope.trackInfo.startFrame),
         INITIAL_SPEED  = 1;
+        END_VIEW_THRESHOLD = 5;
+
+    $scope.frameCount       = INITIAL_FRAME;
 
     // local variables
     var camera, renderer,
@@ -36,20 +40,21 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         speed = INITIAL_SPEED,
         windowWidth = $window.innerWidth,
         windowHeight = $window.innerHeight,
-        frameCount = INITIAL_FRAME,
+        // frameCount = INITIAL_FRAME,
         offset = INITIAL_OFFSET,
         car;
 
     $scope.scrubFrameCount = function(event){
         var percent = event.target.value;
-        var endViewThreshold = 5;
-        frameCount = Math.floor(percent*($scope.gps.length));
+        $scope.frameCount = Math.floor(percent*($scope.gps.length));
     }
 
     $scope.log = function(message) {
         //TODO fix conflict with apply calls already in progress
         $scope.logText = message;
-        $scope.$apply();
+        $timeout(function() {
+            $scope.$apply();
+        }, 0, false);
     };
 
     $scope.getCarCurPosition = function(){
@@ -82,6 +87,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         cfpLoadingBar.start();
         loading.init($scope);
         loading.loaders($scope.execOnLoaded);
+        tags.load($scope);
     };
 
     $scope.addLighting = function(){
@@ -101,7 +107,6 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
         window.addEventListener('resize', $scope.onWindowResize, false);
         document.querySelector('#playspeedrange').addEventListener('input', $scope.changeSpeed);
-        document.querySelector('#scrubber').addEventListener('input', $scope.scrubFrameCount);
     };
 
     $scope.execOnLoaded = function(){
@@ -171,33 +176,29 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         renderer.setSize(windowWidth, windowHeight);
     };
 
-    function updateScrubberValue(){
-        var framePercent = Math.round((frameCount*1.0/$scope.gps.length)*100)/100;
-        document.querySelector('#scrubber').value = framePercent;
-    }
-
     $scope.changeFrame = function(amt){
-        var endViewThreshold = 5;
-        if (frameCount + amt < $scope.gps.length - endViewThreshold && frameCount + amt >= 0){
-            frameCount += amt;
-            updateScrubberValue();
+        if ($scope.frameCount + amt < $scope.gps.length - END_VIEW_THRESHOLD && $scope.frameCount + amt >= 0){
+            $scope.frameCount += amt;
+            $timeout(function() {
+                $scope.$apply();
+            }, 0, false);
         }
     }
 
     $scope.goToStartFrame = function(){
-        frameCount = 0;
+        $scope.frameCount = 0;
     }
 
     $scope.carForward = function(){
         var numForward = 3;
         $scope.changeFrame(numForward);
-        $scope.updateCamera(frameCount);
+        $scope.updateCamera();
     };
 
     $scope.carBack = function(){
         var numDecline = 3;
         $scope.changeFrame(-numDecline);
-        $scope.updateCamera(frameCount);
+        $scope.updateCamera();
     };
 
     $scope.getCarPosition = function(frameCount){
@@ -208,10 +209,12 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
         return new THREE.Vector3(x, y, z);
     };
 
-    $scope.updateCamera = function(frameCount) {
-        var pos = $scope.getCarPosition(frameCount);
+    $scope.updateCamera = function() {
+        $scope.frameCount = parseInt($scope.frameCount, 10);
+        $scope.frameCount = Math.min($scope.frameCount, $scope.gps.length - END_VIEW_THRESHOLD);
+        var pos = $scope.getCarPosition($scope.frameCount);
         angular.extend(car.position, pos);
-        car.lookAt($scope.getCarPosition(frameCount + 1));
+        car.lookAt($scope.getCarPosition($scope.frameCount + 1));
         camera.position.set(car.position.x + offset[0], car.position.y + offset[1], car.position.z + offset[2]);
         var target = car.position;
         camera.lookAt(target);
@@ -227,27 +230,24 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
     };
 
     $scope.animate = function(timestamp) {
-        // console.log(timestamp);
         requestAnimationFrame($scope.animate);
-        //setTimeout($scope.animate, 2);
         $scope.render();
     };
 
     $scope.render = function() {
         camera.updateMatrixWorld(true);
-        $scope.updateCamera(frameCount);
-        updateScrubberValue();
+        $scope.updateCamera();
         if (key.isToggledOn("space") && !editor.isKeyDownDisabled()) {
             $scope.changeFrame(speed);
         }
-        var img_disp = $scope.video.displayImage("projectionCanvas", frameCount);
+        var img_disp = $scope.video.displayImage("projectionCanvas", $scope.frameCount);
         if (img_disp) {
             /*
             for (var idx in $scope.pointClouds.lanes) {
                 videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount], $scope.videoProjectionParams);
             }
             */
-            videoProjection.projectScene("projectionCanvas", $scope.gps[frameCount], $scope.videoProjectionParams);
+            videoProjection.projectScene("projectionCanvas", $scope.gps[$scope.frameCount], $scope.videoProjectionParams);
         } else {
             var canv = document.getElementById("projectionCanvas");
             var ctx = canv.getContext("2d");
@@ -260,9 +260,9 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, editor, loading,
             ctx.fillText("Buffering", canv.width/2, canv.height/2);
         }
 
-        //videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.points, $scope.gps[frameCount], $scope.videoProjectionParams);
-        radar.displayReturns(frameCount, $scope.gps[frameCount]);
-        boundingBoxes.drawBoundingBoxes("projectionCanvas", frameCount);
+        //videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.points, $scope.gps[$scope.frameCount], $scope.videoProjectionParams);
+        radar.displayReturns($scope.frameCount, $scope.gps[$scope.frameCount]);
+        boundingBoxes.drawBoundingBoxes("projectionCanvas", $scope.frameCount);
         fpsMeter.tick();
 
         renderer.render($scope.scene, camera);

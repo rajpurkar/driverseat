@@ -86,12 +86,23 @@ app.post("/autosave", auth.requiredAuthentication, db.autosaveEdit);
 // Tag routes
 
 app.get("/tags", auth.requiredAuthentication, function(req, res) {
-    Category.find(function (err, categories) {
-        if (err) return console.error("Cannot fetch metadata tags for tags page");
-        res.render("tags", {
-            categories: categories
+    if (req.query.route) {
+        var route = req.query.route.split('/');
+        Tag.find({
+            run:   route[0],
+            track: route[1]
+        }).populate("category", "name displayColor description").exec(function(err, tags) {
+            if (err) return console.error("Cannot fetch metadata tags for tags page");
+            res.send(tags);
         });
-    });
+    } else {
+        Category.find(function (err, categories) {
+            if (err) return console.error("Cannot fetch metadata tags for tags page");
+            res.render("tags", {
+                categories: categories
+            });
+        });
+    }
 });
 
 app.post("/categories", auth.requiredAuthentication, db.saveCategory);

@@ -84,6 +84,29 @@ button:focus {
 	padding: 0px 30px;
 	margin-left: auto;
 	margin-right: auto;
+    position: relative;
+}
+
+.scrubberTag {
+    position: absolute;
+    z-index: 10;
+    height: 5px;
+    width: 1px;
+    top: -10px;
+    left: 0px;
+}
+
+.scrubberTagPopup {
+    width: 150px;
+    top: -140px;
+    padding: 10px 10px 1px 10px;
+    background-color: rgba(255,255,255,0.2);
+    position: relative;
+    display: none;
+}
+
+.scrubberTag:hover > .scrubberTagPopup {
+    display: block;
 }
 
 #title{

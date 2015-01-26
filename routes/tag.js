@@ -8,7 +8,7 @@ var TagSchema = new mongoose.Schema({
     track: { type: String, required: true },
     lanesFilename: { type: String, required: true },
     description: String,
-    category: { type: mongoose.Schema.ObjectId, ref: 'CategorySchema' }
+    category: { type: mongoose.Schema.ObjectId, ref: 'categories' }
 });
 
 module.exports = mongoose.model('tags', TagSchema);

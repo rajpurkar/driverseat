@@ -22,7 +22,6 @@ factory('tags', function($http) {
                 };
                 tag.popupStyle = {
                     left: -75 + width / 2 + "px",
-                    top: -140 - categories[tag.category.name]
                 };
             }
         });

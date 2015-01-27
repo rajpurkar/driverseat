@@ -6,7 +6,7 @@ body, html {
 	font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
 }
 
-body, h1, h2, h3, h4, li, a, button {
+body, h1, h2, h3, h4, li, a, button, label {
 	font-weight: 100;
 	color: #fff;
 	letter-spacing: 0.09em;
@@ -154,7 +154,7 @@ button:focus {
     text-decoration:none;
     box-shadow: 0 0 3px gray;
     margin: 10px 10px;
-    font-size: 1.2em;
+    font-size: 1.0em;
     background: none;
     color: #fff;
 }
@@ -187,12 +187,12 @@ button:focus {
 	background: rgb(255,150, 50);
 }
 
-#save:hover,#categoryAddBtn:hover,#tagAddBtn:hover{
+#save:hover{
 	background: rgb(50,150,50);
 }
 
-.greenBackground {
-    background: rgb(50,150,50);
+#categoryAddBtn:hover, #tagAddBtn:hover, .selected{
+	background: rgb(150,150,150);
 }
 
 #right-bottom {
@@ -203,4 +203,8 @@ button:focus {
 
 #videoPlayer{
 	width:100%;
+}
+
+input{
+	font-weight: 200 !important;
 }

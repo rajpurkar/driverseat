@@ -116,12 +116,12 @@ factory('editor', function(util, key, history, $http) {
         var typeToHideBtn = document.getElementById(typeToHide + typeAddBtnIdSuffix);
         if (typeToShowContent.classList.contains("hidden")) {
             typeToHideContent.classList.add("hidden");
-            typeToHideBtn.classList.remove("greenBackground");
+            typeToHideBtn.classList.remove("selected");
             typeToShowContent.classList.remove("hidden");
-            typeToShowBtn.classList.add("greenBackground");
+            typeToShowBtn.classList.add("selected");
         } else {
             typeToShowContent.classList.add("hidden");
-            typeToShowBtn.classList.remove("greenBackground");
+            typeToShowBtn.classList.remove("selected");
         }
     }
 
@@ -139,7 +139,7 @@ factory('editor', function(util, key, history, $http) {
             type: "POST",
             data: $("#categoryForm").serialize(),
             success: function(newCategory) {
-                alert("Saved category!");
+                $scope.log("Saved category!");
                 $(".category-input").val("");
                 $('#categorySelector').append($('<option/>', {
                     value: newCategory._id,
@@ -157,7 +157,7 @@ factory('editor', function(util, key, history, $http) {
             type: "POST",
             data: $("#tagForm").serialize(),
             success: function(data) {
-                alert("Saved tag!");
+                $scope.log("Saved tag!");
                 $(".tag-input").val("");
             }
         });

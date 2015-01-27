@@ -92,12 +92,12 @@ app.get("/tags", auth.requiredAuthentication, function(req, res) {
             run:   route[0],
             track: route[1]
         }).populate("category", "name displayColor description").exec(function(err, tags) {
-            if (err) return console.error("Cannot fetch metadata tags for tags page");
+            if (err) return res.status(500).send("Cannot fetch metadata tags for tags page");
             res.send(tags);
         });
     } else {
         Category.find(function (err, categories) {
-            if (err) return console.error("Cannot fetch metadata tags for tags page");
+            if (err) return res.status(500).send("Cannot fetch metadata tags for tags page");
             res.render("tags", {
                 categories: categories
             });

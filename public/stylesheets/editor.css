@@ -158,10 +158,6 @@ button:focus {
     color: #fff;
 }
 
-.tag-input{
-	background: none;
-}
-
 #fork{
 	background: black;
 }
@@ -190,12 +186,12 @@ button:focus {
 	background: rgb(255,150, 50);
 }
 
-#save:hover,#categoryAddBtn:hover,#tagAddBtn:hover{
+#save:hover{
 	background: rgb(50,150,50);
 }
 
-.greenBackground {
-    background: rgb(50,150,50);
+#categoryAddBtn:hover, #tagAddBtn:hover, .selected{
+	background: rgb(150,150,150);
 }
 
 #right-bottom {
@@ -206,4 +202,8 @@ button:focus {
 
 #videoPlayer{
 	width:100%;
+}
+
+input{
+	font-weight: 200 !important;
 }

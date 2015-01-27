@@ -279,6 +279,16 @@ factory('cache', function($q, $timeout) {
 
 myApp.
 factory('history', function(cache) {
+    function hash(str) {
+        var h = 0, i = 0, l = str.length;
+        if (l === 0) return h;
+        for (; i < l; i++) {
+            h = ((h << 5) - h) + str.charCodeAt(i);
+            h |= 0; // Convert to 32bit integer
+        }
+        return h;
+    }
+
     var undoHistory = [],
     redoHistory = [],
     maxHistorySize = 300;	//TODO max size should depend on available storage size
@@ -333,6 +343,9 @@ factory('history', function(cache) {
             cache.read(entry.filename, function(arrayBuffer) {
                 callback(entry.laneNum, entry.action, arrayBuffer);
             });
+        },
+        undoHistoryHash: function() {
+            return hash(JSON.stringify(undoHistory));
         }
     };
 });

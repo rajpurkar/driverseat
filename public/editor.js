@@ -199,11 +199,18 @@ factory('editor', function(util, key, history, $http) {
         return false;
     }
 
-    var lastSave = "";
+    var lastSave = history.undoHistoryHash();
     function save(autosave) {
         document.getElementById("save").removeEventListener("click", save);
         autosave = typeof autosave === "boolean" ? autosave : false;
-        if (!autosave) $scope.log("Saving...");
+        if (autosave) {
+            var currSave = history.undoHistoryHash();
+            if (currSave == lastSave) return;
+            lastSave = currSave;
+            $scope.log("Autosaving...");
+        } else {
+            $scope.log("Saving...");
+        }
 
         var trackName = $scope.trackInfo.track;
 
@@ -218,14 +225,6 @@ factory('editor', function(util, key, history, $http) {
         }
         var data = {};
         var serializedLanes = JSON.stringify(lanes);
-        if (autosave) {
-            if (serializedLanes == lastSave) {
-                document.getElementById("save").addEventListener("click", save, false);
-                return;
-            }
-            $scope.log("Autosaving...");
-        }
-        lastSave = serializedLanes;
         var zip = new JSZip();
         zip.file("lanes.json", serializedLanes);
         data[trackName] = zip.generate({ compression: "DEFLATE", type: "blob" });

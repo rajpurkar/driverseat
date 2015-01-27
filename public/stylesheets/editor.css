@@ -6,7 +6,7 @@ body, html {
 	font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
 }
 
-body, h1, h2, h3, h4, li, a, button {
+body, h1, h2, h3, h4, li, a, button, label {
 	font-weight: 100;
 	color: #fff;
 	letter-spacing: 0.09em;
@@ -153,9 +153,13 @@ button:focus {
     text-decoration:none;
     box-shadow: 0 0 3px gray;
     margin: 10px 10px;
-    font-size: 1.2em;
+    font-size: 1.0em;
     background: none;
     color: #fff;
+}
+
+.tag-input{
+	background: none;
 }
 
 #fork{

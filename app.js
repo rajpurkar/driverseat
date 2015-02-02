@@ -34,7 +34,8 @@ app.get("/edit", auth.requiredAuthentication, function(req, res) {
         var startFrame = req.query.startFrame;
         var endFrame = req.query.endFrame;
         if (err) return console.error("Cannot fetch metadata categories for run page");
-        var track = req.query.route,
+        var editor = req.query.editor,
+            track = req.query.route,
             lanesFile = req.query.filename;
         if (!track) res.redirect('/browse');
 
@@ -44,6 +45,7 @@ app.get("/edit", auth.requiredAuthentication, function(req, res) {
         // var lanesFile = db.getLatestEdit(track);
         var datafilesPath = "/runs/" + track + "/";
         res.render("index", {
+            editor: editor,
             numCameras: numCams,
             categories: categories,
             trackInfo: {

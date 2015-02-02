@@ -7,7 +7,7 @@ html
 		link(rel='stylesheet', href='/vendor/loading-bar.css')
 		title=title
 	body(ng-app='roadglApp')
-		div(ng-controller='AppCtrl', ng-trackinfo='#{JSON.stringify(trackInfo)}')
+		div(ng-controller='AppCtrl', ng-trackinfo='#{JSON.stringify(trackInfo)}', ng-editor=editor)
 			canvas#road
 				canvas
 			#wrap
@@ -30,8 +30,9 @@ html
 					#videoPlayer
 						canvas#projectionCanvas
 					#slideDiv.tab
-						h4 Drag range
-						input#drrange(type="range", min="1", max="60", value="15", step="5")
+						if editor == "lane"
+							h4 Drag range
+							input#drrange(type="range", min="1", max="60", value="15", step="5")
 						h4 Play speed
 						input#playspeedrange(type="range", min="1", max="5", value="1", step="1")
 				#left-bottom
@@ -40,22 +41,27 @@ html
 					#log.tab
 						p#logText {{logText}}
 				#center-bottom
-					#actions.tab
-						button#undo.actionBtn(type="button")
-							|Undo
-						button#redo.actionBtn(type="button")
-							|Redo
-						button#save.actionBtn(type="button")
-							|Save
+					if editor == "lane"
+						#actions.tab
+							button#undo.actionBtn(type="button")
+								|Undo
+							button#redo.actionBtn(type="button")
+								|Redo
+							button#save.actionBtn(type="button")
+								|Save
 					#scrubberDiv.tab
 						input#scrubber(type="range", min="0", max="{{gps.length}}", step="1", ng-model="frameCount")
-						div(ng-repeat="tag in tags")
-							.scrubberTag(ng-style="tag.style")
-								.scrubberTagPopup(ng-style="tag.popupStyle")
-									p Start Frame: {{tag.startFrame}}
-									p End Frame: {{tag.endFrame}}
-									p {{tag.category.name}}
-									p {{tag.category.description}}
+						if editor == "tag"
+							#tagScrubbers(style="display:none;")
+								input.scrubberMarker.scrubberLeft(type="range", min="0", max="{{gps.length}}", step="1", ng-model="tagLeftVal", ng-change="tagLeft()")
+								input.scrubberMarker.scrubberRight(type="range", min="0", max="{{gps.length}}", step="1", ng-model="tagRightVal", ng-change="tagRight()")
+							div(ng-repeat="tag in tags")
+								.scrubberTag(ng-style="tag.style")
+									.scrubberTagPopup(ng-style="tag.popupStyle")
+										p Start Frame: {{tag.startFrame}}
+										p End Frame: {{tag.endFrame}}
+										p {{tag.category.name}}
+										p {{tag.category.description}}
 				#right-side
 					#options.tab
 						div
@@ -72,11 +78,12 @@ html
 								|Delete
 					.tab
 						h4 Error Tracker
-						div
-							button#categoryAddBtn.actionBtn(type="button")
-								| Add Category
-							button#tagAddBtn.actionBtn(type="button")
-								| Add Tag
+						if editor == "tag"
+							div
+								button#categoryAddBtn.actionBtn(type="button", ng-click="categoryAddBtnShow()")
+									| Add Category
+								button#tagAddBtn.actionBtn(type="button", ng-click="tagAddBtnShow()")
+									| Add Tag
 					#categoryContent.tab.hidden
 						form#categoryForm
 							.form-group
@@ -108,11 +115,11 @@ html
 							.form-group
 								label(for="startFrame")
 									| Start Frame
-								input.tag-input.form-control(type="text", name="startFrame")
+								input#startFrameInput.tag-input.form-control(type="text", name="startFrame", required)
 							.form-group
 								label(for="endFrame")
 									| End Frame
-								input.tag-input.form-control(type="text", name="endFrame")
+								input#endFrameInput.tag-input.form-control(type="text", name="endFrame", required)
 							.form-group
 								label(for="description")
 									| Description
@@ -139,11 +146,11 @@ html
 		script(src='/javascripts/jpeg_encoder_basic.js')
 		script(src='/javascripts/jsmpg.js')
 		script(src='/app.js')
-		script(src='/editor.js')
+		script(src='/laneEditor.js')
+		script(src='/tagEditor.js')
 		script(src='/loading.js')
 		script(src='/util.js')
 		script(src='/video_nacl.js')
 		script(src='/videoProjection.js')
 		script(src='/radar.js')
 		script(src='/boundingBoxes.js')
-		script(src='/tags.js')

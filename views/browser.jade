@@ -27,6 +27,6 @@ block content
 											.panel-collapse.collapse(id=track, role='tabpanel', aria-labelledby="subheading" + track, aria-expanded='false', style='height: 0px;')
 												ul.list-group
 													-each edit in edits
-														a(href="/edit?route=" + run + "%2F" + track + "&filename=" + filenames[edit])
+														a(href="/edit?editor=lane&route=" + run + "%2F" + track + "&filename=" + filenames[edit])
 															li.list-group-item.level2
 																=edit

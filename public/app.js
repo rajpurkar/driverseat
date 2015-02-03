@@ -114,11 +114,11 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
         //video.init($scope.videoData);
         editor.init($scope);
         radar.init($scope.radarData, $scope.params, $scope.scene);
-        if($scope.boundingBoxData) boundingBoxes.init($scope.boundingBoxData, $scope.params, $scope.scene);
         for (var lane in $scope.pointClouds.lanes) {
             editor.initLane(lane);
         }
         $scope.videoProjectionParams = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
+        if ($scope.boundingBoxData) boundingBoxes.init($scope.boundingBoxData, $scope.videoProjectionParams, $scope.scene);
 
         // TODO(rchengyue): Find out how to only watch toggle for space if input text boxes are not in focus.
         key.watchToggle("space");
@@ -262,7 +262,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
 
         //videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.points, $scope.gps[$scope.frameCount], $scope.videoProjectionParams);
         radar.displayReturns($scope.frameCount, $scope.gps[$scope.frameCount]);
-        boundingBoxes.drawBoundingBoxes("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount], $scope.videoProjectionParams);
+        boundingBoxes.drawBoundingBoxes("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
         fpsMeter.tick();
 
         renderer.render($scope.scene, camera);

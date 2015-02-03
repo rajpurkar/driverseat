@@ -48,6 +48,7 @@ service('boundingBoxes', function(util) {
     }
 
     function drawCanvasBoundingBox(index, boundingBoxLocations) {
+        // TODO(rchengyue): Figure out why canvas bounding boxes are a little off.
         var canvasBox = canvasBoxes[index];
         canvasBox.position.x = boundingBoxLocations[3 * index];
         canvasBox.position.y = boundingBoxLocations[3 * index + 1];

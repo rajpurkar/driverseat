@@ -64,7 +64,7 @@ factory('loading', function($http, util) {
                 });
             },
             video: function(callback) {
-                var cb_fn = function() { 
+                var cb_fn = function() {
                     callback(null, "video_init");
                 };
                 $scope.video = new
@@ -82,16 +82,16 @@ factory('loading', function($http, util) {
                     callback(null, "radar_init");
                 });
             },
-            boundingBoxes: function(callback) {
+            carDetection: function(callback) {
                 util.loadJSON(
-                    $scope.trackInfo.files.boundingBoxes,
+                    $scope.trackInfo.files.carDetection,
                     function(data) {
-                        $scope.boundingBoxData = data;
-                        callback(null, "bounding_boxes_init");
+                        $scope.carDetectionData = data;
+                        callback(null, "car_detection_init");
                     },
                     function(data) {
-                        console.log("Cannot open bounding boxes file: " + $scope.trackInfo.files.boundingBoxes);
-                        callback(null, "bounding_boxes_init");
+                        console.log("Cannot open car detection file: " + $scope.trackInfo.files.carDetection);
+                        callback(null, "car_detection_init");
                     });
             },
             params: function(callback) {

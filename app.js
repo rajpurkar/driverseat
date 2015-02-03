@@ -58,7 +58,7 @@ app.get("/edit", auth.requiredAuthentication, function(req, res) {
                     planes:        datafilesPath + "planes.json.zip",
                     video:         datafilesPath + "cam_2.mpg",
                     radar:         datafilesPath + "radar.json.zip",
-                    boundingBoxes: datafilesPath + "bbs-cam2.json",
+                    carDetection:  datafilesPath + "bbs-cam2.json",
                     params:        "/q50_4_3_14_params.json"
                 }
             }

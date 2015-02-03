@@ -1,7 +1,7 @@
 var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 
 myApp.
-controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor, loading, util, key, videoProjection, radar, boundingBoxes, cfpLoadingBar, tags) {
+controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor, loading, util, key, videoProjection, radar, carDetection, cfpLoadingBar, tags) {
 
     // scope variables
     $scope.trackInfo        = JSON.parse($attrs.ngTrackinfo);
@@ -15,7 +15,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
     $scope.video            = null;
     //$scope.videoData        = null;
     $scope.radarData        = null;
-    $scope.boundingBoxData  = null;
+    $scope.carDetectionData = null;
     $scope.datafiles        = null;
     $scope.LANE_POINT_SIZE  = 0.08;
     $scope.LIDAR_POINT_SIZE = 0.12;
@@ -118,7 +118,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
             editor.initLane(lane);
         }
         $scope.videoProjectionParams = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
-        if ($scope.boundingBoxData) boundingBoxes.init($scope.boundingBoxData, $scope.videoProjectionParams, $scope.scene);
+        if ($scope.carDetectionData) carDetection.init($scope.carDetectionData, $scope.videoProjectionParams, $scope.scene);
 
         // TODO(rchengyue): Find out how to only watch toggle for space if input text boxes are not in focus.
         key.watchToggle("space");
@@ -262,7 +262,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
 
         //videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.points, $scope.gps[$scope.frameCount], $scope.videoProjectionParams);
         radar.displayReturns($scope.frameCount, $scope.gps[$scope.frameCount]);
-        boundingBoxes.drawBoundingBoxes("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
+        carDetection.drawCarDetectionBoxes("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
         fpsMeter.tick();
 
         renderer.render($scope.scene, camera);

@@ -1,12 +1,12 @@
 myApp.
-service('boundingBoxes', function(util) {
+service('carDetection', function(util) {
     var canvasBoxes = [];
     var MAX_NUM_CANVAS_BOXES = 64;
-    var boundingBoxesData;
+    var carDetectionData;
     var scene;
     var videoProjectionParams;
 
-    function initializeBoxes() {
+    function initializeCanvasBoxes() {
         for (var i = 0; i < MAX_NUM_CANVAS_BOXES; i++) {
             var geometry = new THREE.BoxGeometry(2, 1, 3);
             var material = new THREE.MeshBasicMaterial( {color: 0x0000ff} );
@@ -17,26 +17,28 @@ service('boundingBoxes', function(util) {
     }
 
     /**
-     * Compiles a vector of x, y, z coordinates of the bounding boxes in the canvas.
+     * Compiles a vector of x, y, z coordinates of the carDetection boxes in the canvas.
      */
-    function getBoundingBoxLocations(boundingBoxesFrameData, imuLocationT) {
-        var boundingBoxLocations = []
-        for (var i = 0; i < boundingBoxesFrameData.length; i++) {
-            var rect = boundingBoxesFrameData[i].rect;
-            var depth = boundingBoxesFrameData[i].depth;
+    function getCarDetectionBoxLocations(carDetectionFrameData, imuLocationT) {
+        var carDetectionBoxLocations = []
+        for (var i = 0; i < carDetectionFrameData.length; i++) {
+            var rect = carDetectionFrameData[i].rect;
+            var depth = carDetectionFrameData[i].depth;
             var u = rect[0];
             var v = rect[1];
-            boundingBoxLocations.push(depth * u);
-            boundingBoxLocations.push(depth * v);
-            boundingBoxLocations.push(depth);
+            var width = rect[2];
+            var height = rect[3];
+            carDetectionBoxLocations.push(depth * u);
+            carDetectionBoxLocations.push(depth * v);
+            carDetectionBoxLocations.push(depth);
         }
         var projectionMatrix = getProjectionMatrix(imuLocationT);
-        projectionMatrix.applyToVector3Array(boundingBoxLocations);
-        return boundingBoxLocations;
+        projectionMatrix.applyToVector3Array(carDetectionBoxLocations);
+        return carDetectionBoxLocations;
     }
 
-    function drawCameraBoundingBox(ctx, boundingBoxFrameData) {
-        var rect = boundingBoxFrameData.rect;
+    function drawCameraCarDetectionBox(ctx, carDetectionBoxFrameData) {
+        var rect = carDetectionBoxFrameData.rect;
         var x = rect[0];
         var y = rect[1];
         var width = rect[2];
@@ -47,12 +49,12 @@ service('boundingBoxes', function(util) {
         ctx.stroke();
     }
 
-    function drawCanvasBoundingBox(index, boundingBoxLocations) {
-        // TODO(rchengyue): Figure out why canvas bounding boxes are a little off.
+    function drawCanvasCarDetectionBox(index, carDetectionBoxLocations) {
+        // TODO(rchengyue): Figure out why canvas carDetection boxes are a little off.
         var canvasBox = canvasBoxes[index];
-        canvasBox.position.x = boundingBoxLocations[3 * index];
-        canvasBox.position.y = boundingBoxLocations[3 * index + 1];
-        canvasBox.position.z = boundingBoxLocations[3 * index + 2];
+        canvasBox.position.x = carDetectionBoxLocations[3 * index];
+        canvasBox.position.y = carDetectionBoxLocations[3 * index + 1];
+        canvasBox.position.z = carDetectionBoxLocations[3 * index + 2];
         canvasBox.lookAt($scope.getCarCurPosition());
         canvasBox.updateMatrix();
     }
@@ -97,22 +99,22 @@ service('boundingBoxes', function(util) {
 
     return {
         init: function(data, vpParams, scn) {
-            boundingBoxesData = data;
+            carDetectionData = data;
             videoProjectionParams = vpParams;
             scene = scn;
-            initializeBoxes();
+            initializeCanvasBoxes();
         },
-        drawBoundingBoxes: function(canvasId, frameNum, imuLocationT) {
-            if (boundingBoxesData && frameNum < boundingBoxesData.length) {
+        drawCarDetectionBoxes: function(canvasId, frameNum, imuLocationT) {
+            if (carDetectionData && frameNum < carDetectionData.length) {
                 var c = document.getElementById(canvasId);
                 var ctx = c.getContext("2d");
-                var boundingBoxesFrameData = boundingBoxesData[frameNum];
-                var boundingBoxLocations = getBoundingBoxLocations(boundingBoxesFrameData, imuLocationT);
+                var carDetectionFrameData = carDetectionData[frameNum];
+                var carDetectionBoxLocations = getCarDetectionBoxLocations(carDetectionFrameData, imuLocationT);
                 var index = 0;
 
-                for (; index < boundingBoxesFrameData.length; index++) {
-                    drawCameraBoundingBox(ctx, boundingBoxesFrameData[index]);
-                    drawCanvasBoundingBox(index, boundingBoxLocations);
+                for (; index < carDetectionFrameData.length; index++) {
+                    drawCameraCarDetectionBox(ctx, carDetectionFrameData[index]);
+                    drawCanvasCarDetectionBox(index, carDetectionBoxLocations);
                 }
 
                 resetCanvasBoxes(index);

@@ -114,7 +114,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
         //video.init($scope.videoData);
         editor.init($scope);
         radar.init($scope.radarData, $scope.params, $scope.scene);
-        if($scope.boundingBoxData) boundingBoxes.init($scope.boundingBoxData);
+        if($scope.boundingBoxData) boundingBoxes.init($scope.boundingBoxData, $scope.params, $scope.scene);
         for (var lane in $scope.pointClouds.lanes) {
             editor.initLane(lane);
         }
@@ -262,7 +262,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
 
         //videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.points, $scope.gps[$scope.frameCount], $scope.videoProjectionParams);
         radar.displayReturns($scope.frameCount, $scope.gps[$scope.frameCount]);
-        boundingBoxes.drawBoundingBoxes("projectionCanvas", $scope.frameCount);
+        boundingBoxes.drawBoundingBoxes("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount], $scope.videoProjectionParams);
         fpsMeter.tick();
 
         renderer.render($scope.scene, camera);

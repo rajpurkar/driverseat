@@ -2,20 +2,20 @@
 service('radar', function(util) {
 
     var boxes = [ ];
-    var scene;
+    var scene; 
     var lastFrameNum = -1;
     var MAX_NUMBER_RADAR_OBJECTS = 64;
-    var log;
+    var log; 
     var params;
     var T_from_r_to_l, T_from_l_to_i, T_imu_0_to_THREE;
 
     function create_T_from_r_to_l() {
         var R_from_r_to_l = util.Matrix4FromJSON3x3(params.radar.R_from_r_to_l);
-        var trans = params.radar.T_from_r_to_l;
-        var T = new THREE.Matrix4();
-        T.makeTranslation(trans[0], trans[1], trans[2]);
+        var trans = params.radar.T_from_r_to_l; 
+        var T = new THREE.Matrix4(); 
+        T.makeTranslation(trans[0], trans[1], trans[2]); 
         T.multiplyMatrices(R_from_r_to_l, T);
-        return T;
+        return T; 
     }
 
     function setRadarObjectPosition(obj, x, y, z) {
@@ -33,13 +33,13 @@ service('radar', function(util) {
             scene = scn;
 
             for (var idx = 0; idx < MAX_NUMBER_RADAR_OBJECTS; idx++) {
-                var geometry = new THREE.BoxGeometry(2,1,3); // width, height, depth; set x, y, z later
-                var material = new THREE.MeshBasicMaterial( {color: 0x00ff00 } );
+                var geometry = new THREE.BoxGeometry(2,1,3);
+                var material = new THREE.MeshBasicMaterial( {color: 0xdddddd} );
                 var cube = new THREE.Mesh( geometry, material );
                 boxes.push(cube);
                 scene.add(cube);
             }
-            T_from_r_to_l = create_T_from_r_to_l();
+            T_from_r_to_l = create_T_from_r_to_l(); 
             T_from_l_to_i = util.Matrix4FromJSON4x4(params.lidar.T_from_l_to_i);
             T_imu_0_to_THREE = new THREE.Matrix4(
                 0, 1, 0, 0,
@@ -49,9 +49,9 @@ service('radar', function(util) {
 	    },
         displayReturns: function(framenum, imu_loc_t) {
 
-            if (framenum == lastFrameNum) return;
+            if (framenum == lastFrameNum) return; 
 
-            var returns;
+            var returns; 
             for (var timestamp in log[framenum])
                 returns = log[framenum][timestamp];
             var locations = [];

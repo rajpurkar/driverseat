@@ -94,7 +94,7 @@ factory('editor', function(util, key, history, $http) {
         document.querySelector('#drrange').addEventListener('input', changeDragRange);
         createSelectedPointBoxes();
 
-        /* setInterval(function() { save(true); }, autosaveInterval); */
+        setInterval(function() { save(true); }, autosaveInterval);
     }
 
     function disableKeyDown(event) {

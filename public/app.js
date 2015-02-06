@@ -133,26 +133,18 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
         $scope.log("Rendering...");
         //video.init($scope.videoData);
         radar.init($scope.radarData, $scope.params, $scope.scene);
-<<<<<<< HEAD
-        for (var lane in $scope.pointClouds.lanes) {
-            editor.initLane(lane);
-=======
-        if($scope.boundingBoxData) boundingBoxes.init($scope.boundingBoxData);
         if ($scope.editor == "lane") {
             laneEditor.init($scope);
             for (var lane in $scope.pointClouds.lanes) {
                 laneEditor.initLane(lane);
             }
->>>>>>> bc2473720fcea34d21bef92eac5167ac537e1ef9
         }
         $scope.videoProjectionParams = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
-        if ($scope.carDetectionData) {
-            carDetection.init(
-                $scope.carDetectionData,
-                $scope.carDetectionVerifiedData,
-                $scope.videoProjectionParams,
-                $scope.scene);
-        }
+        carDetection.init(
+            $scope.carDetectionData,
+            $scope.carDetectionVerifiedData,
+            $scope.videoProjectionParams,
+            $scope.scene);
 
         // TODO(rchengyue): Find out how to only watch toggle for space if input text boxes are not in focus.
         key.watchToggle("space");

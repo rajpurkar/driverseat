@@ -1,9 +1,10 @@
 import argparse
 import fnmatch
+import json
 import numpy
 import os
 import pickle
-import json
+import traceback
 
 from sets import Set
 
@@ -55,15 +56,19 @@ class PklToJsonWriter():
                           " does not match specified filename: " + \
                           self.filename)
                 return
-
-        with open(pkl_filename, 'rb') as pkl_file:
-            print("Loading from Pickle file: " + pkl_filename)
-            pickle_obj = pickle.load(pkl_file)
-            with open(json_filename, 'wb') as json_file:
-                print("Writing to JSON file: " + json_filename)
-                json_file.write(
-                    json.dumps(pickle_obj, cls=NumpyAwareJSONEncoder))
-            self.visited_files.add(pkl_filename)
+        try:
+            with open(pkl_filename, 'rb') as pkl_file:
+                print("Loading from Pickle file: " + pkl_filename)
+                pickle_obj = pickle.load(pkl_file)
+                with open(json_filename, 'wb') as json_file:
+                    print("Writing to JSON file: " + json_filename)
+                    json_file.write(
+                        json.dumps(pickle_obj, cls=NumpyAwareJSONEncoder))
+                self.visited_files.add(pkl_filename)
+        except Exception as e:
+            print("ERROR while converting " + pkl_filename)
+            print(traceback.format_exc())
+            return
 
     def write_json_files(self):
         print("Start writing JSON files")

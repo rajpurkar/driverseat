@@ -1,5 +1,5 @@
 myApp.
-factory('editor', function(util, key, history, $http) {
+factory('laneEditor', function(util, key, history, $http) {
     var $scope,
         selectedPoint = [null, null],
         selectedPointBox = [null, null],
@@ -9,8 +9,6 @@ factory('editor', function(util, key, history, $http) {
         action = { laneNum: 0, type: "" },
         dragRange = 15,
         autosaveInterval = 30000,
-        typeAddBtnIdSuffix = "AddBtn",
-        typeContentIdSuffix = "Content"
         isDisableKeyDown = false;
 
     function initLane(laneNum) {
@@ -67,19 +65,6 @@ factory('editor', function(util, key, history, $http) {
             buttons[i].addEventListener('mousedown', stopBubble, false);
         }
 
-        var inputs = document.getElementsByTagName('input');
-        for (var i = 0; i < inputs.length; i++) {
-            var input = inputs[i];
-            if (input.type == 'text') {
-                input.addEventListener('focus', disableKeyDown, true);
-                input.addEventListener('blur', enableKeyDown, true);
-            }
-        }
-        document.getElementById("categoryAddBtn").addEventListener("click", handleCategoryAddBtnShow, false);
-        document.getElementById("categoryAddBtn").addEventListener("click", handleCategoryAddBtnShow, false);
-        document.getElementById("tagAddBtn").addEventListener("click", handleTagAddBtnShow, false);
-        document.getElementById("categoryForm").addEventListener("submit", handleCategorySubmit, false);
-        document.getElementById("tagForm").addEventListener("submit", handleTagSubmit, false);
         document.getElementById("undo").addEventListener("click", undo, false);
         document.getElementById("redo").addEventListener("click", redo, false);
         document.getElementById("save").addEventListener("click", save, false);
@@ -95,74 +80,6 @@ factory('editor', function(util, key, history, $http) {
         createSelectedPointBoxes();
 
         setInterval(function() { save(true); }, autosaveInterval);
-    }
-
-    function disableKeyDown(event) {
-        isDisableKeyDown = true;
-    }
-
-    function enableKeyDown(event) {
-        isDisableKeyDown = false;
-    }
-
-    function isKeyDownDisabled() {
-        return isDisableKeyDown;
-    }
-
-    function handleAddBtnShow(event, typeToShow, typeToHide) {
-        var typeToShowContent = document.getElementById(typeToShow + typeContentIdSuffix);
-        var typeToShowBtn = document.getElementById(typeToShow + typeAddBtnIdSuffix);
-        var typeToHideContent = document.getElementById(typeToHide + typeContentIdSuffix);
-        var typeToHideBtn = document.getElementById(typeToHide + typeAddBtnIdSuffix);
-        if (typeToShowContent.classList.contains("hidden")) {
-            typeToHideContent.classList.add("hidden");
-            typeToHideBtn.classList.remove("selected");
-            typeToShowContent.classList.remove("hidden");
-            typeToShowBtn.classList.add("selected");
-        } else {
-            typeToShowContent.classList.add("hidden");
-            typeToShowBtn.classList.remove("selected");
-        }
-    }
-
-    function handleCategoryAddBtnShow(event){
-        handleAddBtnShow(event, "category", "tag");
-    }
-
-    function handleTagAddBtnShow(event) {
-        handleAddBtnShow(event, "tag", "category");
-    }
-
-    function handleCategorySubmit(event) {
-        $.ajax({
-            url: "/categories",
-            type: "POST",
-            data: $("#categoryForm").serialize(),
-            success: function(newCategory) {
-                $scope.log("Saved category!");
-                $(".category-input").val("");
-                $('#categorySelector').append($('<option/>', {
-                    value: newCategory._id,
-                    text : newCategory.name
-                }));
-            }
-        });
-        event.preventDefault();
-        return false;
-    }
-
-    function handleTagSubmit(event) {
-        $.ajax({
-            url: "/tags",
-            type: "POST",
-            data: $("#tagForm").serialize(),
-            success: function(data) {
-                $scope.log("Saved tag!");
-                $(".tag-input").val("");
-            }
-        });
-        event.preventDefault();
-        return false;
     }
 
     function stopBubble(event){
@@ -199,11 +116,18 @@ factory('editor', function(util, key, history, $http) {
         return false;
     }
 
-    var lastSave = "";
+    var lastSave = history.undoHistoryHash();
     function save(autosave) {
         document.getElementById("save").removeEventListener("click", save);
         autosave = typeof autosave === "boolean" ? autosave : false;
-        if (!autosave) $scope.log("Saving...");
+        if (autosave) {
+            var currSave = history.undoHistoryHash();
+            if (currSave == lastSave) return;
+            lastSave = currSave;
+            $scope.log("Autosaving...");
+        } else {
+            $scope.log("Saving...");
+        }
 
         var trackName = $scope.trackInfo.track;
 
@@ -218,14 +142,6 @@ factory('editor', function(util, key, history, $http) {
         }
         var data = {};
         var serializedLanes = JSON.stringify(lanes);
-        if (autosave) {
-            if (serializedLanes == lastSave) {
-                document.getElementById("save").addEventListener("click", save, false);
-                return;
-            }
-            $scope.log("Autosaving...");
-        }
-        lastSave = serializedLanes;
         var zip = new JSZip();
         zip.file("lanes.json", serializedLanes);
         data[trackName] = zip.generate({ compression: "DEFLATE", type: "blob" });
@@ -256,7 +172,7 @@ factory('editor', function(util, key, history, $http) {
     }
 
     function onDocumentKeyDown(event) {
-        if (isDisableKeyDown) return;
+        if (!$scope.shortcutsEnabled) return;
         var preventDefault = true;
         switch (event.keyCode) {
             case key.keyMap.esc:
@@ -875,7 +791,6 @@ factory('editor', function(util, key, history, $http) {
         init: init,
         undo: undo,
         redo: redo,
-        save: save,
-        isKeyDownDisabled: isKeyDownDisabled
+        save: save
     };
 });

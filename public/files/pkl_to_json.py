@@ -24,9 +24,10 @@ class PklToJsonWriter():
     under the given base paths.
     """
 
-    def __init__(self, base_paths, is_overwrite):
+    def __init__(self, base_paths, is_overwrite, filename):
         self.base_paths = Set(base_paths)
         self.is_overwrite = is_overwrite
+        self.filename = filename
         self.visited_files = Set()
 
     def __get_json_filename__(self, pkl_filename):
@@ -47,6 +48,14 @@ class PklToJsonWriter():
             print("Already wrote JSON file: " + json_filename)
             return
 
+        if self.filename:
+            local_pkl_filename = pkl_filename.split("/")[-1]
+            if self.filename != local_pkl_filename:
+                print("Pkl filename " + pkl_filename + \
+                          " does not match specified filename: " + \
+                          self.filename)
+                return
+
         with open(pkl_filename, 'rb') as pkl_file:
             print("Loading from Pickle file: " + pkl_filename)
             pickle_obj = pickle.load(pkl_file)
@@ -59,6 +68,9 @@ class PklToJsonWriter():
     def write_json_files(self):
         print("Start writing JSON files")
         for base_path in self.base_paths:
+            if not os.path.exists(base_path):
+                print("Base path does not exist: " + base_path)
+                continue
             for root, dirnames, filenames in os.walk(base_path):
                 for filename in fnmatch.filter(filenames, '*.pkl'):
                     self.__write_json_file__(os.path.join(root, filename))
@@ -83,6 +95,13 @@ def get_args_parser():
         dest="overwrite",
         default=False,
         help="Whether or not to overwrite existing JSON files")
+    parser.add_argument(
+        '-f',
+        '--filename',
+        action="store",
+        dest="filename",
+        required=False,
+        help="Filenames within the base paths for which to convert to JSON")
     return parser
 
 def main():
@@ -97,7 +116,7 @@ def main():
     args = parser.parse_args()
     if args.base_paths:
         pkl_to_json_writer = \
-            PklToJsonWriter(args.base_paths, args.overwrite)
+            PklToJsonWriter(args.base_paths, args.overwrite, args.filename)
         pkl_to_json_writer.write_json_files()
     else:
         print("You must specify base paths")

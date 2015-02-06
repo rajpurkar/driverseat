@@ -94,6 +94,18 @@ factory('loading', function($http, util) {
                         callback(null, "car_detection_init");
                     });
             },
+            carDetectionVerified: function(callback) {
+                util.loadJSON(
+                    $scope.trackInfo.files.carDetectionVerified,
+                    function(data) {
+                        $scope.carDetectionVerifiedData = data;
+                        callback(null, "car_detection_verified_init");
+                    },
+                    function(data) {
+                        console.log("Cannot open car detection verified file: " + $scope.trackInfo.files.carDetectionVerified);
+                        callback(null, "car_detection_verified_init");
+                    });
+            },
             params: function(callback) {
                 util.loadJSON($scope.trackInfo.files.params, function(data) {
                     $scope.params = data;

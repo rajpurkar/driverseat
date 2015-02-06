@@ -3,6 +3,7 @@ service('carDetection', function(util) {
     var canvasBoxes = [];
     var MAX_NUM_CANVAS_BOXES = 64;
     var carDetectionData;
+    var carDetectionVerifiedData;
     var scene;
     var videoProjectionParams;
 
@@ -37,7 +38,7 @@ service('carDetection', function(util) {
         return carDetectionBoxLocations;
     }
 
-    function drawCameraCarDetectionBox(ctx, carDetectionBoxFrameData) {
+    function drawCameraCarDetectionBox(ctx, carDetectionBoxFrameData, color) {
         var rect = carDetectionBoxFrameData.rect;
         var x = rect[0];
         var y = rect[1];
@@ -45,8 +46,8 @@ service('carDetection', function(util) {
         var height = rect[3];
 
         // Camera view is 1/4 the size of the canvas view
-        ctx.rect(x / 4, y / 4, width / 4, height / 4);
-        ctx.stroke();
+        ctx.strokeStyle = color;
+        ctx.strokeRect(x / 4, y / 4, width / 4, height / 4);
     }
 
     function drawCanvasCarDetectionBox(index, carDetectionBoxLocations) {
@@ -98,10 +99,13 @@ service('carDetection', function(util) {
     }
 
     return {
-        init: function(data, vpParams, scn) {
+        init: function(data, verifiedData, vpParams, scn) {
             carDetectionData = data;
+            carDetectionVerifiedData = verifiedData;
             videoProjectionParams = vpParams;
             scene = scn;
+            // TODO(rchengyue): Make separate sets of canvas boxes for detected and verified
+            // if verified data has depth fields
             initializeCanvasBoxes();
         },
         drawCarDetectionBoxes: function(canvasId, frameNum, imuLocationT) {
@@ -113,11 +117,28 @@ service('carDetection', function(util) {
                 var index = 0;
 
                 for (; index < carDetectionFrameData.length; index++) {
-                    drawCameraCarDetectionBox(ctx, carDetectionFrameData[index]);
+                    drawCameraCarDetectionBox(ctx, carDetectionFrameData[index], "blue");
                     drawCanvasCarDetectionBox(index, carDetectionBoxLocations);
                 }
 
                 resetCanvasBoxes(index);
+                return true;
+            }
+        },
+        drawCarDetectionVerifiedBoxes: function(canvasId, frameNum, imuLocationT) {
+            // TODO(rchengyue): Consider making a helper method
+            // if verified data contains depth fields to draw canvas canvasBoxes
+            if (carDetectionData && frameNum < carDetectionVerifiedData.length) {
+                var c = document.getElementById(canvasId);
+                var ctx = c.getContext("2d");
+                // Multiple frame number by 4 since bbs-cam2-verified.json is about
+                // four times the length of bbs-cam2.json
+                var carDetectionVerifiedFrameData = carDetectionVerifiedData[frameNum * 4];
+
+                for (var index = 0; index < carDetectionVerifiedFrameData.length; index++) {
+                    drawCameraCarDetectionBox(ctx, carDetectionVerifiedFrameData[index], "green");
+                }
+
                 return true;
             }
         },

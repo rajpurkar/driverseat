@@ -1,7 +1,8 @@
 myApp.
 service('carDetection', function(util) {
-    var canvasBoxes = [];
     var MAX_NUM_CANVAS_BOXES = 64;
+    var CAR_DETECTION_VERIFIED_FRAME_MULTIPLIER = 4;
+    var canvasBoxes = [];
     var carDetectionData;
     var carDetectionVerifiedData;
     var scene;
@@ -133,7 +134,8 @@ service('carDetection', function(util) {
                 var ctx = c.getContext("2d");
                 // Multiple frame number by 4 since bbs-cam2-verified.json is about
                 // four times the length of bbs-cam2.json
-                var carDetectionVerifiedFrameData = carDetectionVerifiedData[frameNum * 4];
+                var carDetectionVerifiedFrameData =
+                    carDetectionVerifiedData[frameNum * CAR_DETECTION_VERIFIED_FRAME_MULTIPLIER];
 
                 for (var index = 0; index < carDetectionVerifiedFrameData.length; index++) {
                     drawCameraCarDetectionBox(ctx, carDetectionVerifiedFrameData[index], "green");

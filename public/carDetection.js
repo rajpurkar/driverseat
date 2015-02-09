@@ -26,12 +26,12 @@ service('carDetection', function(util) {
         for (var i = 0; i < carDetectionFrameData.length; i++) {
             var rect = carDetectionFrameData[i].rect;
             var depth = carDetectionFrameData[i].depth;
-            var u = rect[0];
-            var v = rect[1];
             var width = rect[2];
             var height = rect[3];
-            carDetectionBoxLocations.push(depth * u);
-            carDetectionBoxLocations.push(depth * v);
+            var u = rect[0];
+            var v = rect[1];
+            carDetectionBoxLocations.push(depth * (u + width / 2));
+            carDetectionBoxLocations.push(depth * (v + height / 2));
             carDetectionBoxLocations.push(depth);
         }
         var projectionMatrix = getProjectionMatrix(imuLocationT);

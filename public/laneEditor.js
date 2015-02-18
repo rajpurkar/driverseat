@@ -7,17 +7,20 @@ factory('laneEditor', function(util, key, history, $http) {
         selectedPositionsDir = -1;
         selectedLane = -1,
         action = { laneNum: 0, type: "" },
-        dragRange = 15,
         autosaveInterval = 30000,
-        isDisableKeyDown = false;
+        autosaveTimer = null,
+        isDisableKeyDown = false,
+        showButton = {
+            append: false,
+            fork: false,
+            copy: false,
+            delete: false,
+            join: false
+        };
 
     function initLane(laneNum) {
         var positions = $scope.geometries["lane"+laneNum].attributes.position;
         history.push("original", positions.array, laneNum);
-    }
-
-    function changeDragRange(event){
-        dragRange = event.target.value;
     }
 
     function setPointBoxVisibility(box1, box2){
@@ -28,27 +31,29 @@ factory('laneEditor', function(util, key, history, $http) {
             selectedPointBox[1].visible = box2;
         }
 
-        if(selectedPointBox[0].visible === true && selectedPointBox[1].visible === false){
-            $scope.appendShow = true;
-            $scope.forkShow = true;
-        }else{
-            $scope.appendShow = false;
-            $scope.forkShow = false;
+        if (selectedPointBox[0].visible === true) {
+            showButton.copy = showButton.delete = showButton.join = true;
+        } else {
+            showButton.copy = showButton.delete = showButton.join = false;
         }
 
-        if(selectedPointBox[0].visible === true && selectedPointBox[1].visible === true){
-            $scope.joinShow = true;
-            $scope.deleteShow = true;
-        }else{
-            $scope.joinShow = false;
-            $scope.deleteShow = false;
+        if (selectedPointBox[0].visible === true && selectedPointBox[1].visible === false) {
+            showButton.append = showButton.fork = true;
+        } else {
+            showButton.append = showButton.fork = false;
+        }
+
+        if (selectedPointBox[0].visible === true && selectedPointBox[1].visible === true) {
+            showButton.join = true;
+        } else {
+            showButton.join = false;
         }
         $scope.$apply();
     }
 
     function createSelectedPointBoxes() {
         var geometry = new THREE.SphereGeometry(0.2, 20, 20);
-        var material = new THREE.MeshNormalMaterial()
+        var material = new THREE.MeshNormalMaterial();
         selectedPointBox[0] = new THREE.Mesh(geometry, material);
         selectedPointBox[1] = new THREE.Mesh(geometry, material);
         setPointBoxVisibility(false, false);
@@ -56,64 +61,40 @@ factory('laneEditor', function(util, key, history, $http) {
         $scope.scene.add(selectedPointBox[1]);
     }
 
+    function deleteSelectedPointBoxes() {
+        $scope.scene.remove(selectedPointBox[0]);
+        $scope.scene.remove(selectedPointBox[1]);
+        delete selectedPointBox[0];
+        delete selectedPointBox[1];
+    }
+
     function init(scope) {
         $scope = scope;
-        //todo make these more angularish!
-        var buttons = document.getElementsByClassName("actionBtn");
-        for(var i=0;i<buttons.length;i++){
-            buttons[i].addEventListener('mouseup', stopBubble, false);
-            buttons[i].addEventListener('mousedown', stopBubble, false);
-        }
-
-        document.getElementById("undo").addEventListener("click", undo, false);
-        document.getElementById("redo").addEventListener("click", redo, false);
-        document.getElementById("save").addEventListener("click", save, false);
-        document.getElementById("fork").addEventListener("click", handleFork, false);
-        document.getElementById("append").addEventListener("click", handleAppend, false);
-        document.getElementById("join").addEventListener("click", handleJoin, false);
-        document.getElementById("delete").addEventListener("click", handleDelete, false);
         document.addEventListener('mousedown', onDocumentMouseDown, false);
         document.addEventListener('mouseup', onDocumentMouseUp, false);
         document.addEventListener('keydown', onDocumentKeyDown, false);
         document.addEventListener('dblclick', onDocumentDblClick, false);
-        document.querySelector('#drrange').addEventListener('input', changeDragRange);
         createSelectedPointBoxes();
+        autosaveTimer = setInterval(function() { save(true); }, autosaveInterval);
 
-        setInterval(function() { save(true); }, autosaveInterval);
-    }
-
-    function stopBubble(event){
-        if(event){
-            event.stopPropagation();
-            event.preventDefault();
+        for (var lane in $scope.pointClouds.lanes) {
+            initLane(lane);
         }
     }
 
-    function handleDelete(event){
-        deleteSegment();
+    function exit() {
+        document.removeEventListener('mousedown', onDocumentMouseDown, false);
+        document.removeEventListener('mouseup', onDocumentMouseUp, false);
+        document.removeEventListener('keydown', onDocumentKeyDown, false);
+        document.removeEventListener('dblclick', onDocumentDblClick, false);
+        deleteSelectedPointBoxes();
+        clearInterval(autosaveTimer);
     }
 
-    function handleJoin(event){
-        joinLanes();
-        return false;
-    }
 
-    function handleAppend(event){
-        $scope.log("Press Esc to finish append");
-        initAppendForkLane("append");
-        return false;
-    }
-
-    function handleFork(event){
-        $scope.log("Press Esc to finish fork");
-        initAppendForkLane("fork");
-        return false;
-    }
-
-    function handleDone(event){
+    function finishAction() {
         deselectPoints(action.laneNum);
         action = { laneNum: 0, type: "" };
-        return false;
     }
 
     var lastSave = history.undoHistoryHash();
@@ -176,7 +157,7 @@ factory('laneEditor', function(util, key, history, $http) {
         var preventDefault = true;
         switch (event.keyCode) {
             case key.keyMap.esc:
-                handleDone();
+                finishAction();
                 break;
             case key.keyMap.backspace:
             case key.keyMap.del:
@@ -194,11 +175,11 @@ factory('laneEditor', function(util, key, history, $http) {
                 break;
             case key.keyMap.A:
             case key.keyMap.a:
-                handleAppend();
+                append();
                 break;
             case key.keyMap.F:
             case key.keyMap.f:
-                handleFork();
+                fork();
                 break;
             case key.keyMap.Z:
             case key.keyMap.z:
@@ -348,7 +329,7 @@ factory('laneEditor', function(util, key, history, $http) {
 
     function dragPointInit() {
         var positions = selectedPoint[0].object.geometry.attributes.position.array;
-        var nearestPoints = $scope.kdtrees["lane"+action.laneNum].nearest(util.getPos(positions, selectedPoint[0].index), 300, dragRange);
+        var nearestPoints = $scope.kdtrees["lane"+action.laneNum].nearest(util.getPos(positions, selectedPoint[0].index), 300, $scope.dragRange);
         selectedPositions = {};
         for (var i = 0; i < nearestPoints.length; i++) {
             var index = nearestPoints[i][0].pos;
@@ -672,6 +653,14 @@ factory('laneEditor', function(util, key, history, $http) {
         return -1;
     }
 
+    function append() {
+        initAppendForkLane("append");
+    }
+
+    function fork() {
+        initAppendForkLane("fork");
+    }
+
     function initAppendForkLane(mode) {
         if (selectedPoint[0] === null) {
             $scope.log("Please select point first");
@@ -682,6 +671,7 @@ factory('laneEditor', function(util, key, history, $http) {
             return;
         }
         if (mode != "fork" && mode != "append") return;
+        $scope.log("Press Esc to finish " + mode);
         action.type = mode;
         if (mode == "fork") return;
 
@@ -789,8 +779,16 @@ factory('laneEditor', function(util, key, history, $http) {
     return {
         initLane: initLane,
         init: init,
+        exit: exit,
         undo: undo,
         redo: redo,
-        save: save
+        save: save,
+        append: append,
+        fork: fork,
+        join: joinLanes,
+        copy: copySegment,
+        delete: deleteSegment,
+        done: finishAction,
+        showButton: showButton
     };
 });

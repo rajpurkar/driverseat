@@ -3,6 +3,8 @@ var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 myApp.
 controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEditor, loading, util, key, videoProjection, radar, carDetection, cfpLoadingBar, tagEditor) {
 
+    $scope.laneEditor       = laneEditor;
+    $scope.tagEditor        = tagEditor;
     // scope variables
     $scope.trackInfo        = JSON.parse($attrs.ngTrackinfo);
     $scope.editor           = $attrs.ngEditor;
@@ -96,14 +98,17 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
         cfpLoadingBar.start();
         loading.init($scope);
         loading.loaders($scope.execOnLoaded);
-        if ($scope.editor == "tag") {
+        if ($scope.editor == "tag")
             tagEditor.init($scope);
-            tagEditor.load();
-        }
         $("input[type=text]").focus(function() {
             $scope.shortcutsEnabled = false;
         }).blur(function() {
             $scope.shortcutsEnabled = true;
+        });
+        $(".actionBtn").on("mouseup mousedown", function(event) {
+            if (!event) return;
+            event.stopPropagation();
+            event.preventDefault();
         });
     };
 
@@ -133,12 +138,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
         $scope.log("Rendering...");
         //video.init($scope.videoData);
         radar.init($scope.radarData, $scope.params, $scope.scene);
-        if ($scope.editor == "lane") {
-            laneEditor.init($scope);
-            for (var lane in $scope.pointClouds.lanes) {
-                laneEditor.initLane(lane);
-            }
-        }
+        if ($scope.editor == "lane") laneEditor.init($scope);
         $scope.videoProjectionParams = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
         carDetection.init(
             $scope.carDetectionData,
@@ -161,6 +161,17 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
         controls.onMouseDown(event);
     };
 
+    $scope.changeEditor = function() {
+        if ($scope.editor == "lane") {
+            $scope.editor = "tag";
+            laneEditor.exit();
+            tagEditor.init($scope);
+        } else if ($scope.editor == "tag") {
+            $scope.editor = "lane";
+            laneEditor.init($scope);
+        }
+
+    };
 
     $scope.onDocumentMouseMove = function(event) {
         mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;

@@ -1,10 +1,13 @@
 var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 
 myApp.
-controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor, loading, util, key, videoProjection, radar, boundingBoxes, cfpLoadingBar, tags) {
+controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEditor, loading, util, key, videoProjection, radar, boundingBoxes, cfpLoadingBar, tagEditor) {
 
+    $scope.laneEditor       = laneEditor;
+    $scope.tagEditor        = tagEditor;
     // scope variables
     $scope.trackInfo        = JSON.parse($attrs.ngTrackinfo);
+    $scope.editor           = $attrs.ngEditor;
     // $scope.categories       = JSON.parse($attrs.ngCategories);
     $scope.scene            = null;
     $scope.raycaster        = null;
@@ -20,15 +23,17 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
     $scope.LANE_POINT_SIZE  = 0.08;
     $scope.LIDAR_POINT_SIZE = 0.12;
     $scope.params           = null;
+    $scope.shortcutsEnabled = true;
 
     // constants
     var INITIAL_OFFSET = [0, 5, -14],
         INITIAL_MOUSE  = { x: 1, y: 1 },
         INITIAL_FRAME  = typeof $scope.trackInfo.startFrame === 'undefined' ? 0 : parseInt($scope.trackInfo.startFrame),
         INITIAL_SPEED  = 1;
-        END_VIEW_THRESHOLD = 5;
+        END_VIEW_THRESHOLD = 2;
 
     $scope.frameCount       = INITIAL_FRAME;
+    $scope.frameCountTemp   = -1;
 
     // local variables
     var camera, renderer,
@@ -49,12 +54,16 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
         $scope.frameCount = Math.floor(percent*($scope.gps.length));
     }
 
-    $scope.log = function(message) {
-        //TODO fix conflict with apply calls already in progress
-        $scope.logText = message;
+    $scope.flush = function() {
         $timeout(function() {
             $scope.$apply();
         }, 0, false);
+    }
+
+    $scope.log = function(message) {
+        //TODO fix conflict with apply calls already in progress
+        $scope.logText = message;
+        $scope.flush();
     };
 
     $scope.getCarCurPosition = function(){
@@ -72,6 +81,8 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
     };
 
     $scope.init = function() {
+        if ($scope.editor != "lane" && $scope.editor != "tag")
+            $scope.editor = "lane";
         fpsMeter = new FPSMeter(document.getElementById("fps"));
         $scope.scene = new THREE.Scene();
         //scene.fog = new THREE.Fog( 0xcce0ff, 500, 10000 );
@@ -87,7 +98,18 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
         cfpLoadingBar.start();
         loading.init($scope);
         loading.loaders($scope.execOnLoaded);
-        tags.load($scope);
+        if ($scope.editor == "tag")
+            tagEditor.init($scope);
+        $("input[type=text]").focus(function() {
+            $scope.shortcutsEnabled = false;
+        }).blur(function() {
+            $scope.shortcutsEnabled = true;
+        });
+        $(".actionBtn").on("mouseup mousedown", function(event) {
+            if (!event) return;
+            event.stopPropagation();
+            event.preventDefault();
+        });
     };
 
     $scope.addLighting = function(){
@@ -106,18 +128,19 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
         controls.addEventListener('change', $scope.setCameraOffset);
         document.addEventListener('keydown', $scope.onDocumentKeyDown, false);
         window.addEventListener('resize', $scope.onWindowResize, false);
+        document.querySelector('#scrubber').addEventListener('mousedown', function() {
+            $scope.frameCountTemp = -1;
+        });
         document.querySelector('#playspeedrange').addEventListener('input', $scope.changeSpeed);
     };
 
     $scope.execOnLoaded = function(){
         $scope.log("Rendering...");
         //video.init($scope.videoData);
-        editor.init($scope);
         radar.init($scope.radarData, $scope.params, $scope.scene);
         if($scope.boundingBoxData) boundingBoxes.init($scope.boundingBoxData);
-        for (var lane in $scope.pointClouds.lanes) {
-            editor.initLane(lane);
-        }
+        if ($scope.editor == "lane")
+            laneEditor.init($scope);
         $scope.videoProjectionParams = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
 
         // TODO(rchengyue): Find out how to only watch toggle for space if input text boxes are not in focus.
@@ -135,6 +158,17 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
         controls.onMouseDown(event);
     };
 
+    $scope.changeEditor = function() {
+        if ($scope.editor == "lane") {
+            $scope.editor = "tag";
+            laneEditor.exit();
+            tagEditor.init($scope);
+        } else if ($scope.editor == "tag") {
+            $scope.editor = "lane";
+            laneEditor.init($scope);
+        }
+
+    };
 
     $scope.onDocumentMouseMove = function(event) {
         mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
@@ -143,7 +177,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
 
     $scope.onDocumentKeyDown = function(event) {
         // TODO(rchengyue): Figure out a better way to determine whether or not to disable key down.
-        if (editor.isKeyDownDisabled()) return;
+        if (!$scope.shortcutsEnabled) return;
         var preventDefault = true;
         switch (event.keyCode) {
             case key.keyMap.space:
@@ -177,11 +211,10 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
     };
 
     $scope.changeFrame = function(amt){
+        $scope.frameCountTemp = -1;
         if ($scope.frameCount + amt < $scope.gps.length - END_VIEW_THRESHOLD && $scope.frameCount + amt >= 0){
             $scope.frameCount += amt;
-            $timeout(function() {
-                $scope.$apply();
-            }, 0, false);
+            $scope.flush();
         }
     }
 
@@ -210,11 +243,16 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
     };
 
     $scope.updateCamera = function() {
-        $scope.frameCount = parseInt($scope.frameCount, 10);
-        $scope.frameCount = Math.min($scope.frameCount, $scope.gps.length - END_VIEW_THRESHOLD);
-        var pos = $scope.getCarPosition($scope.frameCount);
+        var frameCount = $scope.frameCountTemp > -1 ? $scope.frameCountTemp : $scope.frameCount;
+        frameCount = parseInt(frameCount, 10);
+        frameCount = Math.min(frameCount, $scope.gps.length - END_VIEW_THRESHOLD);
+        if ($scope.frameCountTemp > -1)
+            $scope.frameCountTemp = frameCount;
+        else
+            $scope.frameCount = frameCount;
+        var pos = $scope.getCarPosition(frameCount);
         angular.extend(car.position, pos);
-        car.lookAt($scope.getCarPosition($scope.frameCount + 1));
+        car.lookAt($scope.getCarPosition(frameCount + 1));
         camera.position.set(car.position.x + offset[0], car.position.y + offset[1], car.position.z + offset[2]);
         var target = car.position;
         camera.lookAt(target);
@@ -237,7 +275,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, editor
     $scope.render = function() {
         camera.updateMatrixWorld(true);
         $scope.updateCamera();
-        if (key.isToggledOn("space") && !editor.isKeyDownDisabled()) {
+        if (key.isToggledOn("space") && $scope.shortcutsEnabled) {
             $scope.changeFrame(speed);
         }
         var img_disp = $scope.video.displayImage("projectionCanvas", $scope.frameCount);

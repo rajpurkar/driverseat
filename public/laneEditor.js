@@ -1,5 +1,5 @@
 myApp.
-factory('editor', function(util, key, history, $http) {
+factory('laneEditor', function(util, key, history, $http) {
     var $scope,
         selectedPoint = [null, null],
         selectedPointBox = [null, null],
@@ -7,19 +7,20 @@ factory('editor', function(util, key, history, $http) {
         selectedPositionsDir = -1;
         selectedLane = -1,
         action = { laneNum: 0, type: "" },
-        dragRange = 15,
         autosaveInterval = 30000,
-        typeAddBtnIdSuffix = "AddBtn",
-        typeContentIdSuffix = "Content"
-        isDisableKeyDown = false;
+        autosaveTimer = null,
+        isDisableKeyDown = false,
+        showButton = {
+            append: false,
+            fork: false,
+            copy: false,
+            delete: false,
+            join: false
+        };
 
     function initLane(laneNum) {
         var positions = $scope.geometries["lane"+laneNum].attributes.position;
         history.push("original", positions.array, laneNum);
-    }
-
-    function changeDragRange(event){
-        dragRange = event.target.value;
     }
 
     function setPointBoxVisibility(box1, box2){
@@ -30,27 +31,29 @@ factory('editor', function(util, key, history, $http) {
             selectedPointBox[1].visible = box2;
         }
 
-        if(selectedPointBox[0].visible === true && selectedPointBox[1].visible === false){
-            $scope.appendShow = true;
-            $scope.forkShow = true;
-        }else{
-            $scope.appendShow = false;
-            $scope.forkShow = false;
+        if (selectedPointBox[0].visible === true) {
+            showButton.copy = showButton.delete = showButton.join = true;
+        } else {
+            showButton.copy = showButton.delete = showButton.join = false;
         }
 
-        if(selectedPointBox[0].visible === true && selectedPointBox[1].visible === true){
-            $scope.joinShow = true;
-            $scope.deleteShow = true;
-        }else{
-            $scope.joinShow = false;
-            $scope.deleteShow = false;
+        if (selectedPointBox[0].visible === true && selectedPointBox[1].visible === false) {
+            showButton.append = showButton.fork = true;
+        } else {
+            showButton.append = showButton.fork = false;
+        }
+
+        if (selectedPointBox[0].visible === true && selectedPointBox[1].visible === true) {
+            showButton.join = true;
+        } else {
+            showButton.join = false;
         }
         $scope.$apply();
     }
 
     function createSelectedPointBoxes() {
         var geometry = new THREE.SphereGeometry(0.2, 20, 20);
-        var material = new THREE.MeshNormalMaterial()
+        var material = new THREE.MeshNormalMaterial();
         selectedPointBox[0] = new THREE.Mesh(geometry, material);
         selectedPointBox[1] = new THREE.Mesh(geometry, material);
         setPointBoxVisibility(false, false);
@@ -58,152 +61,54 @@ factory('editor', function(util, key, history, $http) {
         $scope.scene.add(selectedPointBox[1]);
     }
 
+    function deleteSelectedPointBoxes() {
+        $scope.scene.remove(selectedPointBox[0]);
+        $scope.scene.remove(selectedPointBox[1]);
+        delete selectedPointBox[0];
+        delete selectedPointBox[1];
+    }
+
     function init(scope) {
         $scope = scope;
-        //todo make these more angularish!
-        var buttons = document.getElementsByClassName("actionBtn");
-        for(var i=0;i<buttons.length;i++){
-            buttons[i].addEventListener('mouseup', stopBubble, false);
-            buttons[i].addEventListener('mousedown', stopBubble, false);
-        }
-
-        var inputs = document.getElementsByTagName('input');
-        for (var i = 0; i < inputs.length; i++) {
-            var input = inputs[i];
-            if (input.type == 'text') {
-                input.addEventListener('focus', disableKeyDown, true);
-                input.addEventListener('blur', enableKeyDown, true);
-            }
-        }
-        document.getElementById("categoryAddBtn").addEventListener("click", handleCategoryAddBtnShow, false);
-        document.getElementById("categoryAddBtn").addEventListener("click", handleCategoryAddBtnShow, false);
-        document.getElementById("tagAddBtn").addEventListener("click", handleTagAddBtnShow, false);
-        document.getElementById("categoryForm").addEventListener("submit", handleCategorySubmit, false);
-        document.getElementById("tagForm").addEventListener("submit", handleTagSubmit, false);
-        document.getElementById("undo").addEventListener("click", undo, false);
-        document.getElementById("redo").addEventListener("click", redo, false);
-        document.getElementById("save").addEventListener("click", save, false);
-        document.getElementById("fork").addEventListener("click", handleFork, false);
-        document.getElementById("append").addEventListener("click", handleAppend, false);
-        document.getElementById("join").addEventListener("click", handleJoin, false);
-        document.getElementById("delete").addEventListener("click", handleDelete, false);
         document.addEventListener('mousedown', onDocumentMouseDown, false);
         document.addEventListener('mouseup', onDocumentMouseUp, false);
         document.addEventListener('keydown', onDocumentKeyDown, false);
         document.addEventListener('dblclick', onDocumentDblClick, false);
-        document.querySelector('#drrange').addEventListener('input', changeDragRange);
         createSelectedPointBoxes();
+        autosaveTimer = setInterval(function() { save(true); }, autosaveInterval);
 
-        setInterval(function() { save(true); }, autosaveInterval);
-    }
-
-    function disableKeyDown(event) {
-        isDisableKeyDown = true;
-    }
-
-    function enableKeyDown(event) {
-        isDisableKeyDown = false;
-    }
-
-    function isKeyDownDisabled() {
-        return isDisableKeyDown;
-    }
-
-    function handleAddBtnShow(event, typeToShow, typeToHide) {
-        var typeToShowContent = document.getElementById(typeToShow + typeContentIdSuffix);
-        var typeToShowBtn = document.getElementById(typeToShow + typeAddBtnIdSuffix);
-        var typeToHideContent = document.getElementById(typeToHide + typeContentIdSuffix);
-        var typeToHideBtn = document.getElementById(typeToHide + typeAddBtnIdSuffix);
-        if (typeToShowContent.classList.contains("hidden")) {
-            typeToHideContent.classList.add("hidden");
-            typeToHideBtn.classList.remove("selected");
-            typeToShowContent.classList.remove("hidden");
-            typeToShowBtn.classList.add("selected");
-        } else {
-            typeToShowContent.classList.add("hidden");
-            typeToShowBtn.classList.remove("selected");
+        for (var lane in $scope.pointClouds.lanes) {
+            initLane(lane);
         }
     }
 
-    function handleCategoryAddBtnShow(event){
-        handleAddBtnShow(event, "category", "tag");
+    function exit() {
+        document.removeEventListener('mousedown', onDocumentMouseDown, false);
+        document.removeEventListener('mouseup', onDocumentMouseUp, false);
+        document.removeEventListener('keydown', onDocumentKeyDown, false);
+        document.removeEventListener('dblclick', onDocumentDblClick, false);
+        deleteSelectedPointBoxes();
+        clearInterval(autosaveTimer);
     }
 
-    function handleTagAddBtnShow(event) {
-        handleAddBtnShow(event, "tag", "category");
-    }
 
-    function handleCategorySubmit(event) {
-        $.ajax({
-            url: "/categories",
-            type: "POST",
-            data: $("#categoryForm").serialize(),
-            success: function(newCategory) {
-                $scope.log("Saved category!");
-                $(".category-input").val("");
-                $('#categorySelector').append($('<option/>', {
-                    value: newCategory._id,
-                    text : newCategory.name
-                }));
-            }
-        });
-        event.preventDefault();
-        return false;
-    }
-
-    function handleTagSubmit(event) {
-        $.ajax({
-            url: "/tags",
-            type: "POST",
-            data: $("#tagForm").serialize(),
-            success: function(data) {
-                $scope.log("Saved tag!");
-                $(".tag-input").val("");
-            }
-        });
-        event.preventDefault();
-        return false;
-    }
-
-    function stopBubble(event){
-        if(event){
-            event.stopPropagation();
-            event.preventDefault();
-        }
-    }
-
-    function handleDelete(event){
-        deleteSegment();
-    }
-
-    function handleJoin(event){
-        joinLanes();
-        return false;
-    }
-
-    function handleAppend(event){
-        $scope.log("Press Esc to finish append");
-        initAppendForkLane("append");
-        return false;
-    }
-
-    function handleFork(event){
-        $scope.log("Press Esc to finish fork");
-        initAppendForkLane("fork");
-        return false;
-    }
-
-    function handleDone(event){
+    function finishAction() {
         deselectPoints(action.laneNum);
         action = { laneNum: 0, type: "" };
-        return false;
     }
 
-    var lastSave = "";
+    var lastSave = history.undoHistoryHash();
     function save(autosave) {
         document.getElementById("save").removeEventListener("click", save);
         autosave = typeof autosave === "boolean" ? autosave : false;
-        if (!autosave) $scope.log("Saving...");
+        if (autosave) {
+            var currSave = history.undoHistoryHash();
+            if (currSave == lastSave) return;
+            lastSave = currSave;
+            $scope.log("Autosaving...");
+        } else {
+            $scope.log("Saving...");
+        }
 
         var trackName = $scope.trackInfo.track;
 
@@ -218,14 +123,6 @@ factory('editor', function(util, key, history, $http) {
         }
         var data = {};
         var serializedLanes = JSON.stringify(lanes);
-        if (autosave) {
-            if (serializedLanes == lastSave) {
-                document.getElementById("save").addEventListener("click", save, false);
-                return;
-            }
-            $scope.log("Autosaving...");
-        }
-        lastSave = serializedLanes;
         var zip = new JSZip();
         zip.file("lanes.json", serializedLanes);
         data[trackName] = zip.generate({ compression: "DEFLATE", type: "blob" });
@@ -256,11 +153,11 @@ factory('editor', function(util, key, history, $http) {
     }
 
     function onDocumentKeyDown(event) {
-        if (isDisableKeyDown) return;
+        if (!$scope.shortcutsEnabled) return;
         var preventDefault = true;
         switch (event.keyCode) {
             case key.keyMap.esc:
-                handleDone();
+                finishAction();
                 break;
             case key.keyMap.backspace:
             case key.keyMap.del:
@@ -278,11 +175,11 @@ factory('editor', function(util, key, history, $http) {
                 break;
             case key.keyMap.A:
             case key.keyMap.a:
-                handleAppend();
+                append();
                 break;
             case key.keyMap.F:
             case key.keyMap.f:
-                handleFork();
+                fork();
                 break;
             case key.keyMap.Z:
             case key.keyMap.z:
@@ -432,7 +329,7 @@ factory('editor', function(util, key, history, $http) {
 
     function dragPointInit() {
         var positions = selectedPoint[0].object.geometry.attributes.position.array;
-        var nearestPoints = $scope.kdtrees["lane"+action.laneNum].nearest(util.getPos(positions, selectedPoint[0].index), 300, dragRange);
+        var nearestPoints = $scope.kdtrees["lane"+action.laneNum].nearest(util.getPos(positions, selectedPoint[0].index), 300, $scope.dragRange);
         selectedPositions = {};
         for (var i = 0; i < nearestPoints.length; i++) {
             var index = nearestPoints[i][0].pos;
@@ -756,6 +653,14 @@ factory('editor', function(util, key, history, $http) {
         return -1;
     }
 
+    function append() {
+        initAppendForkLane("append");
+    }
+
+    function fork() {
+        initAppendForkLane("fork");
+    }
+
     function initAppendForkLane(mode) {
         if (selectedPoint[0] === null) {
             $scope.log("Please select point first");
@@ -766,6 +671,7 @@ factory('editor', function(util, key, history, $http) {
             return;
         }
         if (mode != "fork" && mode != "append") return;
+        $scope.log("Press Esc to finish " + mode);
         action.type = mode;
         if (mode == "fork") return;
 
@@ -873,9 +779,16 @@ factory('editor', function(util, key, history, $http) {
     return {
         initLane: initLane,
         init: init,
+        exit: exit,
         undo: undo,
         redo: redo,
         save: save,
-        isKeyDownDisabled: isKeyDownDisabled
+        append: append,
+        fork: fork,
+        join: joinLanes,
+        copy: copySegment,
+        delete: deleteSegment,
+        done: finishAction,
+        showButton: showButton
     };
 });

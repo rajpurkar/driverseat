@@ -116,7 +116,7 @@ module.exports = {
                     edits[i] = tokens.join("_");
                     filenames[edits[i]] = oldname;
                 }
-                console.log(edits);
+                //console.log(edits);
             }
         }
         return {

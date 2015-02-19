@@ -129,7 +129,7 @@ service('carDetection', function(util) {
         drawCarDetectionVerifiedBoxes: function(canvasId, frameNum, imuLocationT) {
             // TODO(rchengyue): Consider making a helper method
             // if verified data contains depth fields to draw canvas canvasBoxes
-            if (carDetectionData && frameNum < carDetectionVerifiedData.length) {
+            if (carDetectionVerifiedData && frameNum < carDetectionVerifiedData.length) {
                 var c = document.getElementById(canvasId);
                 var ctx = c.getContext("2d");
                 // Multiple frame number by 4 since bbs-cam2-verified.json is about

@@ -54,14 +54,15 @@ app.get("/edit", auth.requiredAuthentication, function(req, res) {
                 endFrame: endFrame,
                 lanesFilename: lanesFile,
                 files: {
-                    points:        datafilesPath + "map.json.zip",
-                    gps:           datafilesPath + "gps.json.zip",
-                    lanes:         datafilesPath + "lanes/" + lanesFile,
-                    planes:        datafilesPath + "planes.json.zip",
-                    video:         datafilesPath + "cam_2.mpg",
-                    radar:         datafilesPath + "radar.json.zip",
-                    boundingBoxes: datafilesPath + "bbs-cam2.json",
-                    params:        "/q50_4_3_14_params.json"
+                    points:                 datafilesPath + "map.json.zip",
+                    gps:                    datafilesPath + "gps.json.zip",
+                    lanes:                  datafilesPath + "lanes/" + lanesFile,
+                    planes:                 datafilesPath + "planes.json.zip",
+                    video:                  datafilesPath + "cam_2.mpg",
+                    radar:                  datafilesPath + "radar.json.zip",
+                    carDetection:           datafilesPath + "bbs-cam2.json",
+                    carDetectionVerified:   datafilesPath + "bbs-cam2-verified.json",
+                    params:                 "/q50_4_3_14_params.json"
                 }
             }
         });

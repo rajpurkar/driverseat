@@ -10,7 +10,13 @@ factory('loading', function($http, util) {
         async.parallel({
             pointCloud: function(callback){
                 JSZipUtils.getBinaryContent($scope.trackInfo.files.points, function(err, data) {
-                    if(err) throw err; // or handle err
+                    if (err) {
+                        $scope.pointClouds.points = null;
+                        $scope.log("Missing map file");
+                        console.log("Cannot open map file: " + $scope.trackInfo.files.points);
+                        callback(null, 'map_load');
+                        return;
+                    }
                     var loader = util.loadDataFromZip;
                     var points = JSON.parse(loader(data, "map.json"));
                     $scope.pointClouds.points = $scope.generatePointCloud("points", points, $scope.LIDAR_POINT_SIZE);
@@ -20,7 +26,13 @@ factory('loading', function($http, util) {
             },
             gps: function(callback){
                 JSZipUtils.getBinaryContent($scope.trackInfo.files.gps, function(err, data) {
-                    if(err) throw err; // or handle err
+                    if (err) {
+                        $scope.gps = null;
+                        $scope.log("Missing gps file");
+                        console.log("Cannot open gps file: " + $scope.trackInfo.files.gps);
+                        callback(null, 'gps_load');
+                        return;
+                    }
                     var loader = util.loadDataFromZip;
                     $scope.gps = JSON.parse(loader(data, "gps.json"));
                     callback(null, 'gps_load');
@@ -28,7 +40,13 @@ factory('loading', function($http, util) {
             },
             lanes: function(callback){
                 JSZipUtils.getBinaryContent($scope.trackInfo.files.lanes, function(err, gzipped_data) {
-                    if (err) throw err; // or handle err
+                    if (err) {
+                        $scope.pointClouds.lanes = null;
+                        $scope.log("Missing lanes file");
+                        console.log("Cannot open lanes file: " + $scope.trackInfo.files.lanes);
+                        callback(null, 'lanes_load');
+                        return;
+                    }
                     var loader = util.loadDataFromZip;
                     var data;
                     //TODO: fix lanes_done.json.zip to contain only lanes.json
@@ -46,21 +64,26 @@ factory('loading', function($http, util) {
                         var positions = laneCloud.geometry.attributes.position.array;
                         $scope.kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3);
                     }
-                    callback(null, 3);
+                    callback(null, 'lanes_load');
                 });
             },
             planes: function(callback){
                 JSZipUtils.getBinaryContent($scope.trackInfo.files.planes, function(err, gzipped_data) {
-                    if(err) throw err; // or handle err
+                    if (err) {
+                        $scope.meshes.groundPlanes = null;
+                        console.log("Cannot open planes file: " + $scope.trackInfo.files.planes);
+                        callback(null, 'planes_load');
+                        return;
+                    }
                     var loader = util.loadDataFromZip;
                     var data = JSON.parse(loader(gzipped_data, "planes.json"));
                     $scope.addPlanes(data);
-                    callback(null, 4);
+                    callback(null, 'planes_load');
                 });
             },
             car: function(callback){
                 $scope.addCar(function(geometry, materials){
-                    callback(null, 5);
+                    callback(null, 'car_load');
                 });
             },
             video: function(callback) {
@@ -75,7 +98,11 @@ factory('loading', function($http, util) {
             },
             radar: function(callback){
                 JSZipUtils.getBinaryContent($scope.trackInfo.files.radar, function(err, gzipped_data) {
-                    if(err) throw err; // or handle err
+                    if (err) {
+                        $scope.radarData = null;
+                        callback(null, 'radar_init');
+                        return;
+                    }
                     var loader = util.loadDataFromZip;
                     var data = JSON.parse(loader(gzipped_data, "radar.json"));
                     $scope.radarData = data;
@@ -90,6 +117,7 @@ factory('loading', function($http, util) {
                         callback(null, "car_detection_init");
                     },
                     function(data) {
+                        $scope.carDetectionData = null;
                         console.log("Cannot open car detection file: " + $scope.trackInfo.files.carDetection);
                         callback(null, "car_detection_init");
                     });
@@ -102,6 +130,7 @@ factory('loading', function($http, util) {
                         callback(null, "car_detection_verified_init");
                     },
                     function(data) {
+                        $scope.carDetectionVerifiedData = null;
                         console.log("Cannot open car detection verified file: " + $scope.trackInfo.files.carDetectionVerified);
                         callback(null, "car_detection_verified_init");
                     });
@@ -110,6 +139,10 @@ factory('loading', function($http, util) {
                 util.loadJSON($scope.trackInfo.files.params, function(data) {
                     $scope.params = data;
                     callback(null, "params");
+                }, function(data) {
+                    $scope.params = null;
+                    console.log("Cannot open params file: " + $scope.trackInfo.files.params);
+                    callback(null, "params")
                 });
             }
         },

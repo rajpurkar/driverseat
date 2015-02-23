@@ -135,11 +135,12 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
         document.querySelector('#playspeedrange').addEventListener('input', $scope.changeSpeed);
     };
 
-    $scope.execOnLoaded = function(){
+    $scope.execOnLoaded = function() {
         $scope.log("Rendering...");
         //video.init($scope.videoData);
         radar.init($scope.radarData, $scope.params, $scope.scene);
-        if ($scope.editor == "lane") laneEditor.init($scope);
+        if ($scope.editor == "lane")
+            laneEditor.init($scope);
         $scope.videoProjectionParams = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
         carDetection.init(
             $scope.carDetectionData,

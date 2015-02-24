@@ -151,8 +151,7 @@ module.exports = {
 
         Category.findOne({
             _id: categoryId
-        },
-        function(err, category) {
+        }, function(err, category) {
             var tag = new Tag({
                 startFrame: startFrame,
                 endFrame: endFrame,
@@ -170,5 +169,19 @@ module.exports = {
                 });
             });
         })
+    },
+    deleteTag: function(req, res) {
+        var tagId = req.body.tagId;
+        Tag.findOneAndRemove({
+            _id: tagId
+        }, function(err, tag) {
+            console.log(tag);
+            console.log(err);
+            if (err) {
+                res.status(500).end();
+                return;
+            }
+            res.status(200).end();
+        });
     }
 };

@@ -2,8 +2,13 @@ import collections
 import fnmatch
 import os
 
-CarDetectionDataFilenames = collections.namedtuple('CarDetectionDataFilenames', ['ground_truth_datafilename', 'prediction_data_filename'])
-PrecisionAndRecall = collections.namedtuple('PrecisionAndRecall', ['precision', 'recall'])
+CarDetectionDataFilenames = collections.namedtuple(
+    'CarDetectionDataFilenames',
+    ['ground_truth_datafilename', 'prediction_data_filename'])
+
+PrecisionAndRecall = collections.namedtuple(
+    'PrecisionAndRecall',
+    ['precision', 'recall'])
 
 class CarDetectionPrecisionRecallCalculator():
     """Calculates the precision and recall based on the

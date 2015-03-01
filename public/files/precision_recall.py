@@ -75,7 +75,22 @@ class CarDetectionPrecisionRecallCalculator():
         prediction_rect_y = prediction_rect['y']
         prediction_rect_width = prediction_rect['width']
         prediction_rect_height = prediction_rect['height']
-        return _is_point_in_rect(prediction_rect_x, ground_truth_rect)
+        return _is_point_in_rect(
+                prediction_rect_x,
+                prediction_rect_y,
+                ground_truth_rect) \
+            or _is_point_in_rect(
+                prediction_rect_x + prediction_rect_width,
+                prediction_rect_y,
+                ground_truth_rect) \
+            or _is_point_in_rect(
+                prediction_rect_x,
+                prediction_rect_y + prediction_rect_width,
+                ground_truth_rect) \
+            or _is_point_in_rect(
+                prediction_rect_x + prediction_rect_width,
+                prediction_rect_y + prediction_rect_width,
+                ground_truth_rect)
 
     def _is_point_in_rect(x, y, rect):
         rect_x = rect['x']

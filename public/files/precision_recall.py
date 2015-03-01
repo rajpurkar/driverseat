@@ -71,7 +71,18 @@ class CarDetectionPrecisionRecallCalculator():
         return total_overlapped_boxes
 
     def _is_overlap(ground_truth_rect, prediction_rect):
-        return None
+        prediction_rect_x = prediction_rect['x']
+        prediction_rect_y = prediction_rect['y']
+        prediction_rect_width = prediction_rect['width']
+        prediction_rect_height = prediction_rect['height']
+        return _is_point_in_rect(prediction_rect_x, ground_truth_rect)
+
+    def _is_point_in_rect(x, y, rect):
+        rect_x = rect['x']
+        rect_y = rect['y']
+        rect_width = rect['width']
+        rect_height = rect['height']
+        return !(x < rect_x || x > rect_x + rect_width || y < rect_y || y > rect_y + rect_height)
 
     def _get_intersect_area(ground_truth_rect, prediction_rect):
         return None

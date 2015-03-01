@@ -1,14 +1,16 @@
+from __future__ import division
+
+import argparse
 import collections
+import json
 import fnmatch
 import os
-
-from __future__ import division
 
 # TODO(rchengyue): Restructure project. Create scripts folder with tests inside. Write tests.
 
 CarDetectionDataFilenames = collections.namedtuple(
     'CarDetectionDataFilenames',
-    ['ground_truth_datafilename', 'prediction_data_filename'])
+    ['ground_truth_data_filename', 'prediction_data_filename'])
 
 PrecisionAndRecall = collections.namedtuple(
     'PrecisionAndRecall',
@@ -32,18 +34,22 @@ class CarDetectionPrecisionRecallCalculator():
         # TODO(rchengyue): Refactor
         total_precision = 0
         total_recall = 0
-        total_frames = prediction_data.length
+        # total_frames = prediction_data.length
+        total_frames = 2
 
         for frame_count in range(total_frames):
             ground_truth_frame_count = \
                 frame_count * CarDetectionPrecisionRecallCalculator.ground_truth_frame_count_multiplier
             # Make sure ground truth frame count is within ground truth data length
-            if (ground_truth_frame_count > ground_truth_data.length):
+            if (ground_truth_frame_count > len(self.ground_truth_data)):
                 break
+            print "BLAH prediction frame_count: " + str(frame_count)
+            print "BLAH ground truth frame count: " + str(ground_truth_frame_count)
             total_overlapped_boxes = \
-                self._get_overlapped_boxes(ground_truth_data[ground_truth_frame_count], prediction_data[frame_count])
-            total_precision += total_overlapped_boxes / prediction_frame_data.length
-            total_recall += total_overlapped_boxes / ground_truth_frame_data.length
+                self._get_overlapped_boxes(self.ground_truth_data[ground_truth_frame_count], self.prediction_data[frame_count])
+            print "BLAH total overlapped boxes: " + str(total_overlapped_boxes)
+            # total_precision += total_overlapped_boxes / prediction_frame_data.length
+            # total_recall += total_overlapped_boxes / ground_truth_frame_data.length
 
         overall_precision = total_precision / total_frames
         overall_recall = total_recall / total_frames
@@ -53,10 +59,10 @@ class CarDetectionPrecisionRecallCalculator():
         try:
             with open(filename, 'rb') as f:
                 return json.load(f)
-        except:
-            print("Cannot load JSON file: " + filename)
+        except Exception as e:
+            print(e)
 
-    def _get_overlapped_boxes(ground_truth_frame_data, prediction_frame_data):
+    def _get_overlapped_boxes(self, ground_truth_frame_data, prediction_frame_data):
         total_overlapped_boxes = 0
         for prediction_frame_data_box in prediction_frame_data:
             for ground_truth_frame_data_box in ground_truth_frame_data:
@@ -64,46 +70,59 @@ class CarDetectionPrecisionRecallCalculator():
                 ground_truth_rect = ground_truth_frame_data_box['rect']
                 if (self._is_overlap(ground_truth_rect, prediction_rect)):
                     overlapped_area_ratio = \
-                        get_intersect_area(ground_truth_rect, prediction_rect) /
-                        get_union_area(ground_truth_rect, prediction_rect)
-                    if (overlapped_area_ratio > self.__class__.overlapped_area_ratio_threshold):
+                        self._get_intersect_area(ground_truth_rect, prediction_rect) / \
+                        self._get_union_area(ground_truth_rect, prediction_rect)
+                    if (overlapped_area_ratio > CarDetectionPrecisionRecallCalculator.overlapped_area_ratio_threshold):
                         total_overlapped_boxes += 1
         return total_overlapped_boxes
 
-    def _is_overlap(ground_truth_rect, prediction_rect):
-        prediction_rect_x = prediction_rect['x']
-        prediction_rect_y = prediction_rect['y']
-        prediction_rect_width = prediction_rect['width']
-        prediction_rect_height = prediction_rect['height']
+    def _is_overlap(self, ground_truth_rect, prediction_rect):
+        print "BLAH ground_truth_rect: " + str(ground_truth_rect)
+        print "BLAH prediction_rect: " + str(prediction_rect)
+        prediction_x = prediction_rect['x']
+        prediction_y = prediction_rect['y']
+        prediction_width = prediction_rect['width']
+        prediction_height = prediction_rect['height']
         return _is_point_in_rect(
-                prediction_rect_x,
-                prediction_rect_y,
+                prediction_x,
+                prediction_y,
                 ground_truth_rect) \
             or _is_point_in_rect(
-                prediction_rect_x + prediction_rect_width,
-                prediction_rect_y,
+                prediction_x + prediction_width,
+                prediction_y,
                 ground_truth_rect) \
             or _is_point_in_rect(
-                prediction_rect_x,
-                prediction_rect_y + prediction_rect_width,
+                prediction_x,
+                prediction_y + prediction_width,
                 ground_truth_rect) \
             or _is_point_in_rect(
-                prediction_rect_x + prediction_rect_width,
-                prediction_rect_y + prediction_rect_width,
+                prediction_x + prediction_width,
+                prediction_y + prediction_width,
                 ground_truth_rect)
 
-    def _is_point_in_rect(x, y, rect):
+    def _is_point_in_rect(self, x, y, rect):
         rect_x = rect['x']
         rect_y = rect['y']
         rect_width = rect['width']
         rect_height = rect['height']
-        return !(x < rect_x || x > rect_x + rect_width || y < rect_y || y > rect_y + rect_height)
+        return not (x < rect_x or x > rect_x + rect_width or y < rect_y or y > rect_y + rect_height)
 
-    def _get_intersect_area(ground_truth_rect, prediction_rect):
-        return None
+    def _get_intersect_area(self, ground_truth_rect, prediction_rect):
+        prediction_x = prediction_rect['x']
+        prediction_y = prediction_rect['y']
+        prediction_width = prediction_rect['width']
+        prediction_height = prediction_rect['height']
+        ground_truth_x = ground_truth_rect['x']
+        ground_truth_y = ground_truth_rect['y']
+        ground_truth_width = ground_truth_rect['width']
+        ground_truth_height = ground_truth_rect['height']
+        return (min(prediction_x + prediction_width, ground_truth_x + ground_truth_width) - max(prediction_x, ground_truth_x)) * \
+            (min(prediction_y + prediction_height, ground_truth_y + ground_truth_height) - max(prediction_y, ground_truth_y))
 
-    def _get_union_area(ground_truth_rect, prediction_rect):
-        return None
+    def _get_union_area(self, ground_truth_rect, prediction_rect):
+        ground_truth_area = ground_truth_rect['width'] * ground_truth_rect['height']
+        prediction_area = prediction_rect['width'] * prediction_rect['height']
+        return ground_truth_area + prediction_area - _get_intersect_area(ground_truth_rect, prediction_rect)
 
 class CarDetectionDataFinder():
     """Finds all the prediction and ground truth filenames to compute precision and recall."""
@@ -130,6 +149,8 @@ class CarDetectionDataFinder():
         return car_detection_data
 
 def get_args_parser():
+    parser = argparse.ArgumentParser(
+        description="Writes precision and recall of car detection files based on given base path")
     parser.add_argument(
         '-b',
         '--base_path',

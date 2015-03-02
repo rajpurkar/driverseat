@@ -81,13 +81,14 @@ class Box(CommonEqualityMixin):
     def union_area(self, other_box):
         return self.area + other_box.area - self.intersect_area(other_box)
 
-class CarDetectionPrecisionRecall():
+class CarDetectionPrecisionAndRecall():
     """Calculates the precision and recall based on the
     given prediction and ground truth data.
     """
 
     ground_truth_frame_count_multiplier = 4
     overlapped_area_ratio_threshold = 0.3
+    overall_precision_and_recall_decimal_places = 4
 
     def __init__(self, car_detection_data_filenames):
         self.__ground_truth_data = \
@@ -108,7 +109,7 @@ class CarDetectionPrecisionRecall():
         total_frames = len(self.__prediction_data)
         for frame_count in range(total_frames):
             ground_truth_frame_count = \
-                frame_count * CarDetectionPrecisionRecall.ground_truth_frame_count_multiplier
+                frame_count * CarDetectionPrecisionAndRecall.ground_truth_frame_count_multiplier
             # Make sure ground truth frame count is within ground truth data length
             if (ground_truth_frame_count > len(self.__ground_truth_data)):
                 break
@@ -118,8 +119,12 @@ class CarDetectionPrecisionRecall():
                 self.__frame_precision_and_recall(ground_truth_frame_data, prediction_frame_data)
             total_precision += frame_precision
             total_recall += frame_recall
-        overall_precision = total_precision / total_frames
-        overall_recall = total_recall / total_frames
+        overall_precision = round(
+            total_precision / total_frames,
+            CarDetectionPrecisionAndRecall.overall_precision_and_recall_decimal_places)
+        overall_recall = round(
+            total_recall / total_frames,
+            CarDetectionPrecisionAndRecall.overall_precision_and_recall_decimal_places)
         return PrecisionAndRecall(overall_precision, overall_recall)
 
     def __frame_precision_and_recall(self, ground_truth_frame_data, prediction_frame_data):
@@ -153,7 +158,7 @@ class CarDetectionPrecisionRecall():
                     intersect_area = prediction_box.intersect_area(ground_truth_box)
                     union_area = prediction_box.union_area(ground_truth_box)
                     overlapped_area_ratio = intersect_area / union_area
-                    if (overlapped_area_ratio > CarDetectionPrecisionRecall.overlapped_area_ratio_threshold):
+                    if (overlapped_area_ratio > CarDetectionPrecisionAndRecall.overlapped_area_ratio_threshold):
                         total_overlapped_boxes += 1
                         seen_ground_truth_boxes.add(ground_truth_box)
         return total_overlapped_boxes
@@ -209,17 +214,19 @@ def main():
     """
     parser = get_args_parser()
     args = parser.parse_args()
+    # TODO(rchengyue): Make run name prefix removal based on current directory.
+    run_name_prefix = 'public/runs/'
     if args.base_path and args.output_file:
         car_detection_data_filenames_finder = CarDetectionDataFilenamesFinder(args.base_path)
         car_detection_data = car_detection_data_filenames_finder.data_filenames()
         precision_recalls = {}
         for run, data in car_detection_data.iteritems():
             print('Computing precision and recall for: ' + run)
-            precision_recall_calculator = CarDetectionPrecisionRecall(data)
-            precision, recall = precision_recall_calculator.precision_and_recall()
+            precision_recall = CarDetectionPrecisionAndRecall(data)
+            precision, recall = precision_recall.precision_and_recall()
             print('Precision for run: ' + run + ' is: ' + str(precision))
             print('Recall for run: ' + run + ' is: ' + str(recall))
-            precision_recalls[run] = {'precision': precision, 'recall': recall}
+            precision_recalls[run.replace(run_name_prefix, '')] = {'precision': precision, 'recall': recall}
         print('Writing precision and recalls out to: ' + args.output_file)
         with open(args.output_file, 'w') as f:
             json.dump(precision_recalls, f)

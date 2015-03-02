@@ -198,14 +198,14 @@ def get_args_parser():
         action='store',
         dest='output_file',
         required=False,
-        default='precision_recall.json',
+        default='public/precision_recall.json',
         help='Output file to write out the precision and recall for runs')
     return parser
 
 def main():
     """
     Example command:
-    python public/files/precision_recall.py -b public/runs -f precision_recall.json
+    python public/files/precision_recall.py -b public/runs -f public/precision_recall.json
     """
     parser = get_args_parser()
     args = parser.parse_args()

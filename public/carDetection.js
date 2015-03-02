@@ -5,6 +5,7 @@ service('carDetection', function(util) {
     var canvasBoxes = [];
     var carDetectionData;
     var carDetectionVerifiedData;
+    var precisionRecallData;
     var scene;
     var videoProjectionParams;
 
@@ -100,9 +101,10 @@ service('carDetection', function(util) {
     }
 
     return {
-        init: function(data, verifiedData, vpParams, scn) {
+        init: function(data, verifiedData, precisionAndRecall, vpParams, scn) {
             carDetectionData = data;
             carDetectionVerifiedData = verifiedData;
+            precisionAndRecallData = precisionAndRecall;
             videoProjectionParams = vpParams;
             scene = scn;
             // TODO(rchengyue): Make separate sets of canvas boxes for detected and verified
@@ -144,5 +146,11 @@ service('carDetection', function(util) {
                 return true;
             }
         },
+        displayPrecisionAndRecall: function() {
+            var precisionElement = document.getElementById("precision");
+            var recallElement = document.getElementById("recall");
+            precisionElement.innerHTML = precisionAndRecallData.precision;
+            recallElement.innerHTML = precisionAndRecallData.recall;
+        }
     };
 });

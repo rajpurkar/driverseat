@@ -62,7 +62,8 @@ app.get("/edit", auth.requiredAuthentication, function(req, res) {
                     radar:                  datafilesPath + "radar.json.zip",
                     carDetection:           datafilesPath + "bbs-cam2.json",
                     carDetectionVerified:   datafilesPath + "bbs-cam2-verified.json",
-                    params:                 "/q50_4_3_14_params.json"
+                    params:                 "/q50_4_3_14_params.json",
+                    precisionAndRecall:     "/precision_and_recall.json"
                 }
             }
         });

@@ -144,6 +144,17 @@ factory('loading', function($http, util) {
                     console.log("Cannot open params file: " + $scope.trackInfo.files.params);
                     callback(null, "params")
                 });
+            },
+            precisionAndRecall: function(callback) {
+                util.loadJSON($scope.trackInfo.files.precisionAndRecall,
+                    function(data) {
+                        $scope.precisionAndRecallData = data;
+                        callback(null, "precision_and_recall_init");
+                    },
+                    function(data) {
+                        console.log("Cannot open precision and recall file: " + $scope.trackInfo.files.precisionAndRecall);
+                        callback(null, "precision_and_recall_init");
+                    });
             }
         },
         function(err, results) {

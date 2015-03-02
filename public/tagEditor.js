@@ -114,7 +114,7 @@ factory('tagEditor', function($http, key) {
     function initializeTagInput() {
         if (vars.showForm != "tag") return;
         vars.tagLeftVal = $scope.frameCount;
-        vars.tagRightVal = $scope.gps.length;
+        vars.tagRightVal = $scope.frameCount + 1;
         $("#startFrameInput").val(vars.tagLeftVal);
         $("#endFrameInput").val(vars.tagRightVal);
     }
@@ -154,6 +154,20 @@ factory('tagEditor', function($http, key) {
         return false;
     }
 
+    function tagDelete(tag) {
+        if (!confirm("Are you sure you want to delete this tag?"))
+            return;
+        $.ajax({
+            url: "/deleteTag",
+            type: "POST",
+            data: { tagId: tag._id },
+            success: function(data) {
+                load();
+                $scope.log("Deleted tag");
+            }
+        });
+    }
+
     return {
         init: init,
         load: load,
@@ -163,6 +177,7 @@ factory('tagEditor', function($http, key) {
         toggleAddTag: toggleAddTag,
         categorySubmit: categorySubmit,
         tagSubmit: tagSubmit,
+        tagDelete: tagDelete,
         vars: vars
     };
 });

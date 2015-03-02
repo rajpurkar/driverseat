@@ -110,6 +110,7 @@ app.get("/tags", auth.requiredAuthentication, function(req, res) {
 
 app.post("/categories", auth.requiredAuthentication, db.saveCategory);
 app.post("/tags", auth.requiredAuthentication, db.saveTag);
+app.post("/deleteTag", auth.requiredAuthentication, db.deleteTag);
 
 //Authentication routes
 

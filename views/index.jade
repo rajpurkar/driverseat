@@ -66,7 +66,9 @@ html
 								input.scrubberMarker.scrubberRight(type="range", min="0", max="{{gps.length}}", step="1", ng-model="tagEditor.vars.tagRightVal", ng-change="tagEditor.tagRight()")
 							div(ng-repeat="tag in tagEditor.vars.tags")
 								.scrubberTag(ng-style="tag.style")
-									.scrubberTagPopup(ng-style="tag.popupStyle")
+									.scrubberTagPopup(ng-style="tag.popupStyle", data-id="{{tag._id}}")
+										button(ng-click="tagEditor.tagDelete(tag)", type="button")
+											|Delete
 										p Start Frame: {{tag.startFrame}}
 										p End Frame: {{tag.endFrame}}
 										p {{tag.category.name}}

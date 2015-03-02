@@ -3,27 +3,28 @@ var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 myApp.
 controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEditor, loading, util, key, videoProjection, radar, carDetection, cfpLoadingBar, tagEditor) {
 
-    $scope.laneEditor       = laneEditor;
-    $scope.tagEditor        = tagEditor;
+    $scope.laneEditor               = laneEditor;
+    $scope.tagEditor                = tagEditor;
     // scope variables
-    $scope.trackInfo        = JSON.parse($attrs.ngTrackinfo);
-    $scope.editor           = $attrs.ngEditor;
-    // $scope.categories       = JSON.parse($attrs.ngCategories);
-    $scope.scene            = null;
-    $scope.raycaster        = null;
-    $scope.geometries       = {};
-    $scope.pointClouds      = {};
-    $scope.meshes           = {};
-    $scope.kdtrees          = {};
-    $scope.video            = null;
-    //$scope.videoData        = null;
-    $scope.radarData        = null;
-    $scope.carDetectionData = null;
-    $scope.datafiles        = null;
-    $scope.LANE_POINT_SIZE  = 0.08;
-    $scope.LIDAR_POINT_SIZE = 0.12;
-    $scope.params           = null;
-    $scope.shortcutsEnabled = true;
+    $scope.trackInfo                = JSON.parse($attrs.ngTrackinfo);
+    $scope.editor                   = $attrs.ngEditor;
+    // $scope.categories            = JSON.parse($attrs.ngCategories);
+    $scope.scene                    = null;
+    $scope.raycaster                = null;
+    $scope.geometries               = {};
+    $scope.pointClouds              = {};
+    $scope.meshes                   = {};
+    $scope.kdtrees                  = {};
+    $scope.video                    = null;
+    //$scope.videoData              = null;
+    $scope.radarData                = null;
+    $scope.carDetectionData         = null;
+    $scope.carDetectionVerifiedData = null;
+    $scope.datafiles                = null;
+    $scope.LANE_POINT_SIZE          = 0.08;
+    $scope.LIDAR_POINT_SIZE         = 0.12;
+    $scope.params                   = null;
+    $scope.shortcutsEnabled         = true;
 
     // constants
     var INITIAL_OFFSET = [0, 5, -14],
@@ -134,11 +135,12 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
         document.querySelector('#playspeedrange').addEventListener('input', $scope.changeSpeed);
     };
 
-    $scope.execOnLoaded = function(){
+    $scope.execOnLoaded = function() {
         $scope.log("Rendering...");
         //video.init($scope.videoData);
         radar.init($scope.radarData, $scope.params, $scope.scene);
-        if ($scope.editor == "lane") laneEditor.init($scope);
+        if ($scope.editor == "lane")
+            laneEditor.init($scope);
         $scope.videoProjectionParams = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
         carDetection.init(
             $scope.carDetectionData,

@@ -149,8 +149,13 @@ service('carDetection', function(util) {
         displayPrecisionAndRecall: function() {
             var precisionElement = document.getElementById("precision");
             var recallElement = document.getElementById("recall");
-            precisionElement.innerHTML = precisionAndRecallData.precision;
-            recallElement.innerHTML = precisionAndRecallData.recall;
+            if (precisionAndRecallData) {
+                precisionElement.innerHTML = precisionAndRecallData.precision;
+                recallElement.innerHTML = precisionAndRecallData.recall;
+            } else {
+                precisionElement.innerHTML = "N/A";
+                recallElement.innerHTML = "N/A";
+            }
         }
     };
 });

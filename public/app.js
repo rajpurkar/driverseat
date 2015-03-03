@@ -24,6 +24,7 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
     $scope.LANE_POINT_SIZE          = 0.08;
     $scope.LIDAR_POINT_SIZE         = 0.12;
     $scope.params                   = null;
+    $scope.precisionAndRecall   = null;
     $scope.shortcutsEnabled         = true;
 
     // constants
@@ -145,8 +146,10 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
         carDetection.init(
             $scope.carDetectionData,
             $scope.carDetectionVerifiedData,
+            $scope.precisionAndRecallData[$scope.trackInfo.track],
             $scope.videoProjectionParams,
             $scope.scene);
+        carDetection.displayPrecisionAndRecall();
 
         // TODO(rchengyue): Find out how to only watch toggle for space if input text boxes are not in focus.
         key.watchToggle("space");

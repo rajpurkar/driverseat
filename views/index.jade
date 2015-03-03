@@ -74,11 +74,11 @@ html
 										p {{tag.category.name}}
 										p {{tag.category.description}}
 				#right-side
-					.tag
-						h4 Precision
-							h5#precision Loading...
-						h4 Recall
-							h5#recall Loading...
+					.tab
+						p#carDetectionPrecisionTitle
+							h5#carDetectionPrecisionField
+						p#carDetectionRecallTitle
+							h5#carDetectionRecallField
 					#options.tab(ng-show="editor == 'lane'")
 						div
 							button#fork.actionBtn(type="button", ng-click="laneEditor.fork()", ng-show="laneEditor.showButton.fork")

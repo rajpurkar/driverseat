@@ -147,14 +147,15 @@ service('carDetection', function(util) {
             }
         },
         displayPrecisionAndRecall: function() {
-            var precisionElement = document.getElementById("precision");
-            var recallElement = document.getElementById("recall");
             if (precisionAndRecallData) {
-                precisionElement.innerHTML = precisionAndRecallData.precision;
-                recallElement.innerHTML = precisionAndRecallData.recall;
-            } else {
-                precisionElement.innerHTML = "N/A";
-                recallElement.innerHTML = "N/A";
+                var precisionTitle = document.getElementById("carDetectionPrecisionTitle");
+                var precisionField = document.getElementById("carDetectionPrecisionField");
+                var recallTitle = document.getElementById("carDetectionRecallTitle");
+                var recallField = document.getElementById("carDetectionRecallField");
+                precisionTitle.innerHTML = "Car Detection Precision"
+                precisionField.innerHTML = precisionAndRecallData.precision;
+                recallTitle.innerHTML = "Car Detection Recall"
+                recallField.innerHTML = precisionAndRecallData.recall;
             }
         }
     };

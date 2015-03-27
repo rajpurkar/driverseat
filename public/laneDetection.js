@@ -107,33 +107,32 @@ service('laneDetection', function(util) {
             scene = scn;
         },
         drawLaneDetectionPoints: function(canvasId, frameNum, imuLocationT) {
-            var laneDetectionLanesData = laneDetectionData['Lanes'];
-            if (laneDetectionLanesData && frameNum < laneDetectionLanesData.length) {
-                var c = document.getElementById(canvasId);
-                var ctx = c.getContext("2d");
-                var laneDetectionFrameData = laneDetectionLanesData[frameNum];
+            if (laneDetectionData) {
+                var laneDetectionLanesData = laneDetectionData['Lanes'];
+                if (laneDetectionData && frameNum < laneDetectionLanesData.length) {
+                    var c = document.getElementById(canvasId);
+                    var ctx = c.getContext("2d");
+                    var laneDetectionFrameData = laneDetectionLanesData[frameNum];
 
-                // TODO(rchengyue): Refactor out camera and canvas methods (have separate class for projection type).
+                    // TODO(rchengyue): Refactor out camera and canvas methods (have separate class for projection type).
 
-                var cameraLaneDetectionPoints = getCameraLaneDetectionPoints(laneDetectionFrameData);
-                var canvasLaneDetectionPoints = getCanvasLaneDetectionPoints(laneDetectionFrameData, imuLocationT);
+                    var cameraLaneDetectionPoints = getCameraLaneDetectionPoints(laneDetectionFrameData);
+                    var canvasLaneDetectionPoints = getCanvasLaneDetectionPoints(laneDetectionFrameData, imuLocationT);
 
-                for (var laneIndex = 0; laneIndex < cameraLaneDetectionPoints.length; laneIndex++) {
-                    var cameraLaneDetectionLanePoints = cameraLaneDetectionPoints[laneIndex];
-                    for (var pointIndex = 0; pointIndex < cameraLaneDetectionLanePoints.length; pointIndex += 3) {
-                        drawCameraLaneDetectionPoint(
-                            ctx,
-                            cameraLaneDetectionLanePoints.slice(pointIndex, pointIndex + 3),
-                            laneColors[laneIndex % laneColors.length]);
+                    for (var laneIndex = 0; laneIndex < cameraLaneDetectionPoints.length; laneIndex++) {
+                        var cameraLaneDetectionLanePoints = cameraLaneDetectionPoints[laneIndex];
+                        for (var pointIndex = 0; pointIndex < cameraLaneDetectionLanePoints.length; pointIndex += 3) {
+                            drawCameraLaneDetectionPoint(
+                                ctx,
+                                cameraLaneDetectionLanePoints.slice(pointIndex, pointIndex + 3),
+                                laneColors[laneIndex % laneColors.length]);
+                        }
                     }
-                }
 
-                for (var laneIndex = 0; laneIndex < canvasLaneDetectionPoints.length; laneIndex++) {
-                    var canvasLaneDetectionLanePoints = canvasLaneDetectionPoints[laneIndex];
-                    drawCanvasLaneDetectionPoint(canvasLaneDetectionLanePoints);
-                    // for (var pointIndex = 0; pointIndex < canvasLaneDetectionLanePoints.length; pointIndex += 3) {
-
-                    // }
+                    for (var laneIndex = 0; laneIndex < canvasLaneDetectionPoints.length; laneIndex++) {
+                        var canvasLaneDetectionLanePoints = canvasLaneDetectionPoints[laneIndex];
+                        drawCanvasLaneDetectionPoint(canvasLaneDetectionLanePoints);
+                    }
                 }
             }
         }

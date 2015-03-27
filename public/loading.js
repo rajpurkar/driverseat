@@ -155,7 +155,20 @@ factory('loading', function($http, util) {
                         console.log("Cannot open precision and recall file: " + $scope.trackInfo.files.precisionAndRecall);
                         callback(null, "precision_and_recall_init");
                     });
-            }
+            },
+            laneDetection: function(callback) {
+                util.loadJSON(
+                    $scope.trackInfo.files.laneDetection,
+                    function(data) {
+                        $scope.laneDetectionData = data;
+                        callback(null, "lane_detection_init");
+                    },
+                    function(data) {
+                        $scope.laneDetectionData = null;
+                        console.log("Cannot open lane detection file: " + $scope.trackInfo.files.laneDetection);
+                        callback(null, "lane_detection_init");
+                    });
+            },
         },
         function(err, results) {
             cb();

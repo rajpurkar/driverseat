@@ -8,6 +8,7 @@ service('carDetection', function(util) {
     var precisionRecallData;
     var scene;
     var videoProjectionParams;
+    var canvasProjectionMatrix;
 
     function initializeCanvasBoxes() {
         for (var i = 0; i < MAX_NUM_CANVAS_BOXES; i++) {
@@ -35,8 +36,8 @@ service('carDetection', function(util) {
             carDetectionBoxLocations.push(depth * (v + height / 2));
             carDetectionBoxLocations.push(depth);
         }
-        var projectionMatrix = getProjectionMatrix(imuLocationT);
-        projectionMatrix.applyToVector3Array(carDetectionBoxLocations);
+        var canvasProjectionMatrix = getCanvasProjectionMatrix(imuLocationT);
+        canvasProjectionMatrix.applyToVector3Array(carDetectionBoxLocations);
         return carDetectionBoxLocations;
     }
 
@@ -62,7 +63,7 @@ service('carDetection', function(util) {
         canvasBox.updateMatrix();
     }
 
-    function getProjectionMatrix(imuLocationT) {
+    function getCanvasProjectionMatrix(imuLocationT) {
         var T_imu_0_to_THREE = videoProjectionParams.T_imu_0_to_THREE;
         var T_from_l_to_i = videoProjectionParams.T_from_l_to_i;
         var T_imu_t_to_imu_0 = util.Matrix4FromJSON4x4(imuLocationT);

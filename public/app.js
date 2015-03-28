@@ -26,6 +26,8 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
     $scope.params                   = null;
     $scope.precisionAndRecall   = null;
     $scope.shortcutsEnabled         = true;
+    $scope.dragRange                = 15;
+    $scope.numLaneTypes             = $attrs.ngLanetypes.split(',').length;
 
     // constants
     var INITIAL_OFFSET = [0, 5, -14],

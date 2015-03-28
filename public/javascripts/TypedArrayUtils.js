@@ -18,7 +18,9 @@ THREE.TypedArrayUtils = {};
  * orderElement: 0 //order according to x
  */
 
-THREE.TypedArrayUtils.quicksortIP = function ( arr, eleSize, orderElement ) {
+THREE.TypedArrayUtils.quicksortIP = function ( arr, eleSize, orderElement, arrAux ) {
+
+	arrAux = arrAux || null;
 
 	var stack = [];
 	var sp = -1;
@@ -36,11 +38,20 @@ THREE.TypedArrayUtils.quicksortIP = function ( arr, eleSize, orderElement ) {
 			arr[ a + y ]=arr[ b + y ];
 			arr[ b + y ]=tmp;
 
+			if (arrAux != null) {
+				tmp = arrAux[ a + y ];
+				arrAux[ a + y ]=arrAux[ b + y ];
+				arrAux[ b + y ]=tmp;
+			}
+
 		}
 
 	};
 	
 	var i, j, swap = new Float32Array( eleSize ), temp = new Float32Array( eleSize );
+
+	if (arrAux != null)
+		var swapAux = new Float32Array(eleSize), tempAux = new Float32Array(eleSize);
 
 	while ( true ) {
 
@@ -52,6 +63,9 @@ THREE.TypedArrayUtils.quicksortIP = function ( arr, eleSize, orderElement ) {
 			
 					swap[ x ] = arr[ j * eleSize + x ];
 
+					if (arrAux != null)
+						swapAux[ x ] = arrAux[ j * eleSize + x ];
+
 				}
 				
 				i = j - 1;
@@ -62,6 +76,9 @@ THREE.TypedArrayUtils.quicksortIP = function ( arr, eleSize, orderElement ) {
 
 						arr[ ( i + 1 ) * eleSize + x ] = arr[ i * eleSize + x ];
 
+						if (arrAux != null)
+							arrAux[ ( i + 1 ) * eleSize + x ] = arrAux[ i * eleSize + x ];
+
 					}
 
 					i --;
@@ -71,6 +88,9 @@ THREE.TypedArrayUtils.quicksortIP = function ( arr, eleSize, orderElement ) {
 				for ( x = 0; x < eleSize; x ++ ) {
 
 					arr[ ( i + 1 ) * eleSize + x ] = swap[ x ];
+
+					if (arrAux != null)
+						arrAux[ ( i + 1 ) * eleSize + x ] = swapAux[ x ];
 
 				}
 
@@ -112,6 +132,9 @@ THREE.TypedArrayUtils.quicksortIP = function ( arr, eleSize, orderElement ) {
 
 				temp[ x ] = arr[ i * eleSize + x ];
 
+				if (arrAux != null)
+					tempAux[ x ] = arrAux[ i * eleSize + x ];
+
 			}
 			
 			while ( true ) {
@@ -129,6 +152,11 @@ THREE.TypedArrayUtils.quicksortIP = function ( arr, eleSize, orderElement ) {
 
 				arr[ ( left + 1 ) * eleSize + x ] = arr[ j * eleSize + x ];
 				arr[ j * eleSize + x ] = temp[ x ];
+
+				if (arrAux != null) {
+					arrAux[ ( left + 1 ) * eleSize + x ] = arrAux[ j * eleSize + x ];
+					arrAux[ j * eleSize + x ] = tempAux[ x ];
+				}
 
 			}
 
@@ -182,7 +210,9 @@ THREE.TypedArrayUtils.quicksortIP = function ( arr, eleSize, orderElement ) {
  * If you want to further minimize memory usage, remove Node.depth and replace in search algorithm with a traversal to root node (see comments at THREE.TypedArrayUtils.Kdtree.prototype.Node)
  */
 
- THREE.TypedArrayUtils.Kdtree = function ( points, metric, eleSize ) {
+ THREE.TypedArrayUtils.Kdtree = function ( points, metric, eleSize, pointsAux ) {
+
+	pointsAux = pointsAux || null;
 
 	var self = this;
 	
@@ -194,7 +224,7 @@ THREE.TypedArrayUtils.quicksortIP = function ( arr, eleSize, orderElement ) {
 
 	};
 		
-	function buildTree( points, depth, parent, pos ) {
+	function buildTree( points, depth, parent, pos, pointsAux ) {
 
 		var dim = depth % eleSize,
 			median,
@@ -210,19 +240,19 @@ THREE.TypedArrayUtils.quicksortIP = function ( arr, eleSize, orderElement ) {
 
 		}
 
-		THREE.TypedArrayUtils.quicksortIP( points, eleSize, dim );
+		THREE.TypedArrayUtils.quicksortIP( points, eleSize, dim, pointsAux );
 		
 		median = Math.floor( plength / 2 );
 		
 		node = new self.Node( getPointSet( points, median ) , depth, parent, median + pos );
-		node.left = buildTree( points.subarray( 0, median * eleSize), depth + 1, node, pos );
-		node.right = buildTree( points.subarray( ( median + 1 ) * eleSize, points.length ), depth + 1, node, pos + median + 1 );
+		node.left = buildTree( points.subarray( 0, median * eleSize), depth + 1, node, pos, pointsAux ? pointsAux.subarray(0, median * eleSize) : null );
+		node.right = buildTree( points.subarray( ( median + 1 ) * eleSize, points.length ), depth + 1, node, pos + median + 1, pointsAux ? pointsAux.subarray((median + 1) * eleSize, points.length) : null );
 
 		return node;
 	
 	}
 
-	this.root = buildTree( points, 0, null, 0 );
+	this.root = buildTree( points, 0, null, 0, pointsAux );
 		
 	this.getMaxDepth = function () { return maxDepth; };
 	

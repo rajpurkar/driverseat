@@ -101,6 +101,25 @@ service('util', function($http) {
             //TODO: define other colors instead of using algorithm?
             return generateRGB(colorIndex);
         },
+        colorHash: function(r, g, b) {
+            if (typeof r === "object") {
+                if (typeof r.r !== "undefined") {
+                    var color = r;
+                    r = color.r;
+                    g = color.g;
+                    b = color.b;
+                } else {
+                    var color = r;
+                    r = color[0];
+                    g = color[1];
+                    b = color[2];
+                }
+            }
+            r = String(r).slice(0,5);
+            g = String(g).slice(0,5);
+            b = String(b).slice(0,5);
+            return r + "," + g + "," + b;
+        },
         loadJSON: function(url, success, fail) {
             $http.get(url)
                 .success(function(data) {
@@ -302,7 +321,7 @@ factory('history', function(cache) {
     redoHistory = [],
     maxHistorySize = 300;	//TODO max size should depend on available storage size
     return {
-        push: function(action, lanePositions, laneNum) {
+        push: function(action, laneNum, lanePositions, laneTypes) {
             var entry = {
                 laneNum: parseInt(laneNum, 10),
                 action: action,
@@ -313,11 +332,12 @@ factory('history', function(cache) {
                 cache.remove(redoHistory[i].filename);
             }
             redoHistory = [];
-            cache.write(entry.filename, lanePositions, function() {
+            cache.write(entry.filename+"_p", lanePositions, function() {
                 // cache.ls(function(entries) {
                 //     console.log(entries);
                 // });
             });
+            cache.write(entry.filename+"_t", laneTypes);
             if (undoHistory.length > maxHistorySize) {
                 cache.remove(undoHistory.shift().filename);
             }
@@ -328,6 +348,8 @@ factory('history', function(cache) {
 
             var entry = undoHistory.pop();
             redoHistory.push(entry);
+            var filename = entry.filename;
+            // find the last state of the lane before the current undo entry
             var filename = "";
             for (var i = undoHistory.length-1; i >= 0; i--) {
                 if (undoHistory[i].laneNum == entry.laneNum) {
@@ -336,11 +358,13 @@ factory('history', function(cache) {
                 }
             }
             if (i < 0) {
-                callback(entry.action, null, entry.laneNum);
+                callback(entry.laneNum, entry.action, null, null);
                 return;
             }
-            cache.read(filename, function(arrayBuffer) {
-                callback(entry.action, arrayBuffer, entry.laneNum);
+            cache.read(filename+"_p", function(posArrayBuf) {
+                cache.read(filename+"_t", function(typesArrayBuf) {
+                    callback(entry.laneNum, entry.action, posArrayBuf, typesArrayBuf);
+                });
             });
         },
         redo: function(callback) {
@@ -349,8 +373,10 @@ factory('history', function(cache) {
 
             var entry = redoHistory.pop();
             undoHistory.push(entry);
-            cache.read(entry.filename, function(arrayBuffer) {
-                callback(entry.laneNum, entry.action, arrayBuffer);
+            cache.read(entry.filename+"_p", function(posArrayBuf) {
+                cache.read(entry.filename+"_t", function(typesArrayBuf) {
+                    callback(entry.laneNum, entry.action, posArrayBuf, typesArrayBuf);
+                });
             });
         },
         undoHistoryHash: function() {

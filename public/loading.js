@@ -74,7 +74,8 @@ factory('loading', function($http, util) {
                         $scope.scene.add(laneCloud);
                         $scope.pointClouds.lanes[lane] = laneCloud;
                         var positions = laneCloud.geometry.attributes.position.array;
-                        $scope.kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3);
+                        var colors = laneCloud.geometry.attributes.color.array;
+                        $scope.kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3, colors);
                     }
                     $scope.laneTypes = laneTypes;
                     callback(null, 'lanes_load');

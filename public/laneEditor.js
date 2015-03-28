@@ -17,11 +17,12 @@ factory('laneEditor', function(util, key, history, $http) {
             delete: false,
             join: false,
             laneType: false
-        };
+        },
+        laneTypeColors = {};
 
     function initLane(laneNum) {
         var positions = $scope.geometries["lane"+laneNum].attributes.position;
-        history.push("original", positions.array, laneNum);
+        history.push("original", laneNum, positions.array, $scope.laneTypes[laneNum]);
     }
 
     function setPointBoxVisibility(box1, box2){
@@ -81,6 +82,10 @@ factory('laneEditor', function(util, key, history, $http) {
         for (var lane in $scope.pointClouds.lanes) {
             initLane(lane);
         }
+        for (var i = 0; i < $scope.numLaneTypes; i++) {
+            laneTypeColors[util.colorHash(util.laneTypeColor(i))] = i;
+        }
+        laneTypeColors["0.5,0.5,0.5"] = -1;
     }
 
     function exit() {
@@ -271,7 +276,8 @@ factory('laneEditor', function(util, key, history, $http) {
 
     function onDocumentMouseUp() {
         if (action.type == "drag") {
-            history.push(action.type, selectedPoint[0].object.geometry.attributes.position.array, action.laneNum);
+            var positions = selectedPoint[0].object.geometry.attributes.position;
+            history.push(action.type, action.laneNum, positions.array, $scope.laneTypes[action.laneNum]);
             deselectPoints(action.laneNum);
             dragPointDists = {};
         }
@@ -413,7 +419,7 @@ factory('laneEditor', function(util, key, history, $http) {
         var positions = $scope.geometries["lane"+laneNum].attributes.position,
             colors = $scope.geometries["lane"+laneNum].attributes.color;
 
-        util.paintPoint(colors, index, 255, 255, 255);
+        // util.paintPoint(colors, index, 255, 255, 255);
         var pos = util.getPos(positions.array, index);
         selectedPointBox[0].position.set(pos[0], pos[1], pos[2]);
         setPointBoxVisibility(true, null);
@@ -445,7 +451,11 @@ factory('laneEditor', function(util, key, history, $http) {
         $scope.laneTypes[laneNum] = laneTypes;
         $scope.pointClouds.lanes[laneNum] = laneCloud;
         var newPositions = laneCloud.geometry.attributes.position;
-        $scope.kdtrees["lane"+laneNum] = new THREE.TypedArrayUtils.Kdtree(newPositions.array, util.distance, 3);
+        var newColors = laneCloud.geometry.attributes.color;
+        $scope.kdtrees["lane"+laneNum] = new THREE.TypedArrayUtils.Kdtree(newPositions.array, util.distance, 3, newColors.array);
+        for (var i = 0; i < $scope.laneTypes[laneNum].length; i++) {
+            $scope.laneTypes[laneNum][i] = laneTypeColors[util.colorHash(newColors.array.subarray(3*i, 3*i+3))]
+        }
     }
 
     function deleteLane(laneNum) {
@@ -471,8 +481,10 @@ factory('laneEditor', function(util, key, history, $http) {
         colors.needsUpdate = true;
 
         delete $scope.kdtrees["lane"+laneNum];
-        $scope.kdtrees["lane"+laneNum] = new THREE.TypedArrayUtils.Kdtree(positions.array, util.distance, 3);
-        console.log(laneNum);
+        $scope.kdtrees["lane"+laneNum] = new THREE.TypedArrayUtils.Kdtree(positions.array, util.distance, 3, colors.array);
+        for (var i = 0; i < $scope.laneTypes[laneNum].length; i++) {
+            $scope.laneTypes[laneNum][i] = laneTypeColors[util.colorHash(colors.array.subarray(3*i, 3*i+3))];
+        }
     }
 
     function copySegment() {
@@ -510,7 +522,6 @@ factory('laneEditor', function(util, key, history, $http) {
         setPointBoxVisibility(true, null);
         selectedPoint[0] = selectedPointRef;
         var laneNum = newLaneNum();
-        $scope.laneTypes[laneNum] = newLaneTypes;
         newLane(laneNum, newPositions, newLaneTypes);
         action.laneNum = laneNum;
     }
@@ -526,7 +537,7 @@ factory('laneEditor', function(util, key, history, $http) {
             positions.array[index++] += dVec[2];
         }
         positions.needsUpdate = true;
-        history.push("new", positions.array, laneNum);
+        history.push("new", laneNum, positions.array, $scope.laneTypes[laneNum]);
         selectedPoint = [null, null];
         selectedPositions = {};
         setPointBoxVisibility(false, null);
@@ -570,14 +581,14 @@ factory('laneEditor', function(util, key, history, $http) {
         }
         newLaneTypes.set(laneTypes[1], laneTypes[0].length + fillPositions.length / 3);
         // delete second lane
-        history.push("delete", positionArrs[1].array, lanes[1]);
+        history.push("delete", lanes[1], positionArrs[1].array, laneTypes[1]);
         deleteLane(lanes[1]);
         // modify first lane
         var positions = positionArrs[0];
         var colors = $scope.pointClouds.lanes[lanes[0]].geometry.attributes.color;
         updateLane(lanes[0], positions, colors, newPositions, newLaneTypes);
 
-        history.push("join", positions.array, lanes[0]);
+        history.push("join", lanes[0], positions.array, $scope.laneTypes[lanes[0]]);
         selectedPoint = [null, null];
         selectedPositions = {};
     }
@@ -599,7 +610,7 @@ factory('laneEditor', function(util, key, history, $http) {
         setPointBoxVisibility(false, false);
         if (selectedLane >= 0) {
             // delete entire lane
-            history.push("delete", positions.array, selectedLane);
+            history.push("delete", selectedLane, positions.array, $scope.laneTypes[selectedLane]);
             deleteLane(selectedLane);
             action.type = "delete";
             selectedLane = -1;
@@ -637,14 +648,15 @@ factory('laneEditor', function(util, key, history, $http) {
         var subNewPositions = newPositions.subarray(0, lenNewPositions);
         var subNewLaneTypes = newLaneTypes.subarray(0, lenNewLaneTypes);
         newLane(laneNum, subNewPositions, subNewLaneTypes);
-        history.push("new_split", subNewPositions, laneNum);
+        newPositions = $scope.geometries["lane"+laneNum].attributes.position;
+        history.push("new_split", laneNum, newPositions.array, $scope.laneTypes[laneNum]);
         // truncate old lane
         var positionsArray = new Float32Array(oldPositions.subarray(0, lenOldPositions));
         var laneTypes = new Int8Array(oldLaneTypes.subarray(0, lenOldLaneTypes));
         updateLane(action.laneNum, positions, colors, positionsArray, laneTypes);
 
         //TODO edge case where newLane is empty
-        history.push("split", positions.array, action.laneNum);
+        history.push("split", action.laneNum, positions.array, $scope.laneTypes[action.laneNum]);
         selectedPoint = [null, null];
         selectedPositions = {};
     }
@@ -739,7 +751,7 @@ factory('laneEditor', function(util, key, history, $http) {
         }
 
         updateLane(laneNum, positions, colors, newPositions, newLaneTypes);
-        history.push("append", positions.array, laneNum);
+        history.push("append", laneNum, positions.array, $scope.laneTypes[laneNum]);
 
         // select last point for next append
         var nearestPoints = $scope.kdtrees["lane"+laneNum].nearest(endPos, 1, util.INTERPOLATE_STEP);
@@ -760,7 +772,8 @@ factory('laneEditor', function(util, key, history, $http) {
         }
         var laneNum = newLaneNum();
         newLane(laneNum, newPositions, newLaneTypes);
-        history.push("fork", newPositions, laneNum);
+        newPositions = $scope.geometries["lane"+laneNum].attributes.position;
+        history.push("fork", laneNum, newPositions.array, $scope.laneTypes[laneNum]);
 
         // select end point for next append
         deselectPoints(action.laneNum);
@@ -802,23 +815,26 @@ factory('laneEditor', function(util, key, history, $http) {
             $scope.laneTypes[laneNum][index] = laneType;
         }
         deselectPoints(laneNum);
+        var positions = $scope.geometries["lane"+laneNum].attributes.position;
+        history.push("type", laneNum, positions.array, $scope.laneTypes[laneNum]);
     }
 
     function undo() {
         action.type = "";
         try {
-            history.undo(function(action, arrayBuffer, laneNum) {
+            history.undo(function(laneNum, action, posArrayBuf, typesArrayBuf) {
                 if (action == "new" || action == "new_split" || action == "fork") {
                     deleteLane(laneNum);
                     return;
                 } else if (action == "delete") {
-                    newLane(laneNum, arrayBuffer);
+                    newLane(laneNum, posArraybuf, new Int8Array(typesArrayBuf));
                     return;
                 }
                 var positions = $scope.geometries["lane"+laneNum].attributes.position;
                 var colors = $scope.geometries["lane"+laneNum].attributes.color;
-                var positionsArray = new Float32Array(arrayBuffer);
-                updateLane(laneNum, positions, colors, positionsArray);
+                var positionsArray = new Float32Array(posArrayBuf);
+                var typesArray = new Int8Array(typesArrayBuf);
+                updateLane(laneNum, positions, colors, positionsArray, typesArray);
                 if (action == "split" || action == "join") {
                     undo();
                 }
@@ -830,9 +846,9 @@ factory('laneEditor', function(util, key, history, $http) {
 
     function redo() {
         try {
-            history.redo(function(laneNum, action, arrayBuffer) {
+            history.redo(function(laneNum, action, posArrayBuf, typesArrayBuf) {
                 if (action == "new" || action == "new_split" || action == "fork") {
-                    newLane(laneNum, arrayBuffer);
+                    newLane(laneNum, posArrayBuf, new Int8Array(typesArrayBuf));
                     if (action == "new_split") redo();
                     //TODO if next is delete:
                     return;
@@ -843,8 +859,9 @@ factory('laneEditor', function(util, key, history, $http) {
                 }
                 var positions = $scope.geometries["lane"+laneNum].attributes.position;
                 var colors = $scope.geometries["lane"+laneNum].attributes.color;
-                var positionsArray = new Float32Array(arrayBuffer);
-                updateLane(laneNum, positions, colors, positionsArray);
+                var positionsArray = new Float32Array(posArrayBuf);
+                var typesArray = new Int8Array(typesArrayBuf);
+                updateLane(laneNum, positions, colors, positionsArray, typesArray);
             });
         } catch (e) {
             $scope.log(e.message);

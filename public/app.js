@@ -1,7 +1,24 @@
 var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 
 myApp.
-controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEditor, loading, util, key, videoProjection, radar, carDetection, cfpLoadingBar, tagEditor) {
+controller(
+    'AppCtrl',
+    function(
+        $scope,
+        $attrs,
+        $window,
+        $parse,
+        $timeout,
+        laneEditor,
+        loading,
+        util,
+        key,
+        videoProjection,
+        radar,
+        carDetection,
+        cfpLoadingBar,
+        tagEditor,
+        laneDetection) {
 
     $scope.laneEditor               = laneEditor;
     $scope.tagEditor                = tagEditor;
@@ -147,14 +164,20 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
         radar.init($scope.radarData, $scope.params, $scope.scene);
         if ($scope.editor == "lane")
             laneEditor.init($scope);
-        $scope.videoProjectionParams = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
+        $scope.videoProjectionParamsFromCamera0 = videoProjection.init($scope.params, 0, $scope.pointClouds.lanes);
+        $scope.videoProjectionParamsFromCamera1 = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
         carDetection.init(
             $scope.carDetectionData,
             $scope.carDetectionVerifiedData,
             $scope.precisionAndRecallData[$scope.trackInfo.track],
-            $scope.videoProjectionParams,
+            $scope.videoProjectionParamsFromCamera1,
             $scope.scene);
         carDetection.displayPrecisionAndRecall();
+        laneDetection.init(
+            $scope.laneDetectionData,
+            $scope.videoProjectionParamsFromCamera0,
+            $scope.videoProjectionParamsFromCamera1,
+            $scope.scene);
 
         // TODO(rchengyue): Find out how to only watch toggle for space if input text boxes are not in focus.
         key.watchToggle("space");
@@ -295,10 +318,10 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
         if (img_disp) {
             /*
             for (var idx in $scope.pointClouds.lanes) {
-                videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount], $scope.videoProjectionParams);
+                videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount], $scope.videoProjectionParamsFromCamera1);
             }
             */
-            videoProjection.projectScene("projectionCanvas", $scope.gps[$scope.frameCount], $scope.videoProjectionParams);
+            videoProjection.projectScene("projectionCanvas", $scope.gps[$scope.frameCount], $scope.videoProjectionParamsFromCamera1);
         } else {
             var canv = document.getElementById("projectionCanvas");
             var ctx = canv.getContext("2d");
@@ -311,10 +334,11 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
             ctx.fillText("Buffering", canv.width/2, canv.height/2);
         }
 
-        //videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.points, $scope.gps[$scope.frameCount], $scope.videoProjectionParams);
+        //videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.points, $scope.gps[$scope.frameCount], $scope.videoProjectionParamsFromCamera1);
         radar.displayReturns($scope.frameCount, $scope.gps[$scope.frameCount]);
         carDetection.drawCarDetectionBoxes("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
         carDetection.drawCarDetectionVerifiedBoxes("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
+        laneDetection.drawLaneDetectionPoints("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
         fpsMeter.tick();
 
         renderer.render($scope.scene, camera);

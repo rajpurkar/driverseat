@@ -7,7 +7,7 @@ html
 		link(rel='stylesheet', href='/vendor/loading-bar.css')
 		title=title
 	body(ng-app='roadglApp')
-		div(ng-controller='AppCtrl', ng-trackinfo='#{JSON.stringify(trackInfo)}', ng-editor=editor)
+		div(ng-controller='AppCtrl', ng-trackinfo='#{JSON.stringify(trackInfo)}', ng-editor=editor, ng-lanetypes=laneTypes)
 			canvas#road
 				canvas
 			#wrap
@@ -95,6 +95,12 @@ html
 						div
 							button#delete.actionBtn(type="button", ng-click="laneEditor.delete()", ng-show="laneEditor.showButton.delete")
 								|Delete
+						div#laneType(ng-show="laneEditor.showButton.laneType")
+							label(for="laneType")
+								|Lane Type
+							select#laneTypeSelector(name="laneType", ng-model="selectedLaneType", ng-change="laneEditor.laneType(selectedLaneType)")
+								-each laneType, index in laneTypes
+									option(value="#{index}") #{laneType}
 					.tab(ng-show="editor == 'tag'")
 						div
 							button#addCategory.actionBtn(type="button", ng-click="tagEditor.toggleAddCategory()")

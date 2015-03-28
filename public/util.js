@@ -47,6 +47,23 @@ service('util', function($http) {
         // return Math.round(rgb * 255);
     }
 
+    /**
+     * Generate a color (for use with laneNum 1,2,3...)
+     */
+    function generateRGB(seed) {
+        seed = ((parseInt(seed, 10) * 17) % 100) / 100;
+        var color = {
+            r: HUEtoRGB(seed+1/3),
+            g: HUEtoRGB(seed),
+            b: HUEtoRGB(seed-1/3)
+        };
+        if (seed < 0.76 && seed > 0.56) {
+            color.r += 0.5;
+            color.g += 0.5;
+        }
+        return color;
+    }
+
     return {
         distance: distance,
         midpoint: function(a, b) {
@@ -76,21 +93,13 @@ service('util', function($http) {
             return array.subarray(3*index, 3*index+3);
         },
         HUEtoRGB: HUEtoRGB,
-        /**
-         * Generate a color (for use with laneNum 1,2,3...)
-         */
-        generateRGB: function(seed) {
-            seed = ((parseInt(seed, 10) * 17) % 100) / 100;
-            var color = {
-                r: HUEtoRGB(seed+1/3),
-                g: HUEtoRGB(seed),
-                b: HUEtoRGB(seed-1/3)
-            };
-            if (seed < 0.76 && seed > 0.56) {
-                color.r += 0.5;
-                color.g += 0.5;
+        generateRGB: generateRGB,
+        laneTypeColor: function(colorIndex) {
+            if (colorIndex == -1) {
+                return { r:0.5, g:0.5, b:0.5 };
             }
-            return color;
+            //TODO: define other colors instead of using algorithm?
+            return generateRGB(colorIndex);
         },
         loadJSON: function(url, success, fail) {
             $http.get(url)

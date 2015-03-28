@@ -65,7 +65,19 @@ app.get("/edit", auth.requiredAuthentication, function(req, res) {
                     params:                 "/q50_4_3_14_params.json",
                     precisionAndRecall:     "/precision_and_recall.json"
                 }
-            }
+            },
+            laneTypes: [
+                "white_dotted",
+                "white_solid",
+                "white_dotted_solid",
+                "white_solid_dotted",
+                "white_solid_solid",
+                "yellow_dotted",
+                "yellow_solid",
+                "yellow_dotted_solid",
+                "yellow_solid_dotted",
+                "yellow_solid_solid"
+            ]
         });
     });
 });

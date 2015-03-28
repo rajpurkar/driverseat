@@ -55,15 +55,28 @@ factory('loading', function($http, util) {
                     } catch (e) {
                         data = JSON.parse(loader(gzipped_data, "lanes_done.json"));
                     }
+                    var laneTypes;
+                    try {
+                        laneTypes = JSON.parse(loader(gzipped_data, "lane_types.json"));
+                    } catch (e) {
+                        laneTypes = {};
+                        for (var lane in data) {
+                            laneTypes[lane] = new Int8Array(data[lane].length);
+                            for (var i = 0; i < laneTypes[lane].length; i++) {
+                                laneTypes[lane][i] = -1;
+                            }
+                        }
+                    }
                     $scope.pointClouds.lanes = {};
                     for (var lane in data) {
-                        var color = util.generateRGB(lane);
-                        var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], $scope.LANE_POINT_SIZE, color);
+                        // var colors = util.generateRGB(laneTypes[lane]);
+                        var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], $scope.LANE_POINT_SIZE, laneTypes[lane]);
                         $scope.scene.add(laneCloud);
                         $scope.pointClouds.lanes[lane] = laneCloud;
                         var positions = laneCloud.geometry.attributes.position.array;
                         $scope.kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3);
                     }
+                    $scope.laneTypes = laneTypes;
                     callback(null, 'lanes_load');
                 });
             },

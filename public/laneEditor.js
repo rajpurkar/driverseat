@@ -9,6 +9,7 @@ factory('laneEditor', function(util, key, history, $http) {
         action = { laneNum: 0, type: "" },
         autosaveInterval = 30000,
         autosaveTimer = null,
+        lastSave = null,
         isDisableKeyDown = false,
         showButton = {
             append: false,
@@ -77,7 +78,6 @@ factory('laneEditor', function(util, key, history, $http) {
         document.addEventListener('keydown', onDocumentKeyDown, false);
         document.addEventListener('dblclick', onDocumentDblClick, false);
         createSelectedPointBoxes();
-        autosaveTimer = setInterval(function() { save(true); }, autosaveInterval);
 
         for (var lane in $scope.pointClouds.lanes) {
             initLane(lane);
@@ -86,6 +86,9 @@ factory('laneEditor', function(util, key, history, $http) {
             laneTypeColors[util.colorHash(util.laneTypeColor(i))] = i;
         }
         laneTypeColors["0.5,0.5,0.5"] = -1;
+
+        autosaveTimer = setInterval(function() { save(true); }, autosaveInterval);
+        lastSave = history.undoHistoryHash();
     }
 
     function exit() {
@@ -103,7 +106,6 @@ factory('laneEditor', function(util, key, history, $http) {
         action = { laneNum: 0, type: "" };
     }
 
-    var lastSave = history.undoHistoryHash();
     function save(autosave) {
         document.getElementById("save").removeEventListener("click", save);
         autosave = typeof autosave === "boolean" ? autosave : false;
@@ -113,12 +115,14 @@ factory('laneEditor', function(util, key, history, $http) {
             lastSave = currSave;
             $scope.log("Autosaving...");
         } else {
+            lastSave = history.undoHistoryHash();
             $scope.log("Saving...");
         }
 
         var trackName = $scope.trackInfo.track;
 
         var lanes = {};
+        var laneTypes = {};
         for (var laneNum in $scope.pointClouds.lanes) {
             var positions = $scope.geometries["lane"+laneNum].attributes.position.array;
             var posVectors = [];
@@ -126,11 +130,14 @@ factory('laneEditor', function(util, key, history, $http) {
                 posVectors.push([positions[i+2], positions[i], positions[i+1]]);
             }
             lanes[laneNum] = posVectors;
+            laneTypes[laneNum] = Array.prototype.slice.call($scope.laneTypes[laneNum]);
         }
         var data = {};
         var serializedLanes = JSON.stringify(lanes);
+        var serializedLaneTypes = JSON.stringify(laneTypes);
         var zip = new JSZip();
         zip.file("lanes.json", serializedLanes);
+        zip.file("lane_types.json", serializedLaneTypes);
         data[trackName] = zip.generate({ compression: "DEFLATE", type: "blob" });
 
         var postUrl = autosave ? "/autosave" : "/save";

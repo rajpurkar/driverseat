@@ -83,7 +83,13 @@ factory('laneEditor', function(util, key, history, $http) {
             initLane(lane);
         }
         for (var i = 0; i < $scope.numLaneTypes; i++) {
-            laneTypeColors[util.colorHash(util.laneTypeColor(i))] = i;
+            var color = util.laneTypeColor(i);
+            laneTypeColors[util.colorHash(color)] = i;
+            var rgb = [];
+            rgb.push(Math.round(color.r * 255));
+            rgb.push(Math.round(color.g * 255));
+            rgb.push(Math.round(color.b * 255));
+            $("#laneTypeSelector > option[value="+i+"]").css("background-color", "rgb("+rgb.join(',')+")");
         }
         laneTypeColors["0.5,0.5,0.5"] = -1;
 

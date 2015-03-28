@@ -51,7 +51,8 @@ service('util', function($http) {
      * Generate a color (for use with laneNum 1,2,3...)
      */
     function generateRGB(seed) {
-        seed = ((parseInt(seed, 10) * 17) % 100) / 100;
+        var scale = 18; // change this to generate different colors
+        seed = ((parseInt(seed, 10) * scale) % 100) / 100;
         var color = {
             r: HUEtoRGB(seed+1/3),
             g: HUEtoRGB(seed),

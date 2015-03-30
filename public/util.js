@@ -47,6 +47,24 @@ service('util', function($http) {
         // return Math.round(rgb * 255);
     }
 
+    /**
+     * Generate a color (for use with laneNum 1,2,3...)
+     */
+    function generateRGB(seed) {
+        var scale = 18; // change this to generate different colors
+        seed = ((parseInt(seed, 10) * scale) % 100) / 100;
+        var color = {
+            r: HUEtoRGB(seed+1/3),
+            g: HUEtoRGB(seed),
+            b: HUEtoRGB(seed-1/3)
+        };
+        if (seed < 0.76 && seed > 0.56) {
+            color.r += 0.5;
+            color.g += 0.5;
+        }
+        return color;
+    }
+
     return {
         distance: distance,
         midpoint: function(a, b) {
@@ -76,21 +94,32 @@ service('util', function($http) {
             return array.subarray(3*index, 3*index+3);
         },
         HUEtoRGB: HUEtoRGB,
-        /**
-         * Generate a color (for use with laneNum 1,2,3...)
-         */
-        generateRGB: function(seed) {
-            seed = ((parseInt(seed, 10) * 17) % 100) / 100;
-            var color = {
-                r: HUEtoRGB(seed+1/3),
-                g: HUEtoRGB(seed),
-                b: HUEtoRGB(seed-1/3)
-            };
-            if (seed < 0.76 && seed > 0.56) {
-                color.r += 0.5;
-                color.g += 0.5;
+        generateRGB: generateRGB,
+        laneTypeColor: function(colorIndex) {
+            if (colorIndex == -1) {
+                return { r:0.5, g:0.5, b:0.5 };
             }
-            return color;
+            //TODO: define other colors instead of using algorithm?
+            return generateRGB(colorIndex);
+        },
+        colorHash: function(r, g, b) {
+            if (typeof r === "object") {
+                if (typeof r.r !== "undefined") {
+                    var color = r;
+                    r = color.r;
+                    g = color.g;
+                    b = color.b;
+                } else {
+                    var color = r;
+                    r = color[0];
+                    g = color[1];
+                    b = color[2];
+                }
+            }
+            r = String(r).slice(0,5);
+            g = String(g).slice(0,5);
+            b = String(b).slice(0,5);
+            return r + "," + g + "," + b;
         },
         loadJSON: function(url, success, fail) {
             $http.get(url)
@@ -293,7 +322,7 @@ factory('history', function(cache) {
     redoHistory = [],
     maxHistorySize = 300;	//TODO max size should depend on available storage size
     return {
-        push: function(action, lanePositions, laneNum) {
+        push: function(action, laneNum, lanePositions, laneTypes) {
             var entry = {
                 laneNum: parseInt(laneNum, 10),
                 action: action,
@@ -304,11 +333,12 @@ factory('history', function(cache) {
                 cache.remove(redoHistory[i].filename);
             }
             redoHistory = [];
-            cache.write(entry.filename, lanePositions, function() {
+            cache.write(entry.filename+"_p", lanePositions, function() {
                 // cache.ls(function(entries) {
                 //     console.log(entries);
                 // });
             });
+            cache.write(entry.filename+"_t", laneTypes);
             if (undoHistory.length > maxHistorySize) {
                 cache.remove(undoHistory.shift().filename);
             }
@@ -319,6 +349,8 @@ factory('history', function(cache) {
 
             var entry = undoHistory.pop();
             redoHistory.push(entry);
+            var filename = entry.filename;
+            // find the last state of the lane before the current undo entry
             var filename = "";
             for (var i = undoHistory.length-1; i >= 0; i--) {
                 if (undoHistory[i].laneNum == entry.laneNum) {
@@ -327,11 +359,13 @@ factory('history', function(cache) {
                 }
             }
             if (i < 0) {
-                callback(entry.action, null, entry.laneNum);
+                callback(entry.laneNum, entry.action, null, null);
                 return;
             }
-            cache.read(filename, function(arrayBuffer) {
-                callback(entry.action, arrayBuffer, entry.laneNum);
+            cache.read(filename+"_p", function(posArrayBuf) {
+                cache.read(filename+"_t", function(typesArrayBuf) {
+                    callback(entry.laneNum, entry.action, posArrayBuf, typesArrayBuf);
+                });
             });
         },
         redo: function(callback) {
@@ -340,8 +374,10 @@ factory('history', function(cache) {
 
             var entry = redoHistory.pop();
             undoHistory.push(entry);
-            cache.read(entry.filename, function(arrayBuffer) {
-                callback(entry.laneNum, entry.action, arrayBuffer);
+            cache.read(entry.filename+"_p", function(posArrayBuf) {
+                cache.read(entry.filename+"_t", function(typesArrayBuf) {
+                    callback(entry.laneNum, entry.action, posArrayBuf, typesArrayBuf);
+                });
             });
         },
         undoHistoryHash: function() {

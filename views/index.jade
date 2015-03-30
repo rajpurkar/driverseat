@@ -7,7 +7,7 @@ html
 		link(rel='stylesheet', href='/vendor/loading-bar.css')
 		title=title
 	body(ng-app='roadglApp')
-		div(ng-controller='AppCtrl', ng-trackinfo='#{JSON.stringify(trackInfo)}', ng-editor=editor)
+		div(ng-controller='AppCtrl', ng-trackinfo='#{JSON.stringify(trackInfo)}', ng-editor=editor, ng-lanetypes=laneTypes)
 			canvas#road
 				canvas
 			#wrap
@@ -41,7 +41,7 @@ html
 					#slideDiv.tab
 						div(ng-show="editor == 'lane'")
 							h4 Drag range
-							input#drrange(type="range", min="1", max="60", value="15", step="5", ng-model="dragRange")
+							input#drrange(type="range", min="1", max="60", step="5", ng-model="dragRange")
 						h4 Play speed
 						input#playspeedrange(type="range", min="1", max="5", value="1", step="1")
 				#left-bottom
@@ -74,6 +74,11 @@ html
 										p {{tag.category.name}}
 										p {{tag.category.description}}
 				#right-side
+					.tab
+						p#carDetectionPrecisionTitle
+							h5#carDetectionPrecisionField
+						p#carDetectionRecallTitle
+							h5#carDetectionRecallField
 					#options.tab(ng-show="editor == 'lane'")
 						div
 							button#fork.actionBtn(type="button", ng-click="laneEditor.fork()", ng-show="laneEditor.showButton.fork")
@@ -90,6 +95,12 @@ html
 						div
 							button#delete.actionBtn(type="button", ng-click="laneEditor.delete()", ng-show="laneEditor.showButton.delete")
 								|Delete
+						div#laneType(ng-show="laneEditor.showButton.laneType")
+							label(for="laneType")
+								|Lane Type
+							select#laneTypeSelector(name="laneType", ng-model="selectedLaneType", ng-change="laneEditor.laneType(selectedLaneType)")
+								-each laneType, index in laneTypes
+									option(value="#{index}") #{laneType}
 					.tab(ng-show="editor == 'tag'")
 						div
 							button#addCategory.actionBtn(type="button", ng-click="tagEditor.toggleAddCategory()")
@@ -166,3 +177,4 @@ html
 		script(src='/videoProjection.js')
 		script(src='/radar.js')
 		script(src='/carDetection.js')
+		script(src='/laneDetection.js')

@@ -5,8 +5,10 @@ service('carDetection', function(util) {
     var canvasBoxes = [];
     var carDetectionData;
     var carDetectionVerifiedData;
+    var precisionRecallData;
     var scene;
     var videoProjectionParams;
+    var canvasProjectionMatrix;
 
     function initializeCanvasBoxes() {
         for (var i = 0; i < MAX_NUM_CANVAS_BOXES; i++) {
@@ -34,8 +36,8 @@ service('carDetection', function(util) {
             carDetectionBoxLocations.push(depth * (v + height / 2));
             carDetectionBoxLocations.push(depth);
         }
-        var projectionMatrix = getProjectionMatrix(imuLocationT);
-        projectionMatrix.applyToVector3Array(carDetectionBoxLocations);
+        var canvasProjectionMatrix = getCanvasProjectionMatrix(imuLocationT);
+        canvasProjectionMatrix.applyToVector3Array(carDetectionBoxLocations);
         return carDetectionBoxLocations;
     }
 
@@ -61,7 +63,7 @@ service('carDetection', function(util) {
         canvasBox.updateMatrix();
     }
 
-    function getProjectionMatrix(imuLocationT) {
+    function getCanvasProjectionMatrix(imuLocationT) {
         var T_imu_0_to_THREE = videoProjectionParams.T_imu_0_to_THREE;
         var T_from_l_to_i = videoProjectionParams.T_from_l_to_i;
         var T_imu_t_to_imu_0 = util.Matrix4FromJSON4x4(imuLocationT);
@@ -100,9 +102,10 @@ service('carDetection', function(util) {
     }
 
     return {
-        init: function(data, verifiedData, vpParams, scn) {
+        init: function(data, verifiedData, precisionAndRecall, vpParams, scn) {
             carDetectionData = data;
             carDetectionVerifiedData = verifiedData;
+            precisionAndRecallData = precisionAndRecall;
             videoProjectionParams = vpParams;
             scene = scn;
             // TODO(rchengyue): Make separate sets of canvas boxes for detected and verified
@@ -144,5 +147,17 @@ service('carDetection', function(util) {
                 return true;
             }
         },
+        displayPrecisionAndRecall: function() {
+            if (precisionAndRecallData) {
+                var precisionTitle = document.getElementById("carDetectionPrecisionTitle");
+                var precisionField = document.getElementById("carDetectionPrecisionField");
+                var recallTitle = document.getElementById("carDetectionRecallTitle");
+                var recallField = document.getElementById("carDetectionRecallField");
+                precisionTitle.innerHTML = "Car Detection Precision"
+                precisionField.innerHTML = precisionAndRecallData.precision;
+                recallTitle.innerHTML = "Car Detection Recall"
+                recallField.innerHTML = precisionAndRecallData.recall;
+            }
+        }
     };
 });

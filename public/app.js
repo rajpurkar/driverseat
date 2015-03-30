@@ -1,7 +1,24 @@
 var myApp = angular.module('roadglApp', ['angular-loading-bar','ngAnimate']);
 
 myApp.
-controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEditor, loading, util, key, videoProjection, radar, carDetection, cfpLoadingBar, tagEditor) {
+controller(
+    'AppCtrl',
+    function(
+        $scope,
+        $attrs,
+        $window,
+        $parse,
+        $timeout,
+        laneEditor,
+        loading,
+        util,
+        key,
+        videoProjection,
+        radar,
+        carDetection,
+        cfpLoadingBar,
+        tagEditor,
+        laneDetection) {
 
     $scope.laneEditor               = laneEditor;
     $scope.tagEditor                = tagEditor;
@@ -24,7 +41,10 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
     $scope.LANE_POINT_SIZE          = 0.08;
     $scope.LIDAR_POINT_SIZE         = 0.12;
     $scope.params                   = null;
+    $scope.precisionAndRecall   = null;
     $scope.shortcutsEnabled         = true;
+    $scope.dragRange                = 15;
+    $scope.numLaneTypes             = $attrs.ngLanetypes.split(',').length;
 
     // constants
     var INITIAL_OFFSET = [0, 5, -14],
@@ -57,7 +77,10 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
 
     $scope.flush = function() {
         $timeout(function() {
-            $scope.$apply();
+            try {
+                $scope.$apply();
+            } catch(e) {
+            }
         }, 0, false);
     }
 
@@ -141,11 +164,19 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
         radar.init($scope.radarData, $scope.params, $scope.scene);
         if ($scope.editor == "lane")
             laneEditor.init($scope);
-        $scope.videoProjectionParams = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
+        $scope.videoProjectionParamsFromCamera0 = videoProjection.init($scope.params, 0, $scope.pointClouds.lanes);
+        $scope.videoProjectionParamsFromCamera1 = videoProjection.init($scope.params, 1, $scope.pointClouds.lanes);
         carDetection.init(
             $scope.carDetectionData,
             $scope.carDetectionVerifiedData,
-            $scope.videoProjectionParams,
+            $scope.precisionAndRecallData[$scope.trackInfo.track],
+            $scope.videoProjectionParamsFromCamera1,
+            $scope.scene);
+        carDetection.displayPrecisionAndRecall();
+        laneDetection.init(
+            $scope.laneDetectionData,
+            $scope.videoProjectionParamsFromCamera0,
+            $scope.videoProjectionParamsFromCamera1,
             $scope.scene);
 
         // TODO(rchengyue): Find out how to only watch toggle for space if input text boxes are not in focus.
@@ -287,10 +318,10 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
         if (img_disp) {
             /*
             for (var idx in $scope.pointClouds.lanes) {
-                videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount], $scope.videoProjectionParams);
+                videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount], $scope.videoProjectionParamsFromCamera1);
             }
             */
-            videoProjection.projectScene("projectionCanvas", $scope.gps[$scope.frameCount], $scope.videoProjectionParams);
+            videoProjection.projectScene("projectionCanvas", $scope.gps[$scope.frameCount], $scope.videoProjectionParamsFromCamera1);
         } else {
             var canv = document.getElementById("projectionCanvas");
             var ctx = canv.getContext("2d");
@@ -303,39 +334,40 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
             ctx.fillText("Buffering", canv.width/2, canv.height/2);
         }
 
-        //videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.points, $scope.gps[$scope.frameCount], $scope.videoProjectionParams);
+        //videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.points, $scope.gps[$scope.frameCount], $scope.videoProjectionParamsFromCamera1);
         radar.displayReturns($scope.frameCount, $scope.gps[$scope.frameCount]);
         carDetection.drawCarDetectionBoxes("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
         carDetection.drawCarDetectionVerifiedBoxes("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
+        laneDetection.drawLaneDetectionPoints("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
         fpsMeter.tick();
 
         renderer.render($scope.scene, camera);
     };
 
-    $scope.fillColor = function(colors, data, r, g, b){
-        for (i = 0; i < data.length; i++) {
+    $scope.fillColor = function(colors, r, g, b){
+        for (i = 0; i < colors.length; i++) {
             colors[3*i+0] = r;
             colors[3*i+1] = g;
             colors[3*i+2] = b;
         }
     };
 
-    $scope.generatePointCloud = function(name, data, size, color) {
+    $scope.generatePointCloud = function(name, data, size, colorIndices) {
         $scope.geometries[name] = new THREE.BufferGeometry();
         var positions, colors;
         var i;
         var dataType = Object.prototype.toString.call(data);
         if (dataType === "[object Float32Array]" || dataType === "[object ArrayBuffer]") {
             positions = new Float32Array(data);
-            colors    = new Float32Array(positions.length);
-            for (i = 0; i < colors.length; i += 3) {
-                colors[i]   = color.r;
-                colors[i+1] = color.g;
-                colors[i+2] = color.b;
-            }
+            // colors    = new Float32Array(positions.length);
+            // for (i = 0; i < colors.length; i += 3) {
+            //     colors[i]   = color.r;
+            //     colors[i+1] = color.g;
+            //     colors[i+2] = color.b;
+            // }
         } else {
             positions = new Float32Array(3*data.length);
-            colors    = new Float32Array(3*data.length);
+            // colors    = new Float32Array(3*data.length);
             for (i = 0; i < data.length; i++) {
                 //Note: order is changed
                 positions[3*i]   = data[i][1];	//x
@@ -343,14 +375,28 @@ controller('AppCtrl', function($scope, $attrs, $window, $parse, $timeout, laneEd
                 positions[3*i+2] = data[i][0];	//z
             }
 
-            if (data[0].length >= 4) {
-                $scope.fillColor(colors, data, 0.6, 0.6, 0.6);
-            } else if (typeof color === "undefined") {
-                $scope.fillColor(colors, data, 1, 1, 1);
-            } else {
-                $scope.fillColor(colors,data, color.r, color.g, color.b);
+            // if (data[0].length >= 4) {
+            //     $scope.fillColor(colors, data, 0.6, 0.6, 0.6);
+            // } else if (typeof color === "undefined") {
+            //     $scope.fillColor(colors, data, 1, 1, 1);
+            // } else {
+            //     $scope.fillColor(colors,data, color.r, color.g, color.b);
+            // }
+        }
+
+        colors = new Float32Array(positions.length);
+        if (typeof colorIndices === "undefined") {
+            color = { r:1, g:1, b:1 };
+            $scope.fillColor(colors, color.r, color.g, color.b);
+        } else {
+            for (i = 0; i < colorIndices.length; i++) {
+                var color = util.laneTypeColor(colorIndices[i]);
+                colors[3*i+0] = color.r;
+                colors[3*i+1] = color.g;
+                colors[3*i+2] = color.b;
             }
         }
+
         $scope.geometries[name].addAttribute('position', new THREE.BufferAttribute(positions, 3));
         $scope.geometries[name].addAttribute('color', new THREE.BufferAttribute(colors, 3));
         var material = new THREE.PointCloudMaterial({ size: size, vertexColors: true });

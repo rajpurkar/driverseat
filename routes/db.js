@@ -4,6 +4,7 @@ var moment = require('moment');
 var Busboy = require('busboy');
 var Category = require('./category');
 var Tag = require('./tag');
+var Lanetype = require('./lanetype');
 
 module.exports = {
     initdb: function(){

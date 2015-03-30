@@ -55,15 +55,29 @@ factory('loading', function($http, util) {
                     } catch (e) {
                         data = JSON.parse(loader(gzipped_data, "lanes_done.json"));
                     }
+                    var laneTypes;
+                    try {
+                        laneTypes = JSON.parse(loader(gzipped_data, "lane_types.json"));
+                    } catch (e) {
+                        laneTypes = {};
+                        for (var lane in data) {
+                            laneTypes[lane] = new Int8Array(data[lane].length);
+                            for (var i = 0; i < laneTypes[lane].length; i++) {
+                                laneTypes[lane][i] = -1;
+                            }
+                        }
+                    }
                     $scope.pointClouds.lanes = {};
                     for (var lane in data) {
-                        var color = util.generateRGB(lane);
-                        var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], $scope.LANE_POINT_SIZE, color);
+                        // var colors = util.generateRGB(laneTypes[lane]);
+                        var laneCloud = $scope.generatePointCloud("lane"+lane, data[lane], $scope.LANE_POINT_SIZE, laneTypes[lane]);
                         $scope.scene.add(laneCloud);
                         $scope.pointClouds.lanes[lane] = laneCloud;
                         var positions = laneCloud.geometry.attributes.position.array;
-                        $scope.kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3);
+                        var colors = laneCloud.geometry.attributes.color.array;
+                        $scope.kdtrees["lane"+lane] = new THREE.TypedArrayUtils.Kdtree(positions, util.distance, 3, colors);
                     }
+                    $scope.laneTypes = laneTypes;
                     callback(null, 'lanes_load');
                 });
             },
@@ -144,7 +158,31 @@ factory('loading', function($http, util) {
                     console.log("Cannot open params file: " + $scope.trackInfo.files.params);
                     callback(null, "params")
                 });
-            }
+            },
+            precisionAndRecall: function(callback) {
+                util.loadJSON($scope.trackInfo.files.precisionAndRecall,
+                    function(data) {
+                        $scope.precisionAndRecallData = data;
+                        callback(null, "precision_and_recall_init");
+                    },
+                    function(data) {
+                        console.log("Cannot open precision and recall file: " + $scope.trackInfo.files.precisionAndRecall);
+                        callback(null, "precision_and_recall_init");
+                    });
+            },
+            laneDetection: function(callback) {
+                util.loadJSON(
+                    $scope.trackInfo.files.laneDetection,
+                    function(data) {
+                        $scope.laneDetectionData = data;
+                        callback(null, "lane_detection_init");
+                    },
+                    function(data) {
+                        $scope.laneDetectionData = null;
+                        console.log("Cannot open lane detection file: " + $scope.trackInfo.files.laneDetection);
+                        callback(null, "lane_detection_init");
+                    });
+            },
         },
         function(err, results) {
             cb();

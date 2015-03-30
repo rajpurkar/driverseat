@@ -10,7 +10,7 @@ from sets import Set
 
 class NumpyAwareJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, numpy.ndarray) and obj.ndim == 1:
+        if isinstance(obj, numpy.ndarray):
             return obj.tolist()
         if isinstance(obj, numpy.bool_):
             return bool(obj)

@@ -159,6 +159,10 @@ button:focus {
     outline: none;
 }
 
+#laneTypeSelector {
+    color: black;
+}
+
 #title{
 	text-align: center;
 }

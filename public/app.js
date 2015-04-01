@@ -161,7 +161,7 @@ controller(
     $scope.execOnLoaded = function() {
         $scope.log("Rendering...");
         //video.init($scope.videoData);
-        radar.init($scope.radarData, $scope.params, $scope.scene);
+        if($scope.radarData !== null) radar.init($scope.radarData, $scope.params, $scope.scene);
         if ($scope.editor == "lane")
             laneEditor.init($scope);
         $scope.videoProjectionParamsFromCamera0 = videoProjection.init($scope.params, 0, $scope.pointClouds.lanes);
@@ -335,7 +335,7 @@ controller(
         }
 
         //videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.points, $scope.gps[$scope.frameCount], $scope.videoProjectionParamsFromCamera1);
-        radar.displayReturns($scope.frameCount, $scope.gps[$scope.frameCount]);
+        if($scope.radarData !== null) radar.displayReturns($scope.frameCount, $scope.gps[$scope.frameCount]);
         carDetection.drawCarDetectionBoxes("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
         carDetection.drawCarDetectionVerifiedBoxes("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
         laneDetection.drawLaneDetectionPoints("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);

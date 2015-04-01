@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <!--
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+  -->
+<head>
+    <title>hello_tutorial</title>
+    <script src="projection_nacl.js"></script>
+    <script type="text/javascript">
+    </script>
+</head>
+
+<body onload="video1.pageDidLoad()">
+
+  <h1>NaCl C++ Tutorial: Getting Started</h1>
+  <p>
+    <!--
+    Load the published pexe.
+    Note: Since this module does not use any real-estate in the browser, its
+    width and height are set to 0.
+
+    Note: The <embed> element is wrapped inside a <div>, which has both a 'load'
+    and a 'message' event listener attached.  This wrapping method is used
+    instead of attaching the event listeners directly to the <embed> element to
+    ensure that the listeners are active before the NaCl module 'load' event
+    fires.  This also allows you to use PPB_Messaging.PostMessage() (in C) or
+    pp::Instance.PostMessage() (in C++) from within the initialization code in
+    your module.
+    -->
+
+
+    <canvas id="draw1", width="200", height="200"></canvas>
+    <canvas id="draw2", width="200", height="200"></canvas>
+    <canvas id="draw3", width="200", height="200"></canvas>
+    <canvas id="draw4", width="200", height="200"></canvas>
+
+    <div id = "videos"> </div>
+    <div id = "js">
+      <script type="text/javascript">
+          var video1 = new ProjectionNACL("cam_1.mpg", "cam_1", "videos", "draw1");
+      </script>
+  </div>
+  </p>
+
+  <h2>Status <code id="statusField">NO-STATUS</code></h2>
+</body>
+</html>

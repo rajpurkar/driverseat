@@ -38,8 +38,8 @@ controller(
     $scope.carDetectionData         = null;
     $scope.carDetectionVerifiedData = null;
     $scope.datafiles                = null;
-    $scope.LANE_POINT_SIZE          = 0.08;
-    $scope.LIDAR_POINT_SIZE         = 0.12;
+    $scope.LANE_POINT_SIZE          = 0.11;
+    $scope.LIDAR_POINT_SIZE         = 0.15;
     $scope.params                   = null;
     $scope.precisionAndRecall   = null;
     $scope.shortcutsEnabled         = true;
@@ -47,7 +47,7 @@ controller(
     $scope.numLaneTypes             = $attrs.ngLanetypes.split(',').length;
 
     // constants
-    var INITIAL_OFFSET = [0, 5, -14],
+    var INITIAL_OFFSET = [0, 3, -8],
         INITIAL_MOUSE  = { x: 1, y: 1 },
         INITIAL_FRAME  = typeof $scope.trackInfo.startFrame === 'undefined' ? 0 : parseInt($scope.trackInfo.startFrame),
         INITIAL_SPEED  = 1;
@@ -112,14 +112,15 @@ controller(
             $scope.editor = "lane";
         fpsMeter = new FPSMeter(document.getElementById("fps"));
         $scope.scene = new THREE.Scene();
+        $scope.scene.fog = new THREE.Fog( 0x000024, 0.1, 5000 );
         //scene.fog = new THREE.Fog( 0xcce0ff, 500, 10000 );
-        camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 0.01, 500);
+        camera = new THREE.PerspectiveCamera(75, windowWidth/windowHeight, 0.01, 1000);
         projector = new THREE.Projector();
         $scope.raycaster = new THREE.Raycaster();
         var canvas = document.getElementById("road");
         renderer = new THREE.WebGLRenderer({canvas: canvas});
         renderer.setSize(windowWidth, windowHeight);
-        //renderer.setClearColor( scene.fog.color );
+        renderer.setClearColor( $scope.scene.fog.color );
         controls = new THREE.OrbitControls(camera);
         $scope.logText = "Loading...";
         cfpLoadingBar.start();
@@ -402,7 +403,7 @@ controller(
 
         $scope.geometries[name].addAttribute('position', new THREE.BufferAttribute(positions, 3));
         $scope.geometries[name].addAttribute('color', new THREE.BufferAttribute(colors, 3));
-        var material = new THREE.PointCloudMaterial({ size: size, vertexColors: true });
+        var material = new THREE.PointCloudMaterial({ size: size, vertexColors: true, fog: false });
         pointCloud = new THREE.PointCloud($scope.geometries[name], material);
         return pointCloud;
     };
@@ -444,7 +445,7 @@ controller(
         var loader = new THREE.BinaryLoader();
         loader.load("/files/CamaroNoUv_bin.js", function(geometry) {
             var materials = camaroMaterials;
-            var s = 0.23, m = new THREE.MeshFaceMaterial();
+            var s = 0.25, m = new THREE.MeshFaceMaterial();
             m.materials[ 0 ] = materials.body.Orange; // car body
             m.materials[ 1 ] = materials.chrome; // wheels chrome
             m.materials[ 2 ] = materials.chrome; // grille chrome

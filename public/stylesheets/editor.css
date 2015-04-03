@@ -3,27 +3,19 @@ body, html {
 	padding: 0px;
 	width: 100%;
 	height: 100%;
-	font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+	font-family: "Open Sans", Arial, sans-serif;
 }
 
-body, h1, h2, h3, h4, li, a, button, label {
-	font-weight: 100;
+body, h1, h2, h3, h4, li, a, button, label, input{
+	font-weight: 300 !important;
 	color: #fff;
 	letter-spacing: 0.09em;
-}
-
-button:focus {
-	outline:0;
-}
-
-.tab{
-	margin-bottom: 15px;
 }
 
 #left-top{
 	width: 200px;
 	position: absolute;
-	top: 0;
+	top: 50;
 	left: 0;
 	margin: 20px 20px;
 }
@@ -45,6 +37,16 @@ button:focus {
 	top: 2px;
 }
 
+#center-center{
+	position: absolute;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	left: 0;
+	right: 0;
+	top: 200px;
+}
+
 #center-bottom{
 	width: auto;
 	position: absolute;
@@ -63,6 +65,45 @@ button:focus {
 	right: 0;
 	margin: 20px 20px;
 }
+
+
+input[type="range"] {
+	-webkit-appearance: none;
+	background-color: #fffx;
+	height: 2px;
+	margin: 5px auto; 
+}
+
+input[type='range'], 
+input[type='range']:focus, 
+input[type='range']:active{
+    border: 0;
+    outline: none !important;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	position: relative;
+	top: 0px;
+	z-index: 1;
+	width: 10px;
+	height: 10px;
+	background: #ddd;
+	cursor: pointer;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+}
+
+button:focus {
+	outline:0;
+}
+
+.tab{
+	margin-bottom: 15px;
+}
+
+
 
 .pagination>li>a, .pagination>li>span{
 	padding: 5px 12px;
@@ -167,13 +208,6 @@ button:focus {
 	text-align: center;
 }
 
-#options{
-	margin-top: 20px;
-	padding: 5px 10px;
-	background: none;
-	color: white;
-}
-
 #log{
 	color: #fff;
 	width: 100%;
@@ -193,38 +227,37 @@ button:focus {
 
 }
 
-#actions{
-}
-
 #slideDiv{
 	background: none;
 	padding: 10px 10px;
 }
 
 .actionBtn {
-	width: 80px;
-	height: 80px;
+	width: 50px;
+	height: 50px;
 	border: 1px solid #f5f5f5;
 	border-radius: 50%;
 	text-align:center;
 	text-decoration:none;
 	box-shadow: 0 0 3px gray;
 	margin: 10px 10px;
-	font-size: 1.0em;
+	font-size: 0.6em;
 	background: none;
 	color: #fff;
 }
 
-#fork{
-	background: black;
-}
-
-#append{
-	background: black;
-}
-
-#done{
-	background: black;
+.actionBtn2 {
+	width: 70px;
+	height: 70px;
+	border: 1px solid #f5f5f5;
+	border-radius: 50%;
+	text-align:center;
+	text-decoration:none;
+	box-shadow: 0 0 3px gray;
+	margin: 10px 10px;
+	font-size: 1em;
+	background: none;
+	color: #fff;
 }
 
 #fork:hover, #append:hover{
@@ -259,8 +292,4 @@ button:focus {
 
 #videoPlayer{
 	width:100%;
-}
-
-input{
-	font-weight: 200 !important;
 }

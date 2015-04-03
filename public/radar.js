@@ -34,8 +34,9 @@
 
              for (var idx = 0; idx < MAX_NUMBER_RADAR_OBJECTS; idx++) {
                  var geometry = new THREE.BoxGeometry(2, 1, 3);
-                 var material = new THREE.MeshBasicMaterial({
-                     color: 0xdddddd
+                 var material = new THREE.MeshLambertMaterial({
+                     color: 0xffffff,
+                     reflectivity: 0.8
                  });
                  var cube = new THREE.Mesh(geometry, material);
                  boxes.push(cube);

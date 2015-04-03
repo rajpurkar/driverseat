@@ -114,7 +114,7 @@ controller(
                 $scope.editor = "lane";
             fpsMeter = new FPSMeter(document.getElementById("fps"));
             $scope.scene = new THREE.Scene();
-            $scope.scene.fog = new THREE.Fog(0x000024, 0.1, 5000);
+            $scope.scene.fog = new THREE.Fog(0x111132, 0.1, 5000);
             //scene.fog = new THREE.Fog( 0xcce0ff, 500, 10000 );
             camera = new THREE.PerspectiveCamera(75, windowWidth / windowHeight, 0.01, 1000);
 

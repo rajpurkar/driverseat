@@ -13,8 +13,9 @@ service('carDetection', function(util) {
     function initializeCanvasBoxes() {
         for (var i = 0; i < MAX_NUM_CANVAS_BOXES; i++) {
             var geometry = new THREE.BoxGeometry(2, 1, 3);
-            var material = new THREE.MeshBasicMaterial({
-                color: 0x0000ff
+            var material = new THREE.MeshLambertMaterial({
+                color: 0xff6611,
+                reflectivity: 0.8
             });
             var canvasBox = new THREE.Mesh(geometry, material);
             canvasBoxes.push(canvasBox);

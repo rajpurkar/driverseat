@@ -3,6 +3,8 @@ html
 		link(rel='shortcut icon', href='/favicon.ico', type='image/x-icon')
 		link(rel='icon', href='/favicon.ico', type='image/x-icon')
 		link(rel='stylesheet', href='/vendor/bootstrap.min.css')
+		link(rel='stylesheet', href='/fonts/Open_Sans/stylesheet.css')
+		link(rel="stylesheet", href="/vendor/font-awesome.css")
 		link(rel='stylesheet', href='/stylesheets/editor.css')
 		link(rel='stylesheet', href='/vendor/loading-bar.css')
 		title=title
@@ -11,55 +13,92 @@ html
 			canvas#road
 				canvas
 			#wrap
+				nav.navbar.navbar-fixed-top
+					.container-fluid
+						.navbar-header
+							a.navbar-brand {{trackInfo.track}}
+						ul.nav.navbar-nav
+							li
+								button#laneEditor.actionBtn(ng-show="editor == 'tag'", ng-click="changeEditor()", type="button")
+									|Lane Editor
+							li
+								button#laneEditor.actionBtn(ng-show="editor == 'lane'", ng-click="changeEditor()", type="button")
+									|Tag Editor
+						ul.nav.navbar-nav(ng-show="editor == 'lane'")
+							li
+								button#undo.actionBtn(ng-click="laneEditor.undo()", type="button")
+									i.fa.fa-undo.fa-2x
+							li
+								button#redo.actionBtn(ng-click="laneEditor.redo()", type="button")
+									i.fa.fa-repeat.fa-2x
+							li
+								button#save.actionBtn(ng-click="laneEditor.save()", type="button")
+									i.fa.fa-save.fa-2x
+							li
+								button.actionBtn(type="button", data-toggle='collapse', ng-model="collapsed", ng-click="collapsed=!collapsed")
+									i.fa.fa-2x.fa-info-circle
+						ul.nav.navbar-right
+							li(ng-show="editor == 'lane'")
+								span Drag range
+									input#drrange(type="range", min="1", max="60", step=".5", ng-model="dragRange")
+								span Play speed
+									input#playspeedrange(type="range", min="0.25", max="4", value="1", step=".1")
 				#left-top
-					#title.tab
-						h4 {{trackInfo.track}}
-					.tab
-						button#laneEditor.actionBtn(ng-show="editor == 'tag'", ng-click="changeEditor()", type="button")
-							|Lane Editor
-						button#laneEditor.actionBtn(ng-show="editor == 'lane'", ng-click="changeEditor()", type="button")
-							|Tag Editor
-					.tab
-						button.infoBtn(data-toggle='collapse', ng-model="collapsed", ng-click="collapsed=!collapsed")
-							| Learn shortcuts
-							div(ng-show='collapsed')
-								ul
-									li	Ctrl+mouse to look
-									li	Play/Pause with Spacebar
-									li	Move car with arrows
-									span(ng-show="editor == 'lane'")
-										li  'f' to fork
-										li  'a' to append
-										li  'j' to join
-										li  'd' to delete
-										li  'c' to copy
-										li  'esc' to be done with fork/append
-										li  Select point, then shift+click to select segment
-										li  Double click point to select entire lane
-					#videoPlayer
-						canvas#projectionCanvas
-					#slideDiv.tab
-						div(ng-show="editor == 'lane'")
-							h4 Drag range
-							input#drrange(type="range", min="1", max="60", step="5", ng-model="dragRange")
-						h4 Play speed
-						input#playspeedrange(type="range", min="1", max="5", value="1", step="1")
+					div(ng-show='collapsed')
+						ul.list-inline
+							li	Ctrl+mouse to look
+							li	Play/Pause with Spacebar
+							li	Move car with arrows
+							span(ng-show="editor == 'lane'")
+								li  'f' to fork
+								li  'a' to append
+								li  'j' to join
+								li  'd' to delete
+								li  'c' to copy
+								li  'esc' to be done with fork/append
+								li  Select point, then shift+click to select segment
+								li  Double click point to select entire lane
 				#left-bottom
-					#fps.tab
+					#videoPlayerWrap
+						#videoPlayer.tab(my-draggable)
+								canvas#projectionCanvas
 				#center-top
+				#center-center
 					#log.tab
 						p#logText {{logText}}
 				#center-bottom
-					div(ng-show="editor == 'lane'")
-						#actions.tab
-							button#undo.actionBtn(ng-click="laneEditor.undo()", type="button")
-								|Undo
-							button#redo.actionBtn(ng-click="laneEditor.redo()", type="button")
-								|Redo
-							button#save.actionBtn(ng-click="laneEditor.save()", type="button")
-								|Save
+					ul.list-inline(ng-show="editor == 'tag'")
+						li
+							button#addCategory.actionBtn2(type="button", ng-click="tagEditor.toggleAddCategory()")
+								| Add Type
+						li
+							button#addTag.actionBtn2(type="button", ng-click="tagEditor.toggleAddTag()")
+								| Add Tag
+					
+					ul.list-inline(ng-show="editor == 'lane'")
+						li
+							button#fork.actionBtn2(type="button", ng-click="laneEditor.fork()", ng-show="laneEditor.showButton.fork")
+								|Fork
+						li
+							button#append.actionBtn2(type="button", ng-click="laneEditor.append()", ng-show="laneEditor.showButton.append")
+								|Append
+						li
+							button#join.actionBtn2(type="button", ng-click="laneEditor.join()", ng-show="laneEditor.showButton.join")
+								|Join
+						li
+							button#copy.actionBtn2(type="button", ng-click="laneEditor.copy()", ng-show="laneEditor.showButton.copy")
+								|Copy
+						li
+							button#delete.actionBtn2(type="button", ng-click="laneEditor.delete()", ng-show="laneEditor.showButton.delete")
+								|Delete
+						li#laneType(ng-show="laneEditor.showButton.laneType")
+							label(for="laneType")
+								|Lane Type
+							select.form-control#laneTypeSelector(name="laneType", ng-model="selectedLaneType", ng-change="laneEditor.laneType(selectedLaneType)")
+								-each laneType, index in laneTypes
+									option(value="#{index}") #{laneType}
 					#scrubberDiv.tab
-						input#scrubber(type="range", min="0", max="{{gps.length}}", step="1", ng-model="frameCount")
+						input#scrubber(type="range", min="0", max="{{gps.length}}", step="0.1", ng-model="frameCount")
 						div(ng-show="editor == 'tag'")
 							#tagScrubbers(ng-show="tagEditor.vars.showForm == 'tag'")
 								input.scrubberMarker.scrubberLeft(type="range", min="0", max="{{gps.length}}", step="1", ng-model="tagEditor.vars.tagLeftVal", ng-change="tagEditor.tagLeft()")
@@ -74,39 +113,12 @@ html
 										p {{tag.category.name}}
 										p {{tag.category.description}}
 				#right-side
+					#fps.hidden
 					.tab
 						p#carDetectionPrecisionTitle
 							h5#carDetectionPrecisionField
 						p#carDetectionRecallTitle
 							h5#carDetectionRecallField
-					#options.tab(ng-show="editor == 'lane'")
-						div
-							button#fork.actionBtn(type="button", ng-click="laneEditor.fork()", ng-show="laneEditor.showButton.fork")
-								|Fork
-						div
-							button#append.actionBtn(type="button", ng-click="laneEditor.append()", ng-show="laneEditor.showButton.append")
-								|Append
-						div
-							button#join.actionBtn(type="button", ng-click="laneEditor.join()", ng-show="laneEditor.showButton.join")
-								|Join
-						div
-							button#copy.actionBtn(type="button", ng-click="laneEditor.copy()", ng-show="laneEditor.showButton.copy")
-								|Copy
-						div
-							button#delete.actionBtn(type="button", ng-click="laneEditor.delete()", ng-show="laneEditor.showButton.delete")
-								|Delete
-						div#laneType(ng-show="laneEditor.showButton.laneType")
-							label(for="laneType")
-								|Lane Type
-							select#laneTypeSelector(name="laneType", ng-model="selectedLaneType", ng-change="laneEditor.laneType(selectedLaneType)")
-								-each laneType, index in laneTypes
-									option(value="#{index}") #{laneType}
-					.tab(ng-show="editor == 'tag'")
-						div
-							button#addCategory.actionBtn(type="button", ng-click="tagEditor.toggleAddCategory()")
-								| Add Category
-							button#addTag.actionBtn(type="button", ng-click="tagEditor.toggleAddTag()")
-								| Add Tag
 					#categoryContent.tab.ng-hide
 						form#categoryForm
 							.form-group
@@ -122,7 +134,7 @@ html
 									| Display Color
 								input.form-control.category-input.color(type="text", name="displayColor")
 							.form-group
-								button.actionBtn#categorySubmit.btn.btn-default(type="submit")
+								button#categorySubmit.btn.btn-default(type="submit")
 									| Submit
 					#tagContent.tab.ng-hide
 						form#tagForm
@@ -148,9 +160,8 @@ html
 									| Description
 								input.tag-input.form-control(type="text", name="description")
 							.form-group
-								button.actionBtn#tagSubmit.btn.btn-default(type="submit")
+								button#tagSubmit.btn.btn-default(type="submit")
 									| Submit
-				#videoPlayerWrap
 		script(src='/vendor/jquery.js')
 		script(src='/vendor/bootstrap.min.js')
 		script(src="/vendor/angular.js")
@@ -170,6 +181,7 @@ html
 		script(src='/javascripts/jpeg_encoder_basic.js')
 		script(src='/javascripts/jsmpg.js')
 		script(src='/app.js')
+		script(src='/draggable.js')
 		script(src='/laneEditor.js')
 		script(src='/tagEditor.js')
 		script(src='/loading.js')

@@ -34,12 +34,6 @@ factory('laneEditor', function(util, key, history, $http) {
             selectedPointBox[1].visible = box2;
         }
 
-        if (selectedPointBox[0].visible === true) {
-            showButton.copy = showButton.delete = showButton.laneType = true;
-        } else {
-            showButton.copy = showButton.delete = showButton.laneType = false;
-        }
-
         if (selectedPointBox[0].visible === true && selectedPointBox[1].visible === false) {
             showButton.append = showButton.fork = true;
         } else {
@@ -47,9 +41,9 @@ factory('laneEditor', function(util, key, history, $http) {
         }
 
         if (selectedPointBox[0].visible === true && selectedPointBox[1].visible === true) {
-            showButton.join = true;
+            showButton.copy = showButton.delete = showButton.laneType = showButton.join = true;
         } else {
-            showButton.join = false;
+            showButton.copy = showButton.delete = showButton.laneType = showButton.join = false;
         }
         $scope.flush();
     }
@@ -308,6 +302,8 @@ factory('laneEditor', function(util, key, history, $http) {
             colors.array[i] = 1;
         }
         colors.needsUpdate = true;
+        showButton.laneType = true;
+        $scope.flush();
     }
 
     function selectRange(intersectedPoint, laneNum) {

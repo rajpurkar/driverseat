@@ -411,7 +411,7 @@ controller(
         var camaroMaterials = {
             body: {
                 Orange: new THREE.MeshLambertMaterial( {
-                    color: 0xff0000,
+                    color: 0xff4411,
                 combine: THREE.MixOperation,
                 reflectivity: 0.3
                 } )

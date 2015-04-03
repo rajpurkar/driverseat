@@ -97,7 +97,7 @@ service('util', function($http) {
         generateRGB: generateRGB,
         laneTypeColor: function(colorIndex) {
             if (colorIndex == -1) {
-                return { r:0.5, g:0.5, b:0.5 };
+                return { r:1, g:0.4, b:0.1 };
             }
             //TODO: define other colors instead of using algorithm?
             return generateRGB(colorIndex);

@@ -13,8 +13,10 @@ service('carDetection', function(util) {
     function initializeCanvasBoxes() {
         for (var i = 0; i < MAX_NUM_CANVAS_BOXES; i++) {
             var geometry = new THREE.BoxGeometry(2, 1, 3);
-            var material = new THREE.MeshBasicMaterial( {color: 0x0000ff} );
-            var canvasBox = new THREE.Mesh( geometry, material );
+            var material = new THREE.MeshBasicMaterial({
+                color: 0x0000ff
+            });
+            var canvasBox = new THREE.Mesh(geometry, material);
             canvasBoxes.push(canvasBox);
             scene.add(canvasBox);
         }
@@ -79,12 +81,12 @@ service('carDetection', function(util) {
 
         //read this bottom up to follow the order of transformations
         var T = new THREE.Matrix4();
-        T.multiply(T_imu_0_to_THREE);// imu_0 -> THREE js frame
+        T.multiply(T_imu_0_to_THREE); // imu_0 -> THREE js frame
         T.multiply(T_imu_t_to_imu_0); //imu_t -> imu_0
         T.multiply(T_from_l_to_i); // lidar_t -> imu_t
         T.multiply(T_from_c_to_l); // camera_t -> lidar_t
         T.multiply(inv_T_Extrinsics); // camera extrinsics
-        T.multiply(inv_KK);// camera intrinsics
+        T.multiply(inv_KK); // camera intrinsics
         return T;
     }
 

@@ -1,13 +1,13 @@
-function VideoNACL(cam_file, id, parent_id, downloadCb) { 
+function VideoNACL(cam_file, id, parent_id, downloadCb) {
 
     this.VideoNACLModule = null;
     this.nacl_id = id;
     this.statusText = 'NO-STATUS';
     var nacl = this;
-    var bytes = null; 
-    var images = [ ]; 
+    var bytes = null;
+    var images = [];
 
-    nacl.displayImage = function(canvasId, framenum) { 
+    nacl.displayImage = function(canvasId, framenum) {
         if (images[framenum]) {
             var j = images[framenum];
             var c = document.getElementById(canvasId);
@@ -26,8 +26,7 @@ function VideoNACL(cam_file, id, parent_id, downloadCb) {
             j.src = images[framenum];
             */
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -35,19 +34,21 @@ function VideoNACL(cam_file, id, parent_id, downloadCb) {
     nacl.loadCallback = function(data) {
         bytes = new Uint8Array(data);
         //console.log(bytes.length);
-        var command = { cmd : 'raw_data',
+        var command = {
+            cmd: 'raw_data',
             data: bytes.buffer,
-            length: bytes.length};
+            length: bytes.length
+        };
         //console.log(command);
         nacl.VideoNACLModule.postMessage(command);
     }
 
-    nacl.load = function( url ) {
+    nacl.load = function(url) {
         this.url = url;
 
         var request = new XMLHttpRequest();
-        request.onreadystatechange = function() {		
-            if( request.readyState == request.DONE && request.status == 200 ) {
+        request.onreadystatechange = function() {
+            if (request.readyState == request.DONE && request.status == 200) {
                 if (downloadCb)
                     downloadCb();
                 nacl.loadCallback(request.response);
@@ -73,9 +74,9 @@ function VideoNACL(cam_file, id, parent_id, downloadCb) {
             //console.log(data.FrameCount);
         }
     }
-    
+
     var embed_div = document.createElement("div");
-    embed_div.setAttribute('id', 'div_'+id);
+    embed_div.setAttribute('id', 'div_' + id);
     embed_div.addEventListener('load', this.moduleDidLoad, true);
     embed_div.addEventListener('message', this.handleMessage, true);
     var embed_obj = document.createElement("embed");

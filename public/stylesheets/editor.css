@@ -83,84 +83,84 @@ button:focus {
 	max-width: 700px;
 	margin-left: auto;
 	margin-right: auto;
-    margin-bottom: 25px;
-    position: relative;
+	margin-bottom: 25px;
+	position: relative;
 }
 
 .scrubberTag {
-    position: absolute;
-    z-index: 10;
-    height: 4px;
-    left: 0px;
+	position: absolute;
+	z-index: 10;
+	height: 4px;
+	left: 0px;
 }
 
 .scrubberTagPopup {
-    width: 150px;
-    top: -157px;
-    padding: 10px 10px 1px 10px;
-    background-color: rgba(255,255,255,0.2);
-    position: relative;
-    display: none;
+	width: 150px;
+	top: -157px;
+	padding: 10px 10px 1px 10px;
+	background-color: rgba(255,255,255,0.2);
+	position: relative;
+	display: none;
 }
 .scrubberTagPopup button {
-    color: #000;
+	color: #000;
 }
 
 .scrubberTag:hover > .scrubberTagPopup {
-    display: block;
+	display: block;
 }
 
 .scrubberMarker {
-    position: absolute;
-    top: 34px;
-    -webkit-appearance: none;
+	position: absolute;
+	top: 34px;
+	-webkit-appearance: none;
 }
 
 .scrubberMarker.scrubberLeft {
-    left: -6px;
+	left: -6px;
 }
 
 .scrubberMarker.scrubberRight {
-    left: 5px;
+	left: 5px;
 }
 
 .scrubberMarker::-webkit-slider-runnable-track {
-    height: 0px;
-    background-color: black;
-    border: none;
+	height: 0px;
+	background-color: black;
+	border: none;
 }
 
 .scrubberMarker::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    border: none;
-    height: 21px;
-    width: 11px;
-    background: transparent;
-    margin-top: -22px;
+	-webkit-appearance: none;
+	border: none;
+	height: 21px;
+	width: 11px;
+	background: transparent;
+	margin-top: -22px;
 }
 
 .scrubberMarker.scrubberLeft::-webkit-slider-thumb {
-    background-image: url("../files/LeftScrubber.gif");
+	background-image: url("../files/LeftScrubber.gif");
 }
 
 .scrubberMarker.scrubberRight::-webkit-slider-thumb {
-    background-image: url("../files/RightScrubber.gif");
+	background-image: url("../files/RightScrubber.gif");
 }
 
 .scrubberMarker.scrubberLeft:hover::-webkit-slider-thumb {
-    background-image: url("../files/LeftScrubberHover.gif");
+	background-image: url("../files/LeftScrubberHover.gif");
 }
 
 .scrubberMarker.scrubberRight:hover::-webkit-slider-thumb {
-    background-image: url("../files/RightScrubberHover.gif");
+	background-image: url("../files/RightScrubberHover.gif");
 }
 
 .scrubberMarker:focus {
-    outline: none;
+	outline: none;
 }
 
 #laneTypeSelector {
-    color: black;
+	color: black;
 }
 
 #title{
@@ -181,14 +181,14 @@ button:focus {
 }
 
 .infoBtn {
-    width: 100%;
-    border: none;
-    text-align:left;
-    text-decoration:none;
-    box-shadow: 0 0 3px gray;
-    font-size: 1.0em;
-    background: #000;
-    color: #fff;
+	width: 100%;
+	border: none;
+	text-align:left;
+	text-decoration:none;
+	box-shadow: 0 0 3px gray;
+	font-size: 1.0em;
+	background: #000;
+	color: #fff;
 
 
 }
@@ -202,17 +202,17 @@ button:focus {
 }
 
 .actionBtn {
-    width: 80px;
-    height: 80px;
-    border: 1px solid #f5f5f5;
-    border-radius: 50%;
-    text-align:center;
-    text-decoration:none;
-    box-shadow: 0 0 3px gray;
-    margin: 10px 10px;
-    font-size: 1.0em;
-    background: none;
-    color: #fff;
+	width: 80px;
+	height: 80px;
+	border: 1px solid #f5f5f5;
+	border-radius: 50%;
+	text-align:center;
+	text-decoration:none;
+	box-shadow: 0 0 3px gray;
+	margin: 10px 10px;
+	font-size: 1.0em;
+	background: none;
+	color: #fff;
 }
 
 #fork{

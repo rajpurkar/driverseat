@@ -22,15 +22,23 @@ app.set("view engine", "jade");
 app.use(favicon(__dirname + "/public/favicon.ico"));
 app.use(logger("dev"));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
 app.use(cookieParser());
-app.use(session({secret: "woah cat", saveUninitialized: true, resave: false}));
-app.use(express.static(path.join(__dirname, "public"), {maxAge: "1d"}));
+app.use(session({
+    secret: "woah cat",
+    saveUninitialized: true,
+    resave: false
+}));
+app.use(express.static(path.join(__dirname, "public"), {
+    maxAge: "1d"
+}));
 app.use(util.initializeLocals);
 db.initdb();
 
 app.get("/edit", auth.requiredAuthentication, function(req, res) {
-    Category.find({}, function (err, categories) {
+    Category.find({}, function(err, categories) {
         var startFrame = req.query.startFrame;
         var endFrame = req.query.endFrame;
         if (err) return console.error("Cannot fetch metadata categories for run page");
@@ -45,18 +53,18 @@ app.get("/edit", auth.requiredAuthentication, function(req, res) {
         // var lanesFile = db.getLatestEdit(track);
         var datafilesPath = "/runs/" + track + "/";
         var dataFiles = {
-            points:                 datafilesPath + "map.json.zip",
-            gps:                    datafilesPath + "gps.json.zip",
-            lanes:                  datafilesPath + "lanes/" + lanesFile,
-            planes:                 datafilesPath + "planes.json.zip",
-            video:                  datafilesPath + "cam_2.mpg",
-            radar:                  datafilesPath + "radar.json.zip",
-            carDetection:           datafilesPath + "bbs-cam2.json",
-            carDetectionVerified:   datafilesPath + "bbs-cam2-verified.json",
-            params:                 "/q50_4_3_14_params.json",
-            precisionAndRecall:     "/precision_and_recall.json"
-        }
-        // We currently only have lane detection data for the sanrafael_e track
+                points: datafilesPath + "map.json.zip",
+                gps: datafilesPath + "gps.json.zip",
+                lanes: datafilesPath + "lanes/" + lanesFile,
+                planes: datafilesPath + "planes.json.zip",
+                video: datafilesPath + "cam_2.mpg",
+                radar: datafilesPath + "radar.json.zip",
+                carDetection: datafilesPath + "bbs-cam2.json",
+                carDetectionVerified: datafilesPath + "bbs-cam2-verified.json",
+                params: "/q50_4_3_14_params.json",
+                precisionAndRecall: "/precision_and_recall.json"
+            }
+            // We currently only have lane detection data for the sanrafael_e track
         if (track == "4-11-14-sanrafael/sanrafael_e") {
             dataFiles.laneDetection = "/4-11-14-sanrafael-sanrafael_e1_combined_lanepred_subsample.json"
         }
@@ -87,7 +95,7 @@ app.get("/edit", auth.requiredAuthentication, function(req, res) {
     });
 });
 
-app.get("/", function(req, res){
+app.get("/", function(req, res) {
     res.redirect('/browse');
 });
 
@@ -96,7 +104,11 @@ app.get("/browse", auth.requiredAuthentication, function(req, res) {
     var user = req.session.user.username,
         runs = util.level3Search("./public/runs", user),
         prettyPrint = db.prettyPrint(runs);
-    var args = { runs: prettyPrint.runs, filenames: prettyPrint.filenames, user: user };
+    var args = {
+        runs: prettyPrint.runs,
+        filenames: prettyPrint.filenames,
+        user: user
+    };
     res.render("browser", args);
 });
 
@@ -110,14 +122,14 @@ app.get("/tags", auth.requiredAuthentication, function(req, res) {
     if (req.query.route) {
         var route = req.query.route.split('/');
         Tag.find({
-            run:   route[0],
+            run: route[0],
             track: route[1]
         }).populate("category", "name displayColor description").exec(function(err, tags) {
             if (err) return res.status(500).send("Cannot fetch metadata tags for tags page");
             res.send(tags);
         });
     } else {
-        Category.find(function (err, categories) {
+        Category.find(function(err, categories) {
             if (err) return res.status(500).send("Cannot fetch metadata tags for tags page");
             res.render("tags", {
                 categories: categories
@@ -132,7 +144,7 @@ app.post("/deleteTag", auth.requiredAuthentication, db.deleteTag);
 
 //Authentication routes
 
-app.get("/signup", function (req, res) {
+app.get("/signup", function(req, res) {
     if (req.session.user) {
         res.redirect("/browse");
     } else {
@@ -143,13 +155,13 @@ app.get("/signup", function (req, res) {
 app.post("/signup", auth.userExist, auth.signup);
 
 app.route("/login")
-    .get(function (req, res) {
+    .get(function(req, res) {
         res.render("login");
     })
-    .post(function (req, res) {
-        auth.authenticate(req.body.username, req.body.password, function (err, user) {
+    .post(function(req, res) {
+        auth.authenticate(req.body.username, req.body.password, function(err, user) {
             if (user) {
-                req.session.regenerate(function () {
+                req.session.regenerate(function() {
                     req.session.user = user;
                     res.redirect("/");
                 });
@@ -160,8 +172,8 @@ app.route("/login")
         });
     });
 
-app.post("/logout", function (req, res) {
-    req.session.destroy(function () {
+app.post("/logout", function(req, res) {
+    req.session.destroy(function() {
         res.redirect("/login");
     });
 });

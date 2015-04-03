@@ -4,8 +4,8 @@ service('video_mpeg', function() {
     var scaling = 1;
     var frameCountSaved = 0;
     var encoder = new JPEGEncoder(95);
-   
-    function encodeFrame(frame) { 
+
+    function encodeFrame(frame) {
         images[frameCountSaved] = encoder.encode(frame);
         frameCountSaved++;
     }
@@ -14,23 +14,23 @@ service('video_mpeg', function() {
         var frame = player.nextFrame();
         if (frame == null) return;
         encodeFrame(frame);
-        setTimeout(loadImage, 0); 
+        setTimeout(loadImage, 0);
     }
 
-	return {
-		init: function(jsmpeg_player) {
+    return {
+        init: function(jsmpeg_player) {
             player = jsmpeg_player;
             images = new Array(player.calculateFrameCount());
             console.log("frames: " + player.calculateFrameCount());
             setTimeout(loadImage, 5);
-		},
+        },
         displayImage: function(canvasId, framenum) {
 
             var c = document.getElementById(canvasId);
             var ctx = c.getContext("2d");
             if (framenum < frameCountSaved) {
 
-                var j = new Image(); 
+                var j = new Image();
                 j.onload = function() {
                     var c = document.getElementById(canvasId);
                     var ctx = c.getContext("2d");
@@ -40,9 +40,9 @@ service('video_mpeg', function() {
                 };
                 j.src = images[framenum];
                 return true;
-            } else { 
+            } else {
                 return false;
             }
         },
-	};
+    };
 });

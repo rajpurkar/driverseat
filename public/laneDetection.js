@@ -30,7 +30,7 @@ service('laneDetection', function(util) {
 
         // read this bottom up to follow the order of transformations
         var T = new THREE.Matrix4();
-        T.multiply(T_imu_0_to_THREE);// imu_0 -> THREE js frame
+        T.multiply(T_imu_0_to_THREE); // imu_0 -> THREE js frame
         T.multiply(T_imu_t_to_imu_0); //imu_t -> imu_0
         T.multiply(T_from_l_to_i); // lidar_t -> imu_t
         T.multiply(T_from_c_to_l); // camera_t -> lidar_t
@@ -93,7 +93,10 @@ service('laneDetection', function(util) {
         var geometry = new THREE.BufferGeometry();
         geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
         geometry.addAttribute('color', new THREE.BufferAttribute(colors, 3));
-        var material = new THREE.PointCloudMaterial({ size: 0.05, vertexColors: true });
+        var material = new THREE.PointCloudMaterial({
+            size: 0.05,
+            vertexColors: true
+        });
         pointCloud = new THREE.PointCloud(geometry, material);
         scene.add(pointCloud);
     }

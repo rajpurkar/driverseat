@@ -42,7 +42,7 @@ factory('tagEditor', function($http, key) {
     }
 
     function load() {
-        $http.get("tags?route="+$scope.trackInfo.track).success(function(data) {
+        $http.get("tags?route=" + $scope.trackInfo.track).success(function(data) {
             vars.tags = data;
             var categories = {};
             var scrubberWidth = document.querySelector("#scrubberDiv").offsetWidth - 10;
@@ -53,10 +53,10 @@ factory('tagEditor', function($http, key) {
                 }
                 var left = Math.round(scrubberWidth * tag.startFrame / $scope.gps.length) + 3,
                     right = Math.round(scrubberWidth * tag.endFrame / $scope.gps.length) + 3,
-                    width = Math.max(right-left, 1);
+                    width = Math.max(right - left, 1);
                 tag.style = {
-                    left: left+"px",
-                    width: width+"px",
+                    left: left + "px",
+                    width: width + "px",
                     top: -10 - categories[tag.category.name],
                     "background-color": tag.category.displayColor
                 };
@@ -129,7 +129,7 @@ factory('tagEditor', function($http, key) {
                 $(".category-input").val("");
                 $('#categorySelector').append($('<option/>', {
                     value: newCategory._id,
-                    text : newCategory.name
+                    text: newCategory.name
                 }));
                 vars.showForm = "";
             }
@@ -160,7 +160,9 @@ factory('tagEditor', function($http, key) {
         $.ajax({
             url: "/deleteTag",
             type: "POST",
-            data: { tagId: tag._id },
+            data: {
+                tagId: tag._id
+            },
             success: function(data) {
                 load();
                 $scope.log("Deleted tag");

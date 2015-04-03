@@ -56,6 +56,9 @@ controller(
     $scope.frameCount       = INITIAL_FRAME;
     $scope.frameCountTemp   = -1;
 
+
+    if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+   
     // local variables
     var camera, renderer,
         projector,

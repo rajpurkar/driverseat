@@ -35,7 +35,7 @@ body, h1, h2, h3, h4, li, a, button, label, input{
 }
 
 #editortypelabel{
-	background: #000;
+	background: none;
 	color: #fff;
 	cursor: pointer;
 	font-weight: 200;
@@ -97,7 +97,7 @@ input[type="range"] {
 	-webkit-appearance: none;
 	background-color: #fffx;
 	height: 2px;
-	margin: 5px auto; 
+	margin: 8px auto; 
 }
 
 input[type='range'], 
@@ -119,6 +119,10 @@ input[type="range"]::-webkit-slider-thumb {
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
+}
+
+.spacer{
+	padding: 10px;
 }
 
 button:focus {
@@ -318,5 +322,5 @@ button:focus {
 
 #videoPlayer{
 	width:100%;
-	cursor: move;
+	cursor: move !important;
 }

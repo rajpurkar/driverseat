@@ -31,7 +31,7 @@ html
 								button.actionBtn(type="button", data-toggle='collapse', ng-model="collapsed", ng-click="collapsed=!collapsed")
 									i.fa.fa-2x.fa-info-circle
 						ul.nav.navbar-right
-							li(ng-show="editor == 'lane'")
+							li(ng-show="editor == 'lane'").spacer
 								span Drag range
 									input#drrange(type="range", min="1", max="60", step=".5", ng-model="dragRange")
 								span Play speed
@@ -106,7 +106,7 @@ html
 										p {{tag.category.name}}
 										p {{tag.category.description}}
 				#right-bottom
-					.btn-group
+					.btn-group.btn-group-xs
 						span.btn.btn-default#editortypelabel(ng-show="editor == 'lane'") Editor Mode
 						span.btn.btn-default#editortypelabel(ng-show="editor == 'tag'") Tag Mode
 						button#laneEditor.btn.btn-default(ng-click="changeEditor()", type="button")

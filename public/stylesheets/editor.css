@@ -41,6 +41,11 @@ body, h1, h2, h3, h4, li, a, button, label, input{
 	font-weight: 200;
 }
 
+#trackName, #trackName:hover, #trackName:active{
+	color: #fff;
+	cursor: default;
+}
+
 #editortypelabel:active,
 #editortypelabel:hover
 {
@@ -313,4 +318,5 @@ button:focus {
 
 #videoPlayer{
 	width:100%;
+	cursor: move;
 }

@@ -16,7 +16,7 @@ html
 				nav.navbar.navbar-fixed-top
 					.container-fluid
 						.navbar-header
-							a.navbar-brand(href="") {{trackInfo.track}}
+							a.navbar-brand#trackName(href="") {{trackInfo.track}}
 						ul.nav.navbar-nav(ng-show="editor == 'lane'")
 							li
 								button#undo.actionBtn(ng-click="laneEditor.undo()", type="button")

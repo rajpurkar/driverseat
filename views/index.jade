@@ -106,18 +106,19 @@ html
 										p {{tag.category.name}}
 										p {{tag.category.description}}
 				#right-bottom
-					.btn-group.btn-group-xs
-						span.btn.btn-default#editortypelabel(ng-show="editor == 'lane'") Editor Mode
-						span.btn.btn-default#editortypelabel(ng-show="editor == 'tag'") Tag Mode
-						button#laneEditor.btn.btn-default(ng-click="changeEditor()", type="button")
-							|Change
-				#right-side
-					#fps.hidden
 					.tab
 						p#carDetectionPrecisionTitle
 							h5#carDetectionPrecisionField
 						p#carDetectionRecallTitle
 							h5#carDetectionRecallField
+					.tab
+						.btn-group.btn-group-xs
+							span.btn.btn-default#editortypelabel(ng-show="editor == 'lane'") Editor Mode
+							span.btn.btn-default#editortypelabel(ng-show="editor == 'tag'") Tag Mode
+							button#laneEditor.btn.btn-default(ng-click="changeEditor()", type="button")
+								|Change
+				#right-side
+					#fps.hidden
 					#categoryContent.tab.ng-hide
 						form#categoryForm
 							.form-group

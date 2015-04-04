@@ -19,7 +19,7 @@ controller(
         cfpLoadingBar,
         tagEditor,
         laneDetection) {
-        
+
         $scope.laneEditor = laneEditor;
         $scope.tagEditor = tagEditor;
         // scope variables
@@ -195,7 +195,7 @@ controller(
         };
 
         $scope.rotateCamera = function(event) {
-            if (!key.isDown("ctrl")) return;
+            if (!(event.metaKey || event.ctrlKey)) return;
             controls.onMouseDown(event);
         };
 

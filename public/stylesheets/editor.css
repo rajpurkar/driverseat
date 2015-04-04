@@ -27,6 +27,27 @@ body, h1, h2, h3, h4, li, a, button, label, input{
 	margin: 20px 20px;
 }
 
+#right-bottom{
+	position: absolute;
+	bottom: 0px;
+	right: 0px;
+	margin: 20px 20px;
+}
+
+#editortypelabel{
+	background: #000;
+	color: #fff;
+	cursor: pointer;
+	font-weight: 200;
+}
+
+#editortypelabel:active,
+#editortypelabel:hover
+{
+	cursor: default;
+
+}
+
 #center-top{
 	position: absolute;
 	margin-left: auto;

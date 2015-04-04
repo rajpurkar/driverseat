@@ -16,14 +16,7 @@ html
 				nav.navbar.navbar-fixed-top
 					.container-fluid
 						.navbar-header
-							a.navbar-brand {{trackInfo.track}}
-						ul.nav.navbar-nav
-							li
-								button#laneEditor.actionBtn(ng-show="editor == 'tag'", ng-click="changeEditor()", type="button")
-									|Lane Editor
-							li
-								button#laneEditor.actionBtn(ng-show="editor == 'lane'", ng-click="changeEditor()", type="button")
-									|Tag Editor
+							a.navbar-brand(href="") {{trackInfo.track}}
 						ul.nav.navbar-nav(ng-show="editor == 'lane'")
 							li
 								button#undo.actionBtn(ng-click="laneEditor.undo()", type="button")
@@ -112,6 +105,12 @@ html
 										p End Frame: {{tag.endFrame}}
 										p {{tag.category.name}}
 										p {{tag.category.description}}
+				#right-bottom
+					.btn-group
+						span.btn.btn-default#editortypelabel(ng-show="editor == 'lane'") Editor Mode
+						span.btn.btn-default#editortypelabel(ng-show="editor == 'tag'") Tag Mode
+						button#laneEditor.btn.btn-default(ng-click="changeEditor()", type="button")
+							|Change
 				#right-side
 					#fps.hidden
 					.tab

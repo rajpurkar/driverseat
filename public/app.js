@@ -19,7 +19,7 @@ controller(
         cfpLoadingBar,
         tagEditor,
         laneDetection) {
-
+        
         $scope.laneEditor = laneEditor;
         $scope.tagEditor = tagEditor;
         // scope variables

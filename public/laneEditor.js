@@ -233,6 +233,7 @@ factory('laneEditor', function(util, key, history, $http) {
     }
 
     function onDocumentMouseDown(event) {
+        if(event.which !== 1) return; //just left click
         if (key.isDown("ctrl")) return;
         // event.stopPropagation();
 
@@ -304,6 +305,7 @@ factory('laneEditor', function(util, key, history, $http) {
     }
 
     function onDocumentMouseUp() {
+        if(event.which !== 1) return; //just left click
         if (action.type == "drag") {
             var positions = selectedPoint[0].object.geometry.attributes.position;
             history.push(action.type, action.laneNum, positions.array, $scope.laneTypes[action.laneNum]);

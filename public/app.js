@@ -62,13 +62,6 @@ controller(
 
         if (!Detector.webgl) Detector.addGetWebGLMessage();
 
-        $(window).load(function() {
-            //$("body").fadeOut(0);
-            console.log("here");
-            
-            //$("body").fadeIn(2000);
-        });
-
         // local variables
         var camera, renderer,
             projector,
@@ -206,6 +199,7 @@ controller(
         };
 
         $scope.rotateCamera = function(event) {
+            if(event.which !== 1) return; //just left click
             if (!(event.metaKey || event.ctrlKey)) return;
             controls.onMouseDown(event);
         };

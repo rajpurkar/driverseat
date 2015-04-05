@@ -12,7 +12,7 @@ body, h1, h2, h3, h4, li, a, button, label, input{
 	letter-spacing: 0.09em;
 }
 
-#left-top{
+.left-top{
 	width: 200px;
 	position: absolute;
 	top: 50;
@@ -20,14 +20,14 @@ body, h1, h2, h3, h4, li, a, button, label, input{
 	margin: 20px 20px;
 }
 
-#left-bottom{
+.left-bottom{
 	position: absolute;
 	bottom: 0px;
 	left: 0;
 	margin: 20px 20px;
 }
 
-#right-bottom{
+.right-bottom{
 	position: absolute;
 	bottom: 0px;
 	right: 0px;
@@ -53,7 +53,7 @@ body, h1, h2, h3, h4, li, a, button, label, input{
 
 }
 
-#center-top{
+.center-top{
 	position: absolute;
 	margin-left: auto;
 	margin-right: auto;
@@ -63,7 +63,7 @@ body, h1, h2, h3, h4, li, a, button, label, input{
 	top: 2px;
 }
 
-#center-center{
+.center-center{
 	position: absolute;
 	margin-left: auto;
 	margin-right: auto;
@@ -73,7 +73,7 @@ body, h1, h2, h3, h4, li, a, button, label, input{
 	top: 200px;
 }
 
-#center-bottom{
+.center-bottom{
 	width: auto;
 	position: absolute;
 	margin-left: auto;
@@ -84,7 +84,7 @@ body, h1, h2, h3, h4, li, a, button, label, input{
 	bottom: 0;
 }
 
-#right-side{
+.right-side{
 	width: 200px;
 	position: absolute;
 	top: 0;

@@ -12,10 +12,15 @@ html
 		div(ng-controller='AppCtrl', ng-trackinfo='#{JSON.stringify(trackInfo)}', ng-editor=editor, ng-lanetypes=laneTypes)
 			canvas#road
 				canvas
-			#wrap
+			.center-center#loaderMessage
+				i.fa.fa-spinner.fa-spin.fa-5x
+				h1 RoadGL
+			#wrap(style="visibility:hidden")
 				nav.navbar.navbar-fixed-top
 					.container-fluid
 						.navbar-header
+							a.navbar-brand(href="javascript:history.back()")
+								i.fa.fa-chevron-circle-left.fa-2x
 							a.navbar-brand#trackName(href="") {{trackInfo.track}}
 						ul.nav.navbar-nav(ng-show="editor == 'lane'")
 							li
@@ -36,7 +41,7 @@ html
 									input#drrange(type="range", min="1", max="60", step=".5", ng-model="dragRange")
 								span Play speed
 									input#playspeedrange(type="range", min="0.25", max="4", value="1", step=".1")
-				#left-top
+				.left-top
 					div(ng-show='collapsed')
 						ul.list-inline
 							li	Ctrl+mouse to look
@@ -51,15 +56,15 @@ html
 								li  'esc' to be done with fork/append
 								li  Select point, then shift+click to select segment
 								li  Double click point to select entire lane
-				#left-bottom
+				.left-bottom
 					#videoPlayerWrap
 						#videoPlayer.tab(my-draggable)
 								canvas#projectionCanvas
-				#center-top
-				#center-center
+				.center-top
+				.center-center
 					#log.tab
 						p#logText {{logText}}
-				#center-bottom
+				.center-bottom
 					ul.list-inline(ng-show="editor == 'tag'")
 						li
 							button#addCategory.actionBtn2(type="button", ng-click="tagEditor.toggleAddCategory()")
@@ -105,7 +110,7 @@ html
 										p End Frame: {{tag.endFrame}}
 										p {{tag.category.name}}
 										p {{tag.category.description}}
-				#right-bottom
+				.right-bottom
 					.tab
 						p#carDetectionPrecisionTitle
 							h5#carDetectionPrecisionField
@@ -117,7 +122,7 @@ html
 							span.btn.btn-default#editortypelabel(ng-show="editor == 'tag'") Tag Mode
 							button#laneEditor.btn.btn-default(ng-click="changeEditor()", type="button")
 								|Change
-				#right-side
+				.right-side
 					#fps.hidden
 					#categoryContent.tab.ng-hide
 						form#categoryForm

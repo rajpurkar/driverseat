@@ -62,6 +62,13 @@ controller(
 
         if (!Detector.webgl) Detector.addGetWebGLMessage();
 
+        $(window).load(function() {
+            //$("body").fadeOut(0);
+            console.log("here");
+            
+            //$("body").fadeIn(2000);
+        });
+
         // local variables
         var camera, renderer,
             projector,
@@ -112,7 +119,7 @@ controller(
         $scope.init = function() {
             if ($scope.editor != "lane" && $scope.editor != "tag")
                 $scope.editor = "lane";
-            fpsMeter = new FPSMeter(document.getElementById("fps"));
+            //fpsMeter = new FPSMeter(document.getElementById("fps"));
             $scope.scene = new THREE.Scene();
             $scope.scene.fog = new THREE.Fog(0x111132, 0.1, 5000);
             //scene.fog = new THREE.Fog( 0xcce0ff, 500, 10000 );
@@ -165,6 +172,10 @@ controller(
 
         $scope.execOnLoaded = function() {
             $scope.log("Rendering...");
+            $("#wrap").fadeOut(0);
+            $("#wrap").css("visibility", "visible");
+            $("#loaderMessage").remove();
+            $("#wrap").fadeIn(4000);
             //video.init($scope.videoData);
             if ($scope.radarData !== null) radar.init($scope.radarData, $scope.params, $scope.scene);
             if ($scope.editor == "lane")
@@ -348,7 +359,7 @@ controller(
             carDetection.drawCarDetectionBoxes("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
             carDetection.drawCarDetectionVerifiedBoxes("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
             laneDetection.drawLaneDetectionPoints("projectionCanvas", $scope.frameCount, $scope.gps[$scope.frameCount]);
-            fpsMeter.tick();
+            //fpsMeter.tick();
 
             renderer.render($scope.scene, camera);
         };

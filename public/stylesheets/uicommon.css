@@ -29,7 +29,7 @@ a, a:focus, a:hover{
 	font-size: 20px;
 }
 
-.level2, .level2:hover{
+.level2, .level2:hover, .level2:focus{
 	font-size: 14px;
 	padding-left: 18px;
 	line-height: 1em;

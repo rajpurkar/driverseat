@@ -187,6 +187,10 @@ factory('laneEditor', function(util, key, history, $http) {
                 case key.keyMap.z:
                     undo();
                     break;
+                case key.keyMap.S:
+                case key.keyMap.s:
+                    save();
+                    break;
                 case key.keyMap.Y:
                 case key.keyMap.y:
                     redo();

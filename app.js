@@ -32,7 +32,7 @@ app.use(session({
     resave: false
 }));
 app.use(express.static(path.join(__dirname, "public"), {
-    maxAge: "1d"
+    maxAge: "1h"
 }));
 app.use(util.initializeLocals);
 db.initdb();

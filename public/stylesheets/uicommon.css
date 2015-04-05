@@ -29,9 +29,9 @@ a, a:focus, a:hover{
 	font-size: 20px;
 }
 
-.level2{
+.level2, .level2:hover{
 	font-size: 14px;
-	text-indent: 10px;
+	padding-left: 12px;
 	line-height: 1em;
 }
 

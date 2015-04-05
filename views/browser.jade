@@ -20,13 +20,6 @@ block content
 								.panel-collapse.collapse(id=run, role='tabpanel', aria-labelledby="heading" + run, aria-expanded='false', style='height: 0px;')
 									ul.list-group
 										- each edits, track in tracks
-											a.collapsed(data-toggle='collapse', href='#' + track, aria-expanded='false', aria-controls=track)
-												.panel-heading(role='tab', id="subheading" + track)
-													h4.panel-title.level2
-														=track
-											.panel-collapse.collapse(id=track, role='tabpanel', aria-labelledby="subheading" + track, aria-expanded='false', style='height: 0px;')
-												ul.list-group
-													-each edit in edits
-														a(href="/edit?editor=lane&route=" + run + "%2F" + track + "&filename=" + filenames[edit])
-															li.list-group-item.level2
-																=edit
+											li
+												a(href="/edit?editor=lane&route=" + run + "%2F" + track + "&filename=" + filenames[edits[0]]).level2
+													=track

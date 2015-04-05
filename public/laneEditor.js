@@ -181,44 +181,50 @@ factory('laneEditor', function(util, key, history, $http) {
     function onDocumentKeyDown(event) {
         if (!$scope.shortcutsEnabled) return;
         var preventDefault = true;
-        switch (event.keyCode) {
-            case key.keyMap.esc:
-                finishAction();
-                break;
-            case key.keyMap.backspace:
-            case key.keyMap.del:
-            case key.keyMap.D:
-            case key.keyMap.d:
-                deleteSegment();
-                break;
-            case key.keyMap.J:
-            case key.keyMap.j:
-                joinLanes();
-                break;
-            case key.keyMap.C:
-            case key.keyMap.c:
-                copySegment();
-                break;
-            case key.keyMap.A:
-            case key.keyMap.a:
-                append();
-                break;
-            case key.keyMap.F:
-            case key.keyMap.f:
-                fork();
-                break;
-            case key.keyMap.Z:
-            case key.keyMap.z:
-                if (!event.ctrlKey) break;
-                undo();
-                break;
-            case key.keyMap.Y:
-            case key.keyMap.y:
-                if (!event.ctrlKey) break;
-                redo();
-                break;
-            default:
-                preventDefault = false;
+        if (event.metaKey || event.ctrlKey){
+            switch (event.keyCode) {
+                case key.keyMap.Z:
+                case key.keyMap.z:
+                    undo();
+                    break;
+                case key.keyMap.Y:
+                case key.keyMap.y:
+                    redo();
+                    break;
+                default:
+                    preventDefault = false;
+            }
+        }
+        else{
+            switch (event.keyCode) {
+                case key.keyMap.esc:
+                    finishAction();
+                    break;
+                case key.keyMap.backspace:
+                case key.keyMap.del:
+                case key.keyMap.D:
+                case key.keyMap.d:
+                    deleteSegment();
+                    break;
+                case key.keyMap.J:
+                case key.keyMap.j:
+                    joinLanes();
+                    break;
+                case key.keyMap.C:
+                case key.keyMap.c:
+                    copySegment();
+                    break;
+                case key.keyMap.A:
+                case key.keyMap.a:
+                    append();
+                    break;
+                case key.keyMap.F:
+                case key.keyMap.f:
+                    fork();
+                    break;
+                default:
+                    preventDefault = false;
+            }
         }
         if (preventDefault) {
             event.preventDefault();

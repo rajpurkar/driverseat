@@ -60,7 +60,10 @@ controller(
         $scope.frameCountTemp = -1;
 
 
-        if (!Detector.webgl) Detector.addGetWebGLMessage();
+        if (!Detector.webgl){
+          $("#loaderMessage").remove();
+          Detector.addGetWebGLMessage();  
+        } 
 
         // local variables
         var camera, renderer,

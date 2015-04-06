@@ -4,6 +4,7 @@ factory('loading', function($http, util) {
     function init(scope) {
         $scope = scope;
         $scope.debugText = "Loading...";
+        $scope.logText = "Loading...";
     }
 
     function loaders(cb) {
@@ -171,6 +172,12 @@ factory('loading', function($http, util) {
                         });
                 },
                 laneDetection: function(callback) {
+                    if(!$scope.trackInfo.files.laneDetection){
+                        $scope.laneDetectionData = null;
+                        callback(null, "lane_detection_init");
+                        return;
+                    }
+
                     util.loadJSON(
                         $scope.trackInfo.files.laneDetection,
                         function(data) {
@@ -182,7 +189,7 @@ factory('loading', function($http, util) {
                             console.log("Cannot open lane detection file: " + $scope.trackInfo.files.laneDetection);
                             callback(null, "lane_detection_init");
                         });
-                },
+                }
             },
             function(err, results) {
                 cb();

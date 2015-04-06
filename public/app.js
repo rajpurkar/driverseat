@@ -168,10 +168,8 @@ controller(
 
         $scope.execOnLoaded = function() {
             $scope.log("Rendering...");
-            $("#wrap").fadeOut(0);
             $("#wrap").css("visibility", "visible");
             $("#loaderMessage").remove();
-            $("#wrap").fadeIn(4000);
             //video.init($scope.videoData);
             if ($scope.radarData !== null) radar.init($scope.radarData, $scope.params, $scope.scene);
             if ($scope.editor == "lane")

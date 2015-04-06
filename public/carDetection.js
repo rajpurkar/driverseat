@@ -62,7 +62,7 @@ service('carDetection', function(util) {
         canvasBox.position.x = carDetectionBoxLocations[3 * index];
         canvasBox.position.y = carDetectionBoxLocations[3 * index + 1];
         canvasBox.position.z = carDetectionBoxLocations[3 * index + 2];
-        canvasBox.lookAt($scope.getCarCurPosition());
+        //canvasBox.lookAt($scope.getCarCurPosition());
         canvasBox.updateMatrix();
     }
 

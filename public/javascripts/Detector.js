@@ -35,10 +35,10 @@ var Detector = {
 
 			element.innerHTML = window.WebGLRenderingContext ? [
 				'Your graphics card does not seem to support <a href="http://khronos.org/webgl/wiki/Getting_a_WebGL_Implementation" style="color:#000">WebGL</a>.<br />',
-				'Go <a href="javascript:history.back()"> back </a>'
+				'Go <a style="color:blue" href="javascript:history.back()"> back </a>'
 			].join('\n') : [
 				'Your browser does not seem to support <a href="http://khronos.org/webgl/wiki/Getting_a_WebGL_Implementation" style="color:#000">WebGL</a>.<br/>',
-				'Go <a href="javascript:history.back()"> back </a>'
+				'Go <a style="color:blue" href="javascript:history.back()"> back </a>'
 			].join('\n');
 
 		}

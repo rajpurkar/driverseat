@@ -1,4 +1,6 @@
 (function (window, $, THREE, JSZip, FormData) {
+  'use strict'
+
   window.myApp.
   factory('laneEditor', function (util, key, history, $http) {
     var $scope,

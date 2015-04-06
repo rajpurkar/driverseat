@@ -1,4 +1,6 @@
 (function (window, Image, JSZip) {
+  'use strict'
+
   window.myApp.
   service('video', function () {
     var images = [],

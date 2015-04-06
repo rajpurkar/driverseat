@@ -1,8 +1,7 @@
 (function (angular, $, Detector, THREE, window) {
-  var myApp = window.myApp = angular.module('roadglApp', ['angular-loading-bar', 'ngAnimate'])
-
   'use strict'
 
+  var myApp = window.myApp = angular.module('roadglApp', ['angular-loading-bar', 'ngAnimate'])
   myApp.
     controller(
       'AppCtrl',

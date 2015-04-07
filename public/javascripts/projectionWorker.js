@@ -1,10 +1,10 @@
-(function () {
+(function (global) {
   'use strict'
 
   var state = []
 
   // TODO : figure out whether this function is required
-  var onmessage = function (oEvent) {
+  global.onmessage = function (oEvent) {
     // console.log("data recv")
     var msg = oEvent.data
     var M
@@ -15,7 +15,7 @@
       M = new Float32Array(msg.M)
 
       var valid_pix = projectPoints(data, color_data, M)
-      window.postMessage({
+      global.postMessage({
         pix: valid_pix,
         canvasId: msg.canvasId
       })
@@ -34,7 +34,7 @@
       // all_pix.concat(pix)
       // postMessage({ pix: pix, canvasId: msg.canvasId})
       }
-      window.postMessage({
+      global.postMessage({
         pix: all_pix,
         canvasId: msg.canvasId
       })
@@ -80,4 +80,4 @@
     }
     return valid_pix
   }
-})()
+})(this)

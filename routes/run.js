@@ -1,11 +1,10 @@
 var mongoose = require('mongoose'),
-    Schema = mongoose.Schema;
+  Schema = mongoose.Schema
 
 var RunSchema = new Schema({
-    title: String,
-    dateFinished: { type: Date, default: Date.now },
-    completed: { type: Boolean, default: false }
-});
+  title: String,
+  dateFinished: { type: Date, default: Date.now },
+  completed: { type: Boolean, default: false }
+})
 
-
-module.exports = mongoose.model('runs', RunSchema);
+module.exports = mongoose.model('runs', RunSchema)

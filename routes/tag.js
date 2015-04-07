@@ -1,5 +1,4 @@
-var mongoose = require('mongoose'),
-    Category = require('./category');
+var mongoose = require('mongoose')
 
 var TagSchema = new mongoose.Schema({
     startFrame: { type: Number, required: true },
@@ -9,6 +8,6 @@ var TagSchema = new mongoose.Schema({
     lanesFilename: { type: String, required: true },
     description: String,
     category: { type: mongoose.Schema.ObjectId, ref: 'categories' }
-});
+})
 
-module.exports = mongoose.model('tags', TagSchema);
+module.exports = mongoose.model('tags', TagSchema)

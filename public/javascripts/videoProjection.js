@@ -63,7 +63,6 @@
       inv_imu_transforms_t.getInverse(imu_transforms_t)
 
       var T = new THREE.Matrix4()
-      // TODO PSR: is this repeated?
       // read this backwards
       T.multiply(p.KK) // camera intrinsics
       T.multiply(p.T_Extrinsics) // camera extrinsics

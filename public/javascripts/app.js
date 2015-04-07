@@ -87,7 +87,7 @@
         }
 
         $scope.log = function (message) {
-          // TODO fix conflict with apply calls already in progress
+          // TODO PSR: fix conflict with apply calls already in progress
           $scope.logText = message
           $scope.flush()
         }
@@ -164,7 +164,6 @@
           $scope.log('Rendering...')
           $('#wrap').css('visibility', 'visible')
           $('#loaderMessage').remove()
-          // video.init($scope.videoData)
           if ($scope.radarData !== null) radar.init($scope.radarData, $scope.params, $scope.scene)
           if ($scope.editor === 'lane') {
             laneEditor.init($scope)
@@ -326,11 +325,6 @@
           }
           var img_disp = $scope.video.displayImage('projectionCanvas', $scope.frameCount)
           if (img_disp) {
-            /*
-            for (var idx in $scope.pointClouds.lanes) {
-                videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.lanes[idx], $scope.gps[frameCount], $scope.videoProjectionParamsFromCamera1)
-            }
-            */
             videoProjection.projectScene('projectionCanvas', $scope.gps[$scope.frameCount], $scope.videoProjectionParamsFromCamera1)
           } else {
             var canv = document.getElementById('projectionCanvas')
@@ -344,13 +338,10 @@
             ctx.fillText('Buffering', canv.width / 2, canv.height / 2)
           }
 
-          // videoProjection.projectCloud("projectionCanvas", $scope.pointClouds.points, $scope.gps[$scope.frameCount], $scope.videoProjectionParamsFromCamera1)
           if ($scope.radarData !== null) radar.displayReturns($scope.frameCount, $scope.gps[$scope.frameCount])
           carDetection.drawCarDetectionBoxes('projectionCanvas', $scope.frameCount, $scope.gps[$scope.frameCount])
           carDetection.drawCarDetectionVerifiedBoxes('projectionCanvas', $scope.frameCount, $scope.gps[$scope.frameCount])
           laneDetection.drawLaneDetectionPoints('projectionCanvas', $scope.frameCount, $scope.gps[$scope.frameCount])
-          // fpsMeter.tick()
-
           renderer.render($scope.scene, camera)
         }
 
@@ -364,14 +355,12 @@
 
         $scope.generatePointCloud = function (name, data, size, colorIndices) {
           $scope.geometries[name] = new THREE.BufferGeometry()
-          var positions, colors
-          var i
+          var positions, colors, i
           var dataType = Object.prototype.toString.call(data)
           if (dataType === '[object Float32Array]' || dataType === '[object ArrayBuffer]') {
             positions = new Float32Array(data)
           } else {
             positions = new Float32Array(3 * data.length)
-            // colors    = new Float32Array(3*data.length)
             for (i = 0; i < data.length; i++) {
               // Note: order is changed
               positions[3 * i] = data[i][1] // x
@@ -457,10 +446,8 @@
             m.materials[8] = materials.black // behind grille
 
             car = new THREE.Mesh(geometry, m)
-            // car.rotation.set( - Math.PI / 2, 0, -Math.PI /2)
             car.scale.set(s, s, s)
             car.position.set(0, -1.5, 7)
-            // TODO car gets in the way of lane editing
             $scope.scene.add(car)
             callback()
           })

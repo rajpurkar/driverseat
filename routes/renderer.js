@@ -27,8 +27,8 @@ exports.edit = function (req, res) {
       radar: datafilesPath + 'radar.json.zip',
       carDetection: datafilesPath + 'bbs-cam2.json',
       carDetectionVerified: datafilesPath + 'bbs-cam2-verified.json',
-      params: '/q50_4_3_14_params.json',
-      precisionAndRecall: '/precision_and_recall.json'
+      params: '/files/q50_4_3_14_params.json',
+      precisionAndRecall: '/files/precision_and_recall.json'
     }
     // We currently only have lane detection data for the sanrafael_e track
     if (track === '4-11-14-sanrafael/sanrafael_e') {

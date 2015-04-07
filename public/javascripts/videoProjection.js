@@ -160,7 +160,7 @@
         var T_from_l_to_c = create_T_from_l_to_c(cam)
         var T_Extrinsics = util.Matrix4FromJSON4x4(cam.E)
 
-        var worker = new Worker('projectionWorker.js')
+        var worker = new Worker('/javascripts/projectionWorker.js')
         worker.onmessage = processWorkerMessage
 
         return {

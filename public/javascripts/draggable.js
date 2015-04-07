@@ -1,3 +1,4 @@
+// TODO PSR : where is this from? add credits
 (function (window) {
   'use strict'
 

@@ -2,7 +2,7 @@
   'use strict'
 
   // TODO PSR: better way?
-  window.VideoNACL = function(cam_file, id, parent_id, downloadCb) {
+  window.VideoNACL = function (cam_file, id, parent_id, downloadCb) {
     this.VideoNACLModule = null
     this.nacl_id = id
     this.statusText = 'NO-STATUS'

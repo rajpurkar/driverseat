@@ -148,9 +148,9 @@ html
 							.form-group
 								label(for="categoryId")
 									| Category
-									select#categorySelector.form-control(name="categoryId")
-										-each category in categories
-											option(value="#{category._id}") #{category.name}
+								select#categorySelector.form-control(name="categoryId")
+									-each category in categories
+										option(value="#{category._id}") #{category.name}
 							input#run(type="hidden", name="run", value="#{track}")
 							.form-group
 								label(for="startFrame")

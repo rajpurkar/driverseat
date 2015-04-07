@@ -11,7 +11,7 @@ function authenticate (name, pass, fn) {
         if (err) return fn(new Error('cannot find user'))
         hash(pass, user.salt, function (err, hash) {
           if (err) return fn(err)
-          if (hash === user.hash) return fn(null, user)
+          if (hash.toString('utf8') === user.hash) return fn(null, user)
           fn(new Error('invalid password'))
         })
       } else {

@@ -93,21 +93,21 @@ body, h1, h2, h3, h4, li, a, button, label, input{
 }
 
 
-input[type="range"] {
+#scrubber {
 	-webkit-appearance: none;
 	background-color: #fffx;
 	height: 2px;
 	margin: 8px auto; 
 }
 
-input[type='range'], 
-input[type='range']:focus, 
-input[type='range']:active{
+#scrubber, 
+#scrubber:focus, 
+#scrubber:active{
     border: 0;
     outline: none !important;
 }
 
-input[type="range"]::-webkit-slider-thumb {
+#scrubber::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	position: relative;
 	top: 0px;
@@ -132,8 +132,6 @@ button:focus {
 .tab{
 	margin-bottom: 15px;
 }
-
-
 
 .pagination>li>a, .pagination>li>span{
 	padding: 5px 12px;
@@ -183,7 +181,7 @@ button:focus {
 
 .scrubberMarker {
 	position: absolute;
-	top: 34px;
+	top: 25px;
 	-webkit-appearance: none;
 }
 
@@ -204,7 +202,7 @@ button:focus {
 .scrubberMarker::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	border: none;
-	height: 21px;
+	height: 11px;
 	width: 11px;
 	background: transparent;
 	margin-top: -22px;

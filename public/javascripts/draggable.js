@@ -1,4 +1,4 @@
-// TODO PSR : where is this from? add credits
+//adapted from https://docs.angularjs.org/guide/compiler
 (function (window) {
   'use strict'
 

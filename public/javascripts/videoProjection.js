@@ -41,19 +41,7 @@
       var ctx = c.getContext('2d')
       var pix = msg.pix
       last_pix = pix
-      // TODO PSR: why is there code after return?
       return
-
-      for (var id in pix) {
-        var px = pix[id][0]
-        var py = pix[id][1]
-        var r = pix[id][2]
-        var g = pix[id][3]
-        var b = pix[id][4]
-        var a = 255
-        ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + (a / 255) + ')'
-        ctx.fillRect(px, py, 2, 2)
-      }
     }
 
     function computeProjectionMatrix (imu_loc_t, params) {

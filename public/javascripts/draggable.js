@@ -1,4 +1,4 @@
-//adapted from https://docs.angularjs.org/guide/compiler
+// adapted from https://docs.angularjs.org/guide/compiler
 (function (window) {
   'use strict'
 

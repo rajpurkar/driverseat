@@ -420,7 +420,7 @@
         var entry = {
           laneNum: parseInt(laneNum, 10),
           action: action,
-          filename: performance.now().toString() // TODO PSR: what's performance??
+          filename: window.performance.now().toString()
         }
         undoHistory.push(entry)
         for (var i = 0; i < redoHistory.length; i++) {
@@ -445,10 +445,7 @@
         var entry = undoHistory.pop()
         redoHistory.push(entry)
 
-        // TODO PSR: what is even going on here!?
-        var filename = entry.filename
-        // find the last state of the lane before the current undo entry
-        var filename = ''
+        var filename
         for (var i = undoHistory.length - 1; i >= 0; i--) {
           if (undoHistory[i].laneNum === entry.laneNum) {
             filename = undoHistory[i].filename

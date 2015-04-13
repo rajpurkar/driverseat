@@ -839,24 +839,26 @@
       }
       action.type = 'laneType'
       var colors = selectedPoint[0].object.geometry.attributes.color
+      var laneNum
       if (selectedLane >= 0) {
-        for (var i = 0; i < $scope.laneTypes[selectedLane].length; i++) {
-          $scope.laneTypes[selectedLane][i] = laneType
+        laneNum = selectedLane
+        for (var i = 0; i < $scope.laneTypes[laneNum].length; i++) {
+          $scope.laneTypes[laneNum][i] = laneType
         }
-        colorLane(selectedLane, colors)
+        colorLane(laneNum, colors)
         colors.needsUpdate = true
-        deselectPoints(selectedLane)
+        deselectPoints(laneNum)
         selectedLane = -1
         selectedPoint = [null, null]
         selectedPositions = {}
         setPointBoxVisibility(false, null)
-        return
+      } else {
+        laneNum = action.laneNum
+        for (var index in selectedPositions) {
+          $scope.laneTypes[laneNum][index] = laneType
+        }
+        deselectPoints(laneNum)
       }
-      var laneNum = action.laneNum
-      for (var index in selectedPositions) {
-        $scope.laneTypes[laneNum][index] = laneType
-      }
-      deselectPoints(laneNum)
       var positions = $scope.geometries['lane' + laneNum].attributes.position
       history.push('type', laneNum, positions.array, $scope.laneTypes[laneNum])
     }

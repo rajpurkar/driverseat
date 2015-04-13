@@ -41,15 +41,15 @@
       }
 
       if (selectedPointBox[0].visible === true && selectedPointBox[1].visible === false) {
-        showButton.append = showButton.fork = true
+        showButton.append = showButton.fork = showButton.laneType = true
       } else {
-        showButton.append = showButton.fork = false
+        showButton.append = showButton.fork = showButton.laneType = false
       }
 
       if (selectedPointBox[0].visible === true && selectedPointBox[1].visible === true) {
-        showButton.copy = showButton.delete = showButton.laneType = showButton.join = true
+        showButton.copy = showButton.delete = showButton.join = true
       } else {
-        showButton.copy = showButton.delete = showButton.laneType = showButton.join = false
+        showButton.copy = showButton.delete = showButton.join = false
       }
       $scope.flush()
     }
@@ -287,6 +287,9 @@
       util.paintPoint($scope.geometries['lane' + laneNum].attributes.color, selectedPoint[0].index, 255, 255, 255)
       selectedPositions = {}
       selectedPositions[selectedPoint[0].index] = selectedPos
+
+      // Update selected lane type view
+      $scope.selectedLaneType = $scope.laneTypes[laneNum][selectedPoint[0].index]
 
       var nearestPoints = $scope.kdtrees['lane' + laneNum].nearest(selectedPos, 2).filter(function (kdPoint) {
         // filter out same point

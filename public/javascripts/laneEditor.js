@@ -40,10 +40,15 @@
         selectedPointBox[1].visible = box2
       }
 
+      if (selectedPointBox[0].visible === true){
+        showButton.laneType = true
+      } else{
+        showButton.laneType = false
+      }
       if (selectedPointBox[0].visible === true && selectedPointBox[1].visible === false) {
-        showButton.append = showButton.fork = showButton.laneType = true
+        showButton.append = showButton.fork = true
       } else {
-        showButton.append = showButton.fork = showButton.laneType = false
+        showButton.append = showButton.fork = false
       }
 
       if (selectedPointBox[0].visible === true && selectedPointBox[1].visible === true) {

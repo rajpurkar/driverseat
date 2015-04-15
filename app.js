@@ -51,7 +51,7 @@ app.get('/', function (req, res) { res.redirect('/browse') })
 // Authentication routes
 app.post('/login', authrender.loginPost)
 app.post('/logout', authrender.logoutPost)
-app.post('/signup', auth.userExist, authrender.signupPost)
+app.post('/signup', auth.userExist, auth.signup)
 app.get('/signup', authrender.signup)
 app.get('/login', authrender.login)
 

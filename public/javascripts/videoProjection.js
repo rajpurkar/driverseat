@@ -85,7 +85,8 @@
           target_state[idx] === undefined) {
           updateState = true
         } else if (tracking_clouds[idx].geometry.uuid !== target_state[idx].uuid ||
-          tracking_clouds[idx].geometry.attributes.position.needsUpdate) {
+          tracking_clouds[idx].geometry.attributes.position.needsUpdate ||
+          tracking_clouds[idx].geometry.attributes.color.needsUpdate) {
           updateState = true
         }
 

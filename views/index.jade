@@ -9,7 +9,7 @@ html
 		link(rel='stylesheet', href='/vendor/loading-bar.css')
 		title=title
 	body(ng-app='roadglApp')
-		div(ng-controller='AppCtrl', ng-trackinfo='#{JSON.stringify(trackInfo)}', ng-editor=editor, ng-lanetypes=laneTypes)
+		div(ng-controller='AppCtrl', ng-trackinfo='#{JSON.stringify(trackInfo)}', ng-editor=editor, ng-lanetypes=laneTypes, ng-guest='#{JSON.stringify(guest)}')
 			canvas#road
 				canvas
 			.center-center#loaderMessage
@@ -72,7 +72,7 @@ html
 						li
 							button#addTag.actionBtn2(type="button", ng-click="tagEditor.toggleAddTag()")
 								| Add Tag
-					
+
 					ul.list-inline(ng-show="editor == 'lane'")
 						li
 							button#fork.actionBtn2(type="button", ng-click="laneEditor.fork()", ng-show="laneEditor.showButton.fork")

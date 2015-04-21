@@ -44,6 +44,7 @@ app.post('/deleteTag', auth.requiredAuthentication, db.deleteTag)
 
 // Get routes
 app.get('/edit', auth.requiredAuthentication, renderer.edit)
+app.get('/demo', renderer.guestEdit)
 app.get('/browse', auth.requiredAuthentication, renderer.browse)
 app.get('/tags', auth.requiredAuthentication, renderer.tag)
 app.get('/', function (req, res) { res.redirect('/browse') })

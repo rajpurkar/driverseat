@@ -40,9 +40,9 @@
         selectedPointBox[1].visible = box2
       }
 
-      if (selectedPointBox[0].visible === true){
+      if (selectedPointBox[0].visible === true) {
         showButton.laneType = true
-      } else{
+      } else {
         showButton.laneType = false
       }
       if (selectedPointBox[0].visible === true && selectedPointBox[1].visible === false) {
@@ -122,6 +122,7 @@
     }
 
     function save (autosave) {
+      if ($scope.guest === true) return
       document.getElementById('save').removeEventListener('click', save)
       autosave = typeof autosave === 'boolean' ? autosave : false
       if (autosave) {

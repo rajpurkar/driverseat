@@ -24,6 +24,7 @@
         $scope.laneEditor = laneEditor
         $scope.tagEditor = tagEditor
         $scope.trackInfo = JSON.parse($attrs.ngTrackinfo)
+        $scope.guest = $attrs.ngGuest === 'true' ? true : false
         $scope.editor = $attrs.ngEditor
         $scope.scene = null
         $scope.raycaster = null
@@ -43,7 +44,8 @@
         $scope.shortcutsEnabled = true
         $scope.dragRange = 15
         $scope.numLaneTypes = $attrs.ngLanetypes.split(',').length
-
+        console.log($scope.guest)
+        console.log($attrs.ngEditor)
         var INITIAL_OFFSET = [0, 3, -8],
           INITIAL_MOUSE = {
             x: 1,

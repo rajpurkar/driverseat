@@ -3,7 +3,7 @@ var util = require('./util')
 var db = require('./db')
 var Tag = require('./tag')
 
-exports.edit = function (req, res) {
+function edits (req, res, guest) {
   Category.find({}, function (err, categories) {
     var startFrame = req.query.startFrame
     var endFrame = req.query.endFrame
@@ -34,10 +34,12 @@ exports.edit = function (req, res) {
     if (track === '4-11-14-sanrafael/sanrafael_e') {
       dataFiles.laneDetection = '/4-11-14-sanrafael-sanrafael_e1_combined_lanepred_subsample.json'
     }
+    console.log(guest)
     res.render('index', {
       editor: editor,
       numCameras: numCams,
       categories: categories,
+      guest: guest,
       trackInfo: {
         track: track,
         startFrame: startFrame,
@@ -59,6 +61,14 @@ exports.edit = function (req, res) {
       ]
     })
   })
+}
+
+exports.guestEdit = function (req, res) {
+  edits(req, res, true)
+}
+
+exports.edit = function (req, res) {
+  edits(req, res, false)
 }
 
 exports.browse = function (req, res) {

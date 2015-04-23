@@ -21,10 +21,9 @@ block content
 									ul.list-group
 										if(Object.keys(tracks).length === 0)
 											li
-												p.level2 No Tracks Ready 
+												p.level2 No Tracks Ready
 										else
 											- each edits, track in tracks
-
 												li
 													a(href="/edit?editor=lane&route=" + run + "%2F" + track + "&filename=" + filenames[edits[0]]).level2
 														=track

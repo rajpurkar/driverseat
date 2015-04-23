@@ -97,11 +97,11 @@ body, h1, h2, h3, h4, li, a, button, label, input{
 	-webkit-appearance: none;
 	background-color: #fffx;
 	height: 2px;
-	margin: 8px auto; 
+	margin: 8px auto;
 }
 
-#scrubber, 
-#scrubber:focus, 
+#scrubber,
+#scrubber:focus,
 #scrubber:active{
     border: 0;
     outline: none !important;
@@ -214,14 +214,6 @@ button:focus {
 
 .scrubberMarker.scrubberRight::-webkit-slider-thumb {
 	background-image: url("../files/RightScrubber.gif");
-}
-
-.scrubberMarker.scrubberLeft:hover::-webkit-slider-thumb {
-	background-image: url("../files/LeftScrubberHover.gif");
-}
-
-.scrubberMarker.scrubberRight:hover::-webkit-slider-thumb {
-	background-image: url("../files/RightScrubberHover.gif");
 }
 
 .scrubberMarker:focus {

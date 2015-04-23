@@ -27,14 +27,13 @@ function edits (req, res, guest) {
       radar: datafilesPath + 'radar.json.zip',
       carDetection: datafilesPath + 'bbs-cam2.json',
       carDetectionVerified: datafilesPath + 'bbs-cam2-verified.json',
-      params: '/files/q50_4_3_14_params.json',
-      precisionAndRecall: '/files/precision_and_recall.json'
+      params: '/params/q50_4_3_14_params.json',
+      precisionAndRecall: '/params/precision_and_recall.json'
     }
     // We currently only have lane detection data for the sanrafael_e track
     if (track === '4-11-14-sanrafael/sanrafael_e') {
       dataFiles.laneDetection = '/4-11-14-sanrafael-sanrafael_e1_combined_lanepred_subsample.json'
     }
-    console.log(guest)
     res.render('index', {
       editor: editor,
       numCameras: numCams,

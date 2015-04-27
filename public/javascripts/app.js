@@ -46,7 +46,7 @@
         $scope.numLaneTypes = $attrs.ngLanetypes.split(',').length
         console.log($scope.guest)
         console.log($attrs.ngEditor)
-        var INITIAL_OFFSET = [0, 3, -8],
+        var INITIAL_OFFSET = new THREE.Vector3(0, 3, -8),
           INITIAL_MOUSE = {
             x: 1,
             y: 1
@@ -71,7 +71,7 @@
           speed = INITIAL_SPEED,
           windowWidth = $window.innerWidth,
           windowHeight = $window.innerHeight,
-          offset = INITIAL_OFFSET,
+          offset = new THREE.Vector3(INITIAL_OFFSET.x, INITIAL_OFFSET.y, INITIAL_OFFSET.z),
           car,
           pointCloud
 
@@ -103,9 +103,7 @@
         }
 
         $scope.setCameraOffset = function () {
-          offset[0] = -car.position.x + camera.position.x
-          offset[1] = -car.position.y + camera.position.y
-          offset[2] = -car.position.z + camera.position.z
+          offset.subVectors(camera.position, car.position)
         }
 
         $scope.init = function () {
@@ -258,23 +256,23 @@
           if ($scope.frameCount + amt < $scope.gps.length - END_VIEW_THRESHOLD && $scope.frameCount + amt >= 0) {
             $scope.frameCount += amt
             $scope.flush()
+            $scope.updateCamera()
           }
         }
 
         $scope.goToStartFrame = function () {
           $scope.frameCount = 0
+          $scope.updateCamera()
         }
 
         $scope.carForward = function () {
           var numForward = 3
           $scope.changeFrame(numForward)
-          $scope.updateCamera()
         }
 
         $scope.carBack = function () {
           var numDecline = 3
           $scope.changeFrame(-numDecline)
-          $scope.updateCamera()
         }
 
         $scope.getCarPosition = function (frameCount) {
@@ -297,9 +295,14 @@
           var pos = $scope.getCarPosition(frameCount)
           angular.extend(car.position, pos)
           car.lookAt($scope.getCarPosition(frameCount + 1))
-          camera.position.set(car.position.x + offset[0], car.position.y + offset[1], car.position.z + offset[2])
+          var a = offset.length() / INITIAL_OFFSET.length()
+          offset.copy(INITIAL_OFFSET)
+          offset.multiplyScalar(a)
+          offset.applyEuler(car.rotation)
+          camera.position.set(car.position.x + offset.x, car.position.y + offset.y, car.position.z + offset.z)
           var target = car.position
           camera.lookAt(target)
+          // console.log(camera)
           controls.target.copy(target)
           controls.update()
         }
@@ -322,7 +325,6 @@
 
         $scope.render = function () {
           camera.updateMatrixWorld(true)
-          $scope.updateCamera()
           if (key.isToggledOn('space') && $scope.shortcutsEnabled) {
             $scope.changeFrame(speed)
           }

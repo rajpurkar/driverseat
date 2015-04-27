@@ -283,6 +283,7 @@
           return new THREE.Vector3(x, y, z)
         }
 
+        var oldCarRotation = new THREE.Euler()
         $scope.updateCamera = function () {
           var frameCount = $scope.frameCountTemp > -1 ? $scope.frameCountTemp : $scope.frameCount
           frameCount = parseInt(frameCount, 10)
@@ -294,15 +295,17 @@
           }
           var pos = $scope.getCarPosition(frameCount)
           angular.extend(car.position, pos)
+          oldCarRotation.copy(car.rotation)
           car.lookAt($scope.getCarPosition(frameCount + 1))
-          var a = offset.length() / INITIAL_OFFSET.length()
-          offset.copy(INITIAL_OFFSET)
-          offset.multiplyScalar(a)
-          offset.applyEuler(car.rotation)
+          var cameraRotation = new THREE.Euler(
+            car.rotation.x - oldCarRotation.x,
+            car.rotation.y - oldCarRotation.y,
+            car.rotation.z - oldCarRotation.z
+          )
+          offset.applyEuler(cameraRotation)
           camera.position.set(car.position.x + offset.x, car.position.y + offset.y, car.position.z + offset.z)
           var target = car.position
           camera.lookAt(target)
-          // console.log(camera)
           controls.target.copy(target)
           controls.update()
         }

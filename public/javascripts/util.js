@@ -182,6 +182,7 @@
   window.myApp.
   factory('key', function () {
     var pressedKeys = []
+    var enableToggle = true
     var toggleKeys = {}
     var keyMap = {
       backspace: 8,
@@ -272,6 +273,7 @@
     var onDocumentKeyUp = function (event) {
       var i = pressedKeys.indexOf(event.keyCode)
       if (i !== -1) pressedKeys.splice(i, 1)
+      if (!enableToggle) return
       if (event.keyCode in toggleKeys) {
         toggleKeys[event.keyCode] = !toggleKeys[event.keyCode]
       }
@@ -287,6 +289,12 @@
       watchToggle: function (key) {
         if (!(key in keyMap)) throw Error('Key <' + key + '> not in keyMap')
         toggleKeys[keyMap[key]] = false
+      },
+      disableToggle: function() {
+        enableToggle = false
+      },
+      enableToggle: function() {
+        enableToggle = true
       },
       isToggledOn: function (key) {
         return key in keyMap && toggleKeys[keyMap[key]]

@@ -156,7 +156,8 @@
           controls.addEventListener('change', $scope.setCameraOffset)
           document.addEventListener('keydown', $scope.onDocumentKeyDown, false)
           window.addEventListener('resize', $scope.onWindowResize, false)
-          document.querySelector('#scrubber').addEventListener('mousedown', function () {
+          document.querySelector('#scrubber').addEventListener('mousedown', function (e) {
+            e.stopPropagation()
             $scope.frameCountTemp = -1
           })
           document.querySelector('#playspeedrange').addEventListener('input', $scope.changeSpeed)

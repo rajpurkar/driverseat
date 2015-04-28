@@ -165,7 +165,7 @@
           $scope.log('Rendering...')
           $('#wrap').css('visibility', 'visible')
           $('#loaderMessage').remove()
-          if ($scope.radarData !== null) radar.init($scope.radarData, $scope.params, $scope.scene)
+          if ($scope.radarData !== null) radar.init($scope.radarData, $scope.params, $scope.scene, $scope.getCarRotation)
           if ($scope.editor === 'lane') {
             laneEditor.init($scope)
           }
@@ -176,7 +176,8 @@
             $scope.carDetectionVerifiedData,
             $scope.precisionAndRecallData[$scope.trackInfo.track],
             $scope.videoProjectionParamsFromCamera1,
-            $scope.scene)
+            $scope.scene,
+            $scope.getCarRotation)
           carDetection.displayPrecisionAndRecall()
           laneDetection.init(
             $scope.laneDetectionData,
@@ -281,6 +282,10 @@
           var y = pos[2][3] - 1.1
           var z = pos[0][3]
           return new THREE.Vector3(x, y, z)
+        }
+
+        $scope.getCarRotation = function() {
+          return car.rotation
         }
 
         var oldCarRotation = new THREE.Euler()

@@ -1,20 +1,20 @@
+/* this is a worker that is projecting points*/
 (function (global) {
   'use strict'
 
   var state = []
 
-  // TODO : figure out whether this function is required
   global.onmessage = function (oEvent) {
-    // console.log("data recv")
     var msg = oEvent.data
     var M
+
     if (msg.cmd === 'project_cloud') {
-      // make a float32array around the buffer passed
       var data = new Float32Array(msg.data)
       var color_data = new Float32Array(msg.color_data)
       M = new Float32Array(msg.M)
-
       var valid_pix = projectPoints(data, color_data, M)
+
+      // send pixels back to main thread
       global.postMessage({
         pix: valid_pix,
         canvasId: msg.canvasId
@@ -31,9 +31,9 @@
         for (var p in pix) {
           all_pix.push(pix[p])
         }
-      // all_pix.concat(pix)
-      // postMessage({ pix: pix, canvasId: msg.canvasId})
       }
+
+      // send pixels back to main thread
       global.postMessage({
         pix: all_pix,
         canvasId: msg.canvasId

@@ -23,16 +23,17 @@ function edits (req, res, guest) {
     // find video file (cam_2.mpg, cam_604.mpg, *.mpg...)
     var videoPath = null
     if (fs.existsSync('./public' + datafilesPath + 'cam_2.mpg')) {
-        videoPath = 'cam_2.mpg'
+      videoPath = 'cam_2.mpg'
     } else if (fs.existsSync('./public' + datafilesPath + 'cam_604.mpg')) {
-        videoPath = 'cam_604.mpg'
+      videoPath = 'cam_604.mpg'
     } else {
-        var files = fs.readdirSync('./public' + datafilesPath)
-        files = files.filter(function(elem) {
-            return elem.match("\.mpg$")
-        })
-        if (files.length > 0)
-            videoPath = files[0]
+      var files = fs.readdirSync('./public' + datafilesPath)
+      files = files.filter(function (elem) {
+        return elem.match('\.mpg$')
+      })
+      if (files.length > 0) {
+        videoPath = files[0]
+      }
     }
     var dataFiles = {
       points: datafilesPath + 'map.json.zip',

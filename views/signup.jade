@@ -1,27 +1,27 @@
 extends uilayout 
 
 block extraheads
-	link(rel='stylesheet', href='/stylesheets/files.css')
-	
+  link(rel='stylesheet', href='/stylesheets/files.css')
+  
 block content
-	.container
-		include errormessage
-		.col-sm-3
-			.row
-				h1 Signup
-				form(action="/signup", method="post", autocomplete="off" )
-					.form-group
-						label(for="fullname")
-							| Name
-						input#fullname.form-control(type="text", name="fullname", required)
-					.form-group
-						label(for="username")
-							| Username
-						input#username.form-control(type="text", name="username", required)
-					.form-group
-						label(for="password")
-							| Password
-						input#password.form-control(type="password", name="password", required)
-					.form-group
-						button.btn.btn-default(type="submit")
-							| Submit
+  .container
+    include errormessage
+    .col-sm-3
+      .row
+        h1 Signup
+        form(action="/signup", method="post", autocomplete="off" )
+          .form-group
+            label(for="fullname")
+              | Name
+            input#fullname.form-control(type="text", name="fullname", required)
+          .form-group
+            label(for="username")
+              | Username
+            input#username.form-control(type="text", name="username", required)
+          .form-group
+            label(for="password")
+              | Password
+            input#password.form-control(type="password", name="password", required)
+          .form-group
+            button.btn.btn-default(type="submit")
+              | Submit

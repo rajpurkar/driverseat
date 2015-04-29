@@ -1,20 +1,20 @@
 extends uilayout 
-	
+  
 block content
-	.container
-		include errormessage
-		.col-sm-3
-			.row
-				h1 Login
-				form(action="/login", method="post")
-					.form-group
-						label(for="username")
-							| Username
-						input.form-control(type="text", name="username", required)
-					.form-group
-						label(for="password")
-							| Password
-						input.form-control(type="password", name="password", required)
-					.form-group
-						button.btn.btn-default(type="submit")
-							| Submit
+  .container
+    include errormessage
+    .col-sm-3
+      .row
+        h1 Login
+        form(action="/login", method="post")
+          .form-group
+            label(for="username")
+              | Username
+            input.form-control(type="text", name="username", required)
+          .form-group
+            label(for="password")
+              | Password
+            input.form-control(type="password", name="password", required)
+          .form-group
+            button.btn.btn-default(type="submit")
+              | Submit

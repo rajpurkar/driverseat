@@ -1,19 +1,19 @@
 extends uilayout
 
 block content
-	.container
-		include errormessage
-		.row
-			.col-md-7
-				h1 Tags
-					each category in categories
-						h2 Category: #{category.name}
-						h4 Description: #{category.description}
-						div(style='color: #{category.displayColor}') Display Color
-						each tag in category.tags
-							h4
-								a(href="/edit?route=#{tag.run}%2F#{tag.track}&filename=#{tag.lanesFilename}&startFrame=#{tag.startFrame}&endFrame=#{tag.endFrame}") #{tag.run}/#{tag.track}
-							ul.list-group
-								li.list-group-item Start Frame: #{tag.startFrame}
-								li.list-group-item End Frame: #{tag.endFrame}
-								li.list-group-item Description: #{tag.description}
+  .container
+    include errormessage
+    .row
+      .col-md-7
+        h1 Tags
+          each category in categories
+            h2 Category: #{category.name}
+            h4 Description: #{category.description}
+            div(style='color: #{category.displayColor}') Display Color
+            each tag in category.tags
+              h4
+                a(href="/edit?route=#{tag.run}%2F#{tag.track}&filename=#{tag.lanesFilename}&startFrame=#{tag.startFrame}&endFrame=#{tag.endFrame}") #{tag.run}/#{tag.track}
+              ul.list-group
+                li.list-group-item Start Frame: #{tag.startFrame}
+                li.list-group-item End Frame: #{tag.endFrame}
+                li.list-group-item Description: #{tag.description}

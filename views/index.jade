@@ -1,198 +1,198 @@
 html
-	head
-		link(rel='shortcut icon', href='/favicon.ico', type='image/x-icon')
-		link(rel='icon', href='/favicon.ico', type='image/x-icon')
-		link(rel='stylesheet', href='/vendor/bootstrap.min.css')
-		link(rel='stylesheet', href='/fonts/Open_Sans/stylesheet.css')
-		link(rel="stylesheet", href="/vendor/font-awesome.css")
-		link(rel='stylesheet', href='/stylesheets/editor.css')
-		link(rel='stylesheet', href='/vendor/loading-bar.css')
-		title=title
-	body(ng-app='roadglApp')
-		div(ng-controller='AppCtrl', ng-trackinfo='#{JSON.stringify(trackInfo)}', ng-editor=editor, ng-lanetypes=laneTypes, ng-guest='#{JSON.stringify(guest)}')
-			canvas#road
-				canvas
-			.center-center#loaderMessage
-				i.fa.fa-spinner.fa-spin.fa-5x
-				h1 RoadGL
-			#wrap(style="visibility:hidden")
-				nav.navbar.navbar-fixed-top
-					.container-fluid
-						.navbar-header
-							a.navbar-brand(href="/browse")
-								i.fa.fa-chevron-circle-left.fa-2x
-							a.navbar-brand#trackName(href="") {{trackInfo.track}}
-						ul.nav.navbar-nav(ng-show="editor == 'lane'")
-							li
-								button#undo.actionBtn(ng-click="laneEditor.undo()", type="button")
-									i.fa.fa-undo.fa-2x
-							li
-								button#redo.actionBtn(ng-click="laneEditor.redo()", type="button")
-									i.fa.fa-repeat.fa-2x
-							li
-								button#save.actionBtn(ng-click="laneEditor.save()", type="button")
-									i.fa.fa-save.fa-2x
-							li
-								button.actionBtn(type="button", data-toggle='collapse', ng-model="collapsed", ng-click="collapsed=!collapsed")
-									i.fa.fa-2x.fa-info-circle
-						ul.nav.navbar-right
-							li(ng-show="editor == 'lane'").spacer
-								span Drag range
-									input#drrange(type="range", min="1", max="60", step=".5", ng-model="dragRange")
-								span Play speed
-									input#playspeedrange(type="range", min="1", max="4", value="1", step=".1")
-				.left-top
-					div(ng-show='collapsed')
-						ul.list-inline
-							li	Ctrl+mouse to look
-							li	Play/Pause with Spacebar
-							li	Move car with arrows
-							span(ng-show="editor == 'lane'")
-								li  'f' to fork
-								li  'a' to append
-								li  'j' to join
-								li  'd' to delete
-								li  'c' to copy
-								li  'esc' to be done with fork/append
-								li  Select point, then shift+click to select segment
-								li  Double click point to select entire lane
-				.left-bottom
-					#videoPlayerWrap
-						#videoPlayer.tab(my-draggable)
-								canvas#projectionCanvas
-				.center-top
-				.center-center
-					#log.tab
-						p#logText {{logText}}
-				.center-bottom
-					ul.list-inline(ng-show="editor == 'tag'")
-						li
-							button#addCategory.actionBtn2(type="button", ng-click="tagEditor.toggleAddCategory()")
-								| Add Type
-						li
-							button#addTag.actionBtn2(type="button", ng-click="tagEditor.toggleAddTag()")
-								| Add Tag
+  head
+    link(rel='shortcut icon', href='/favicon.ico', type='image/x-icon')
+    link(rel='icon', href='/favicon.ico', type='image/x-icon')
+    link(rel='stylesheet', href='/vendor/bootstrap.min.css')
+    link(rel='stylesheet', href='/fonts/Open_Sans/stylesheet.css')
+    link(rel="stylesheet", href="/vendor/font-awesome.css")
+    link(rel='stylesheet', href='/stylesheets/editor.css')
+    link(rel='stylesheet', href='/vendor/loading-bar.css')
+    title=title
+  body(ng-app='roadglApp')
+    div(ng-controller='AppCtrl', ng-trackinfo='#{JSON.stringify(trackInfo)}', ng-editor=editor, ng-lanetypes=laneTypes, ng-guest='#{JSON.stringify(guest)}')
+      canvas#road
+        canvas
+      .center-center#loaderMessage
+        i.fa.fa-spinner.fa-spin.fa-5x
+        h1 RoadGL
+      #wrap(style="visibility:hidden")
+        nav.navbar.navbar-fixed-top
+          .container-fluid
+            .navbar-header
+              a.navbar-brand(href="/browse")
+                i.fa.fa-chevron-circle-left.fa-2x
+              a.navbar-brand#trackName(href="") {{trackInfo.track}}
+            ul.nav.navbar-nav(ng-show="editor == 'lane'")
+              li
+                button#undo.actionBtn(ng-click="laneEditor.undo()", type="button")
+                  i.fa.fa-undo.fa-2x
+              li
+                button#redo.actionBtn(ng-click="laneEditor.redo()", type="button")
+                  i.fa.fa-repeat.fa-2x
+              li
+                button#save.actionBtn(ng-click="laneEditor.save()", type="button")
+                  i.fa.fa-save.fa-2x
+              li
+                button.actionBtn(type="button", data-toggle='collapse', ng-model="collapsed", ng-click="collapsed=!collapsed")
+                  i.fa.fa-2x.fa-info-circle
+            ul.nav.navbar-right
+              li(ng-show="editor == 'lane'").spacer
+                span Drag range
+                  input#drrange(type="range", min="1", max="60", step=".5", ng-model="dragRange")
+                span Play speed
+                  input#playspeedrange(type="range", min="1", max="4", value="1", step=".1")
+        .left-top
+          div(ng-show='collapsed')
+            ul.list-inline
+              li  Ctrl+mouse to look
+              li  Play/Pause with Spacebar
+              li  Move car with arrows
+              span(ng-show="editor == 'lane'")
+                li  'f' to fork
+                li  'a' to append
+                li  'j' to join
+                li  'd' to delete
+                li  'c' to copy
+                li  'esc' to be done with fork/append
+                li  Select point, then shift+click to select segment
+                li  Double click point to select entire lane
+        .left-bottom
+          #videoPlayerWrap
+            #videoPlayer.tab(my-draggable)
+                canvas#projectionCanvas
+        .center-top
+        .center-center
+          #log.tab
+            p#logText {{logText}}
+        .center-bottom
+          ul.list-inline(ng-show="editor == 'tag'")
+            li
+              button#addCategory.actionBtn2(type="button", ng-click="tagEditor.toggleAddCategory()")
+                | Add Type
+            li
+              button#addTag.actionBtn2(type="button", ng-click="tagEditor.toggleAddTag()")
+                | Add Tag
 
-					ul.list-inline(ng-show="editor == 'lane'")
-						li
-							button#fork.actionBtn2(type="button", ng-click="laneEditor.fork()", ng-show="laneEditor.showButton.fork")
-								|Fork
-						li
-							button#append.actionBtn2(type="button", ng-click="laneEditor.append()", ng-show="laneEditor.showButton.append")
-								|Append
-						li
-							button#join.actionBtn2(type="button", ng-click="laneEditor.join()", ng-show="laneEditor.showButton.join")
-								|Join
-						li
-							button#copy.actionBtn2(type="button", ng-click="laneEditor.copy()", ng-show="laneEditor.showButton.copy")
-								|Copy
-						li
-							button#delete.actionBtn2(type="button", ng-click="laneEditor.delete()", ng-show="laneEditor.showButton.delete")
-								|Delete
-						li#laneType(ng-show="laneEditor.showButton.laneType")
-							label(for="laneType")
-								|Lane Type
-							select.form-control#laneTypeSelector(name="laneType", ng-model="selectedLaneType", ng-change="laneEditor.laneType(selectedLaneType)")
-								-each laneType, index in laneTypes
-									option(value="#{index}") #{laneType}
-					#scrubberDiv.tab
-						input#scrubber(type="range", min="0", max="{{gps.length}}", step="0.1", ng-model="frameCount")
-						div(ng-show="editor == 'tag'")
-							#tagScrubbers(ng-show="tagEditor.vars.showForm == 'tag'")
-								input.scrubberMarker.scrubberLeft(type="range", min="0", max="{{gps.length}}", step="1", ng-model="tagEditor.vars.tagLeftVal", ng-change="tagEditor.tagLeft()")
-								input.scrubberMarker.scrubberRight(type="range", min="0", max="{{gps.length}}", step="1", ng-model="tagEditor.vars.tagRightVal", ng-change="tagEditor.tagRight()")
-							div(ng-repeat="tag in tagEditor.vars.tags")
-								.scrubberTag(ng-style="tag.style")
-									.scrubberTagPopup(ng-style="tag.popupStyle", data-id="{{tag._id}}")
-										button(ng-click="tagEditor.tagDelete(tag)", type="button")
-											|Delete
-										p Start Frame: {{tag.startFrame}}
-										p End Frame: {{tag.endFrame}}
-										p {{tag.category.name}}
-										p {{tag.category.description}}
-				.right-bottom
-					.tab
-						p#carDetectionPrecisionTitle
-							h5#carDetectionPrecisionField
-						p#carDetectionRecallTitle
-							h5#carDetectionRecallField
-					.tab
-						.btn-group.btn-group-xs
-							span.btn.btn-default#editortypelabel(ng-show="editor == 'lane'") Editor Mode
-							span.btn.btn-default#editortypelabel(ng-show="editor == 'tag'") Tag Mode
-							button#laneEditor.btn.btn-default(ng-click="changeEditor()", type="button")
-								|Change
-				.right-side
-					#fps.hidden
-					#categoryContent.tab.ng-hide
-						form#categoryForm
-							.form-group
-								label(for="name")
-									| Category Name
-								input.form-control.category-input(type="text", name="name", required)
-							.form-group
-								label(for="description")
-									| Description
-								input.form-control.category-input(type="text", name="description")
-							.form-group
-								label(for="diplayColor")
-									| Display Color
-								input.form-control.category-input.color(type="text", name="displayColor")
-							.form-group
-								button#categorySubmit.btn.btn-default(type="submit")
-									| Submit
-					#tagContent.tab.ng-hide
-						form#tagForm
-							input(type="hidden", name="runTrack", value="#{trackInfo.track}")
-							input(type="hidden", name="lanesFilename", value="#{trackInfo.lanesFilename}")
-							.form-group
-								label(for="categoryId")
-									| Category
-								select#categorySelector.form-control(name="categoryId")
-									-each category in categories
-										option(value="#{category._id}") #{category.name}
-							input#run(type="hidden", name="run", value="#{track}")
-							.form-group
-								label(for="startFrame")
-									| Start Frame
-								input#startFrameInput.tag-input.form-control(type="text", name="startFrame", required)
-							.form-group
-								label(for="endFrame")
-									| End Frame
-								input#endFrameInput.tag-input.form-control(type="text", name="endFrame", required)
-							.form-group
-								label(for="description")
-									| Description
-								input.tag-input.form-control(type="text", name="description")
-							.form-group
-								button#tagSubmit.btn.btn-default(type="submit")
-									| Submit
-		script(src='/vendor/jquery.js')
-		script(src='/vendor/bootstrap.min.js')
-		script(src="/vendor/angular-1.3.10.min.js")
-		script(src='/vendor/angular-animate-1.3.10.js')
-		script(src='/vendor/loading-bar.js')
-		script(src='/vendor/three.min.js')
-		script(src="/vendor/Detector.js")
-		script(src='/vendor/OrbitControls.js')
-		script(src='/vendor/TypedArrayUtils.js')
-		script(src='/vendor/BinaryLoader.js')
-		script(src='/vendor/async.js')
-		script(src='/vendor/fpsmeter.js')
-		script(src='/vendor/jscolor.js')
-		script(src='/vendor/jszip.js')
-		script(src='/vendor/jszip-utils.js')
-		script(src='/vendor/numeric-1.2.6.js')
-		script(src='/vendor/jpeg_encoder_basic.js')
-		script(src='/vendor/jsmpg.js')
-		script(src='/javascripts/app.js')
-		script(src='/javascripts/draggable.js')
-		script(src='/javascripts/laneEditor.js')
-		script(src='/javascripts/tagEditor.js')
-		script(src='/javascripts/loading.js')
-		script(src='/javascripts/util.js')
-		script(src='/javascripts/video_nacl.js')
-		script(src='/javascripts/videoProjection.js')
-		script(src='/javascripts/radar.js')
-		script(src='/javascripts/carDetection.js')
-		script(src='/javascripts/laneDetection.js')
+          ul.list-inline(ng-show="editor == 'lane'")
+            li
+              button#fork.actionBtn2(type="button", ng-click="laneEditor.fork()", ng-show="laneEditor.showButton.fork")
+                |Fork
+            li
+              button#append.actionBtn2(type="button", ng-click="laneEditor.append()", ng-show="laneEditor.showButton.append")
+                |Append
+            li
+              button#join.actionBtn2(type="button", ng-click="laneEditor.join()", ng-show="laneEditor.showButton.join")
+                |Join
+            li
+              button#copy.actionBtn2(type="button", ng-click="laneEditor.copy()", ng-show="laneEditor.showButton.copy")
+                |Copy
+            li
+              button#delete.actionBtn2(type="button", ng-click="laneEditor.delete()", ng-show="laneEditor.showButton.delete")
+                |Delete
+            li#laneType(ng-show="laneEditor.showButton.laneType")
+              label(for="laneType")
+                |Lane Type
+              select.form-control#laneTypeSelector(name="laneType", ng-model="selectedLaneType", ng-change="laneEditor.laneType(selectedLaneType)")
+                -each laneType, index in laneTypes
+                  option(value="#{index}") #{laneType}
+          #scrubberDiv.tab
+            input#scrubber(type="range", min="0", max="{{gps.length}}", step="0.1", ng-model="frameCount")
+            div(ng-show="editor == 'tag'")
+              #tagScrubbers(ng-show="tagEditor.vars.showForm == 'tag'")
+                input.scrubberMarker.scrubberLeft(type="range", min="0", max="{{gps.length}}", step="1", ng-model="tagEditor.vars.tagLeftVal", ng-change="tagEditor.tagLeft()")
+                input.scrubberMarker.scrubberRight(type="range", min="0", max="{{gps.length}}", step="1", ng-model="tagEditor.vars.tagRightVal", ng-change="tagEditor.tagRight()")
+              div(ng-repeat="tag in tagEditor.vars.tags")
+                .scrubberTag(ng-style="tag.style")
+                  .scrubberTagPopup(ng-style="tag.popupStyle", data-id="{{tag._id}}")
+                    button(ng-click="tagEditor.tagDelete(tag)", type="button")
+                      |Delete
+                    p Start Frame: {{tag.startFrame}}
+                    p End Frame: {{tag.endFrame}}
+                    p {{tag.category.name}}
+                    p {{tag.category.description}}
+        .right-bottom
+          .tab
+            p#carDetectionPrecisionTitle
+              h5#carDetectionPrecisionField
+            p#carDetectionRecallTitle
+              h5#carDetectionRecallField
+          .tab
+            .btn-group.btn-group-xs
+              span.btn.btn-default#editortypelabel(ng-show="editor == 'lane'") Editor Mode
+              span.btn.btn-default#editortypelabel(ng-show="editor == 'tag'") Tag Mode
+              button#laneEditor.btn.btn-default(ng-click="changeEditor()", type="button")
+                |Change
+        .right-side
+          #fps.hidden
+          #categoryContent.tab.ng-hide
+            form#categoryForm
+              .form-group
+                label(for="name")
+                  | Category Name
+                input.form-control.category-input(type="text", name="name", required)
+              .form-group
+                label(for="description")
+                  | Description
+                input.form-control.category-input(type="text", name="description")
+              .form-group
+                label(for="diplayColor")
+                  | Display Color
+                input.form-control.category-input.color(type="text", name="displayColor")
+              .form-group
+                button#categorySubmit.btn.btn-default(type="submit")
+                  | Submit
+          #tagContent.tab.ng-hide
+            form#tagForm
+              input(type="hidden", name="runTrack", value="#{trackInfo.track}")
+              input(type="hidden", name="lanesFilename", value="#{trackInfo.lanesFilename}")
+              .form-group
+                label(for="categoryId")
+                  | Category
+                select#categorySelector.form-control(name="categoryId")
+                  -each category in categories
+                    option(value="#{category._id}") #{category.name}
+              input#run(type="hidden", name="run", value="#{track}")
+              .form-group
+                label(for="startFrame")
+                  | Start Frame
+                input#startFrameInput.tag-input.form-control(type="text", name="startFrame", required)
+              .form-group
+                label(for="endFrame")
+                  | End Frame
+                input#endFrameInput.tag-input.form-control(type="text", name="endFrame", required)
+              .form-group
+                label(for="description")
+                  | Description
+                input.tag-input.form-control(type="text", name="description")
+              .form-group
+                button#tagSubmit.btn.btn-default(type="submit")
+                  | Submit
+    script(src='/vendor/jquery.js')
+    script(src='/vendor/bootstrap.min.js')
+    script(src="/vendor/angular-1.3.10.min.js")
+    script(src='/vendor/angular-animate-1.3.10.js')
+    script(src='/vendor/loading-bar.js')
+    script(src='/vendor/three.min.js')
+    script(src="/vendor/Detector.js")
+    script(src='/vendor/OrbitControls.js')
+    script(src='/vendor/TypedArrayUtils.js')
+    script(src='/vendor/BinaryLoader.js')
+    script(src='/vendor/async.js')
+    script(src='/vendor/fpsmeter.js')
+    script(src='/vendor/jscolor.js')
+    script(src='/vendor/jszip.js')
+    script(src='/vendor/jszip-utils.js')
+    script(src='/vendor/numeric-1.2.6.js')
+    script(src='/vendor/jpeg_encoder_basic.js')
+    script(src='/vendor/jsmpg.js')
+    script(src='/javascripts/app.js')
+    script(src='/javascripts/draggable.js')
+    script(src='/javascripts/laneEditor.js')
+    script(src='/javascripts/tagEditor.js')
+    script(src='/javascripts/loading.js')
+    script(src='/javascripts/util.js')
+    script(src='/javascripts/video_nacl.js')
+    script(src='/javascripts/videoProjection.js')
+    script(src='/javascripts/radar.js')
+    script(src='/javascripts/carDetection.js')
+    script(src='/javascripts/laneDetection.js')

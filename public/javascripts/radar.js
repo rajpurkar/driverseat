@@ -9,7 +9,8 @@
       MAX_NUMBER_RADAR_OBJECTS = 64,
       log,
       params,
-      T_from_r_to_l, T_from_l_to_i, T_imu_0_to_THREE
+      T_from_r_to_l, T_from_l_to_i, T_imu_0_to_THREE,
+      getCarRotation
 
     function create_T_from_r_to_l () {
       var R_from_r_to_l = util.Matrix4FromJSON3x3(params.radar.R_from_r_to_l)
@@ -24,15 +25,19 @@
       obj.position.x = x
       obj.position.y = y
       obj.position.z = z
-      // obj.lookAt($scope.getCarCurPosition()) // TODO PSR : figure out
+      var carRotation = getCarRotation()
+      obj.rotation.x = carRotation.x
+      obj.rotation.y = carRotation.y
+      obj.rotation.z = carRotation.z
       obj.updateMatrix()
     }
 
     return {
-      init: function (radar_log, calibration_params, scn) {
+      init: function (radar_log, calibration_params, scn, getCarRotation_func) {
         log = radar_log
         params = calibration_params
         scene = scn
+        getCarRotation = getCarRotation_func
 
         for (var idx = 0; idx < MAX_NUMBER_RADAR_OBJECTS; idx++) {
           var geometry = new THREE.BoxGeometry(2, 1, 3)

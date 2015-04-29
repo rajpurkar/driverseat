@@ -10,7 +10,8 @@
       carDetectionVerifiedData,
       precisionAndRecallData,
       scene,
-      videoProjectionParams
+      videoProjectionParams,
+      getCarRotation
 
     function initializeCanvasBoxes () {
       for (var i = 0; i < MAX_NUM_CANVAS_BOXES; i++) {
@@ -64,7 +65,10 @@
       canvasBox.position.x = carDetectionBoxLocations[3 * index]
       canvasBox.position.y = carDetectionBoxLocations[3 * index + 1]
       canvasBox.position.z = carDetectionBoxLocations[3 * index + 2]
-      // canvasBox.lookAt($scope.getCarCurPosition())
+      var carRotation = getCarRotation()
+      canvasBox.rotation.x = carRotation.x
+      canvasBox.rotation.y = carRotation.y
+      canvasBox.rotation.z = carRotation.z
       canvasBox.updateMatrix()
     }
 
@@ -105,12 +109,13 @@
     }
 
     return {
-      init: function (data, verifiedData, precisionAndRecall, vpParams, scn) {
+      init: function (data, verifiedData, precisionAndRecall, vpParams, scn, getCarRotation_func) {
         carDetectionData = data
         carDetectionVerifiedData = verifiedData
         precisionAndRecallData = precisionAndRecall
         videoProjectionParams = vpParams
         scene = scn
+        getCarRotation = getCarRotation_func
         // TODO(rchengyue): Make separate sets of canvas boxes for detected and verified
         // if verified data has depth fields
         initializeCanvasBoxes()

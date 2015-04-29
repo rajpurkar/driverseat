@@ -13,6 +13,12 @@
       $scope = scope
       document.getElementById('categoryForm').addEventListener('submit', categorySubmit, false)
       document.getElementById('tagForm').addEventListener('submit', tagSubmit, false)
+      jQuery(document).on('focus', 'input', function() {
+          key.disableToggle()
+      })
+      jQuery(document).on('blur', 'input', function() {
+          key.enableToggle()
+      })
       load()
     }
 
@@ -134,10 +140,6 @@
     }
 
     function tagDelete (tag) {
-      // TODO PSR : better way?
-      if (! window.confirm('Are you sure you want to delete this tag?')) {
-        return
-      }
       $.ajax({
         url: '/deleteTag',
         type: 'POST',

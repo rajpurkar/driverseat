@@ -46,7 +46,7 @@
         $scope.numLaneTypes = $attrs.ngLanetypes.split(',').length
         console.log($scope.guest)
         console.log($attrs.ngEditor)
-        var INITIAL_OFFSET = [0, 3, -8],
+        var INITIAL_OFFSET = new THREE.Vector3(0, 3, -8),
           INITIAL_MOUSE = {
             x: 1,
             y: 1
@@ -71,7 +71,7 @@
           speed = INITIAL_SPEED,
           windowWidth = $window.innerWidth,
           windowHeight = $window.innerHeight,
-          offset = INITIAL_OFFSET,
+          offset = new THREE.Vector3(INITIAL_OFFSET.x, INITIAL_OFFSET.y, INITIAL_OFFSET.z),
           car,
           pointCloud
 
@@ -103,9 +103,7 @@
         }
 
         $scope.setCameraOffset = function () {
-          offset[0] = -car.position.x + camera.position.x
-          offset[1] = -car.position.y + camera.position.y
-          offset[2] = -car.position.z + camera.position.z
+          offset.subVectors(camera.position, car.position)
         }
 
         $scope.init = function () {
@@ -156,7 +154,8 @@
           controls.addEventListener('change', $scope.setCameraOffset)
           document.addEventListener('keydown', $scope.onDocumentKeyDown, false)
           window.addEventListener('resize', $scope.onWindowResize, false)
-          document.querySelector('#scrubber').addEventListener('mousedown', function () {
+          document.querySelector('#scrubber').addEventListener('mousedown', function (e) {
+            e.stopPropagation()
             $scope.frameCountTemp = -1
           })
           document.querySelector('#playspeedrange').addEventListener('input', $scope.changeSpeed)
@@ -166,7 +165,7 @@
           $scope.log('Rendering...')
           $('#wrap').css('visibility', 'visible')
           $('#loaderMessage').remove()
-          if ($scope.radarData !== null) radar.init($scope.radarData, $scope.params, $scope.scene)
+          if ($scope.radarData !== null) radar.init($scope.radarData, $scope.params, $scope.scene, $scope.getCarRotation)
           if ($scope.editor === 'lane') {
             laneEditor.init($scope)
           }
@@ -177,7 +176,8 @@
             $scope.carDetectionVerifiedData,
             $scope.precisionAndRecallData[$scope.trackInfo.track],
             $scope.videoProjectionParamsFromCamera1,
-            $scope.scene)
+            $scope.scene,
+            $scope.getCarRotation)
           carDetection.displayPrecisionAndRecall()
           laneDetection.init(
             $scope.laneDetectionData,
@@ -257,23 +257,23 @@
           if ($scope.frameCount + amt < $scope.gps.length - END_VIEW_THRESHOLD && $scope.frameCount + amt >= 0) {
             $scope.frameCount += amt
             $scope.flush()
+            $scope.updateCamera()
           }
         }
 
         $scope.goToStartFrame = function () {
           $scope.frameCount = 0
+          $scope.updateCamera()
         }
 
         $scope.carForward = function () {
           var numForward = 3
           $scope.changeFrame(numForward)
-          $scope.updateCamera()
         }
 
         $scope.carBack = function () {
           var numDecline = 3
           $scope.changeFrame(-numDecline)
-          $scope.updateCamera()
         }
 
         $scope.getCarPosition = function (frameCount) {
@@ -284,6 +284,11 @@
           return new THREE.Vector3(x, y, z)
         }
 
+        $scope.getCarRotation = function() {
+          return car.rotation
+        }
+
+        var oldCarRotation = new THREE.Euler()
         $scope.updateCamera = function () {
           var frameCount = $scope.frameCountTemp > -1 ? $scope.frameCountTemp : $scope.frameCount
           frameCount = parseInt(frameCount, 10)
@@ -295,8 +300,15 @@
           }
           var pos = $scope.getCarPosition(frameCount)
           angular.extend(car.position, pos)
+          oldCarRotation.copy(car.rotation)
           car.lookAt($scope.getCarPosition(frameCount + 1))
-          camera.position.set(car.position.x + offset[0], car.position.y + offset[1], car.position.z + offset[2])
+          var cameraRotation = new THREE.Euler(
+            car.rotation.x - oldCarRotation.x,
+            car.rotation.y - oldCarRotation.y,
+            car.rotation.z - oldCarRotation.z
+          )
+          offset.applyEuler(cameraRotation)
+          camera.position.set(car.position.x + offset.x, car.position.y + offset.y, car.position.z + offset.z)
           var target = car.position
           camera.lookAt(target)
           controls.target.copy(target)
@@ -321,7 +333,6 @@
 
         $scope.render = function () {
           camera.updateMatrixWorld(true)
-          $scope.updateCamera()
           if (key.isToggledOn('space') && $scope.shortcutsEnabled) {
             $scope.changeFrame(speed)
           }

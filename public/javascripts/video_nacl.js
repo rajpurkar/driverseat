@@ -1,54 +1,46 @@
+// loads an image at a url, and draws it on canvas
+
 (function (window, Image, XMLHttpRequest) {
   'use strict'
 
-  // TODO PSR: better way?
   window.VideoNACL = function (cam_file, id, parent_id, downloadCb) {
     this.VideoNACLModule = null
     this.nacl_id = id
     this.statusText = 'NO-STATUS'
     var nacl = this
-    var bytes = null
     var images = []
 
+    // called from app.js
     nacl.displayImage = function (canvasId, framenum) {
       if (images[framenum]) {
         var j = images[framenum]
         var c = document.getElementById(canvasId)
-        var ctx = c.getContext('2d')
         c.width = j.width
         c.height = j.height
-        ctx.drawImage(j, 0, 0, c.width, c.height)
+        c.getContext('2d').drawImage(j, 0, 0, c.width, c.height)
         return true
-      } else {
-        return false
-      }
+      } else return false
     }
 
     nacl.loadCallback = function (data) {
-      bytes = new Uint8Array(data)
-      // console.log(bytes.length)
+      var bytes = new Uint8Array(data)
       var command = {
         cmd: 'raw_data',
         data: bytes.buffer,
         length: bytes.length
       }
-      // console.log(command)
       nacl.VideoNACLModule.postMessage(command)
     }
 
     nacl.load = function (url) {
       this.url = url
-
       var request = new XMLHttpRequest()
       request.onreadystatechange = function () {
         if (request.readyState === request.DONE && request.status === 200) {
-          if (downloadCb) {
-            downloadCb()
-          }
+          if (downloadCb) downloadCb()
           nacl.loadCallback(request.response)
         }
       }
-
       request.open('GET', url)
       request.responseType = 'arraybuffer'
       request.send()

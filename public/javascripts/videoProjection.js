@@ -5,6 +5,7 @@
   service('videoProjection', function (util) {
     var last_pix // this needs to be refactored
 
+    // return the camera intrinsics
     function CameraIntrinsics (c) {
       return new THREE.Matrix4(
         c.fx, 0, c.cu, 0,
@@ -14,6 +15,7 @@
       )
     }
 
+    // Transformation coordinate change
     function create_R_from_l_to_c (cam) {
       var coordinate_change = new THREE.Matrix4(
         0, -1, 0, 0,
@@ -24,6 +26,7 @@
       return coordinate_change
     }
 
+    // lidar_t -> camera_t
     function create_T_from_l_to_c (cam) {
       var R_from_l_to_c = create_R_from_l_to_c(cam)
       var trans = cam.displacement_from_l_to_c_in_lidar_frame
@@ -33,15 +36,9 @@
       return T
     }
 
+    // set last pix
     function processWorkerMessage (oEvent) {
-      var msg = oEvent.data
-
-      var canvasId = msg.canvasId
-      var c = document.getElementById(canvasId)
-      var ctx = c.getContext('2d')
-      var pix = msg.pix
-      last_pix = pix
-      return
+      last_pix = oEvent.data.pix
     }
 
     function computeProjectionMatrix (imu_loc_t, params) {
@@ -58,12 +55,11 @@
       T.multiply(p.T_from_i_to_l) // imu_t -> lidar_t
       T.multiply(inv_imu_transforms_t) // imu_0 -> imu_t
       T.multiply(p.T_THREE_to_imu_0)// from THREE_JS frame to imu_0
-      var M = T.elements
 
-      return M
-
+      return T.elements
     }
 
+    // give the worker the points
     function projectPoints (canvasId, data, color_data, imu_loc_t, params) {
       var p = params
       var M = computeProjectionMatrix(imu_loc_t, params)
@@ -78,6 +74,7 @@
     function synchronizeState (tracking_clouds, target_state, worker) {
       for (var idx in tracking_clouds) {
         var updateState = false
+        // check if state needs to be updated
         if (tracking_clouds[idx] === undefined &&
           target_state[idx] === undefined) {
           continue
@@ -91,7 +88,6 @@
         }
 
         if (updateState) {
-          // console.log("updating state")
           var uuid = tracking_clouds[idx].geometry.uuid
           var attr = tracking_clouds[idx].geometry.attributes
           var positions = new Float32Array(attr.position.array)
@@ -101,7 +97,7 @@
             positions: positions,
             colors: colors
           }
-          // also update worker state
+          // tell worker to update its state
           if (worker) {
             worker.postMessage({
               cmd: 'update_state',
@@ -115,7 +111,7 @@
       for (var id in target_state) {
         if (tracking_clouds[id] === undefined) {
           delete target_state[id]
-          // also update worker state
+          // tell worker to update its state
           if (worker) {
             worker.postMessage({
               cmd: 'delete_state',

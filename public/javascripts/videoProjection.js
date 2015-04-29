@@ -122,76 +122,84 @@
       }
     }
 
-    return {
-      init: function (calibration_params, camera_idx, clouds) {
-        var params = calibration_params
-        var cam_idx = camera_idx
-        var cam = params.cam[cam_idx]
+    function init (calibration_params, camera_idx, clouds) {
+      var params = calibration_params
+      var cam_idx = camera_idx
+      var cam = params.cam[cam_idx]
 
-        var T_imu_0_to_THREE = new THREE.Matrix4(
-          0, 1, 0, 0,
-          0, 0, 1, 0,
-          1, 0, 0, 0,
-          0, 0, 0, 1)
+      var T_imu_0_to_THREE = new THREE.Matrix4(
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        1, 0, 0, 0,
+        0, 0, 0, 1)
 
-        var T_THREE_to_imu_0 = new THREE.Matrix4()
-        T_THREE_to_imu_0.getInverse(T_imu_0_to_THREE)
-        var T_from_l_to_i = util.Matrix4FromJSON4x4(params.lidar.T_from_l_to_i)
-        var T_from_i_to_l = new THREE.Matrix4()
-        T_from_i_to_l.getInverse(T_from_l_to_i)
+      var T_THREE_to_imu_0 = new THREE.Matrix4()
+      T_THREE_to_imu_0.getInverse(T_imu_0_to_THREE)
 
-        var KK = CameraIntrinsics(cam)
-        var T_from_l_to_c = create_T_from_l_to_c(cam)
-        var T_Extrinsics = util.Matrix4FromJSON4x4(cam.E)
+      var T_from_l_to_i = util.Matrix4FromJSON4x4(params.lidar.T_from_l_to_i)
 
-        var worker = new Worker('/javascripts/projectionWorker.js')
-        worker.onmessage = processWorkerMessage
+      var T_from_i_to_l = new THREE.Matrix4()
+      T_from_i_to_l.getInverse(T_from_l_to_i)
 
-        return {
-          T_imu_0_to_THREE: T_imu_0_to_THREE,
-          T_THREE_to_imu_0: T_THREE_to_imu_0,
-          T_from_l_to_i: T_from_l_to_i,
-          T_from_i_to_l: T_from_i_to_l,
-          T_from_l_to_c: T_from_l_to_c,
-          T_Extrinsics: T_Extrinsics,
-          params: params,
-          cam_idx: cam_idx,
-          cam: cam,
-          KK: KK,
-          worker: worker,
-          scene_state: {},
-          tracking_clouds: clouds
-        }
-      },
-      projectScene: function (canvasId, imu_loc_t, params) {
-        var p = params
-        synchronizeState(p.tracking_clouds, p.scene_state, p.worker)
-        var M = computeProjectionMatrix(imu_loc_t, params)
-        p.worker.postMessage({
-          cmd: 'project_state',
-          M: M.buffer,
-          canvasId: canvasId
-        })
+      var KK = CameraIntrinsics(cam)
+      var T_from_l_to_c = create_T_from_l_to_c(cam)
+      var T_Extrinsics = util.Matrix4FromJSON4x4(cam.E)
 
-        var c = document.getElementById(canvasId)
-        var ctx = c.getContext('2d')
-        for (var idx in last_pix) {
-          var px = last_pix[idx][0]
-          var py = last_pix[idx][1]
-          var r = last_pix[idx][2]
-          var g = last_pix[idx][3]
-          var b = last_pix[idx][4]
-          var a = 255
-          ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + (a / 255) + ')'
-          ctx.fillRect(px, py, 2, 2)
-        }
-      },
+      // make a worker, and have it  listen to processWorkerMessage
+      var worker = new Worker('/javascripts/projectionWorker.js')
+      worker.onmessage = processWorkerMessage
 
-      projectCloud: function (canvasId, cloud, imu_loc_t, params) {
-        var data = cloud.geometry.attributes.position.array
-        var color_data = cloud.geometry.attributes.color.array
-        projectPoints(canvasId, data, color_data, imu_loc_t, params)
+      return {
+        T_imu_0_to_THREE: T_imu_0_to_THREE,
+        T_THREE_to_imu_0: T_THREE_to_imu_0,
+        T_from_l_to_i: T_from_l_to_i,
+        T_from_i_to_l: T_from_i_to_l,
+        T_from_l_to_c: T_from_l_to_c,
+        T_Extrinsics: T_Extrinsics,
+        params: params,
+        cam_idx: cam_idx,
+        cam: cam,
+        KK: KK,
+        worker: worker,
+        scene_state: {},
+        tracking_clouds: clouds
       }
+    }
+
+    function projectScene (canvasId, imu_loc_t, params) {
+      var p = params
+      synchronizeState(p.tracking_clouds, p.scene_state, p.worker)
+      var M = computeProjectionMatrix(imu_loc_t, params)
+      p.worker.postMessage({
+        cmd: 'project_state',
+        M: M.buffer,
+        canvasId: canvasId
+      })
+
+      var c = document.getElementById(canvasId)
+      var ctx = c.getContext('2d')
+      for (var idx in last_pix) {
+        var px = last_pix[idx][0]
+        var py = last_pix[idx][1]
+        var r = last_pix[idx][2]
+        var g = last_pix[idx][3]
+        var b = last_pix[idx][4]
+        var a = 255
+        ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + (a / 255) + ')'
+        ctx.fillRect(px, py, 2, 2)
+      }
+    }
+
+    function projectCloud (canvasId, cloud, imu_loc_t, params) {
+      var data = cloud.geometry.attributes.position.array
+      var color_data = cloud.geometry.attributes.color.array
+      projectPoints(canvasId, data, color_data, imu_loc_t, params)
+    }
+
+    return {
+      init: init,
+      projectScene: projectScene,
+      projectCloud: projectCloud
     }
   })
 })(window, window.THREE, window.Worker)

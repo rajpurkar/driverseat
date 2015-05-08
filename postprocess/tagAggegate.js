@@ -15,6 +15,8 @@ var main = function (callback) {
         var wstream = fs.createWriteStream('./' + folder_name + '/' + cat.name + '.txt', { flags: 'w'})
         cat.tags.forEach(function (tag) {
           var runAndTrack = tag.run + '/' + tag.track
+          /* to get the camera frame, need to multiply by 0.8 before 360,
+          * and 0.4 after the 360 cameras were installed */
           var startAndEndFrame = tag.startFrame + ' ' + tag.endFrame
           wstream.write(runAndTrack + ' ' + startAndEndFrame + '\n')
         })

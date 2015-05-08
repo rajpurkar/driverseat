@@ -8,7 +8,7 @@ var Tag = require('./tag')
 module.exports = {
   initdb: function () {
     try {
-      var filename = './credentials'
+      var filename = require('path').resolve(__dirname + '/../credentials')
       if (fs.existsSync(filename)) {
         var data = fs.readFileSync(filename, 'utf-8'),
           credList = data.replace(' ', '').trim().split(','),
@@ -23,6 +23,9 @@ module.exports = {
     } catch (err) {
       console.log(err)
     }
+  },
+  closedb: function () {
+    mongoose.disconnect()
   },
   saveEdit: function (req, res) {
     var busboy = new Busboy({ headers: req.headers })

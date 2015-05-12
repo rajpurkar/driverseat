@@ -44,7 +44,7 @@ function edits (req, res, guest) {
       radar: datafilesPath + 'radar.json.zip',
       carDetection: datafilesPath + 'bbs-cam2.json',
       carDetectionVerified: datafilesPath + 'bbs-cam2-verified.json',
-      params: '/params/q50_4_3_14_params.json',
+      params: videoPath == 'cam_604.jpg' ? '/params/q50_11_20_14_params.json' : '/params/q50_4_3_14_params.json',
       precisionAndRecall: '/params/precision_and_recall.json'
     }
     // We currently only have lane detection data for the sanrafael_e track
